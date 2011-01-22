@@ -1,0 +1,13 @@
+Hi!
+
+JMembase is a super-scaled down test server I'm going to be using to test
+libmembase. It is not designed to be used in production environments, only
+to verify that libmembase works as intended.
+
+I've tried to keep the dependency list as short as possible and rather
+implement the basic functionality I need instead of adding dependencies to
+another library (and have to look at the license for the library etc)
+
+Cheers,
+
+Trond Norbye

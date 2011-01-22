@@ -1,0 +1,3 @@
+# Keep the entries sorted to reduce the risk for a merge conflict
+*~
+/target/
