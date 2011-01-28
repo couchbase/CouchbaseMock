@@ -154,14 +154,18 @@ public class HttpRequestImpl implements HttpRequest {
             output.add(buffer);
         }
 
-        if (chunkedResponse && out != null) {
-            byte array[] = out.toByteArray();
-            output.add(ByteBuffer.wrap(Integer.toHexString(array.length).getBytes()));
-            output.add(ByteBuffer.wrap("\r\n".getBytes()));
-            output.add(ByteBuffer.wrap(array));
-            output.add(ByteBuffer.wrap("\r\n".getBytes()));
+        if (out != null) {
+            if (chunkedResponse) {
+                byte array[] = out.toByteArray();
+                output.add(ByteBuffer.wrap(Integer.toHexString(array.length).getBytes()));
+                output.add(ByteBuffer.wrap("\r\n".getBytes()));
+                output.add(ByteBuffer.wrap(array));
+                output.add(ByteBuffer.wrap("\r\n".getBytes()));
+            } else {
+                output.add(ByteBuffer.wrap(out.toByteArray()));
+            }
+            out = null;
         }
-        out = null;
     }
 
     private void purgeSendBuffers() {
@@ -182,7 +186,7 @@ public class HttpRequestImpl implements HttpRequest {
 
     public boolean shouldClose() {
         purgeSendBuffers();
-        return (output.isEmpty() && reasonCode != HttpReasonCode.OK);
+        return (output.isEmpty() && (reasonCode != HttpReasonCode.OK || !chunkedResponse));
     }
 
     public void startChunk() {

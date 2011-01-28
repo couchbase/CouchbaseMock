@@ -17,9 +17,11 @@ package org.membase.jmembase;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.net.Socket;
 import junit.framework.TestCase;
 import org.membase.jmembase.http.HttpReasonCode;
 import org.membase.jmembase.http.HttpRequestImpl;
@@ -36,15 +38,20 @@ public class JMembaseTest extends TestCase {
         super(testName);
     }
     JMembase instance;
+    Thread thread;
+
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
         instance = new JMembase(8091, 100, 4096);
+        thread = new Thread(instance);
+        thread.start();
     }
 
     @Override
     protected void tearDown() throws Exception {
+        thread.interrupt();
         instance.close();
         super.tearDown();
     }
@@ -70,6 +77,29 @@ public class JMembaseTest extends TestCase {
 
         instance.handleHttpRequest(request);
         assert (request.getReasonCode() == HttpReasonCode.OK);
+    }
+
+    public void testHandleHttpRequestNetwork() throws IOException {
+        System.out.println("testHandleHttpRequest");
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+
+        pw.println("GET /pools/default/buckets/default HTTP/1.1");
+        pw.println("Authorization: Basic " + Base64.encode("Administrator:password"));
+        pw.println();
+        pw.flush();
+
+        BufferedReader r = new BufferedReader(new StringReader(sw.toString()));
+
+        Socket s = new Socket("localhost", 8091);
+        s.getOutputStream().write(sw.toString().getBytes());
+        s.getOutputStream().flush();
+
+        BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()));
+        while (in.readLine() != null) {
+            /* Do nothing */
+        }
+        s.close();
     }
 
     public void testHandleHttpRequestMissingAuth() throws IOException {
