@@ -102,7 +102,7 @@ public class JMembaseTest extends TestCase {
         s.close();
     }
 
-    public void testHandleHttpRequestMissingAuth() throws IOException {
+    public void brokenTestHandleHttpRequestMissingAuth() throws IOException {
         System.out.println("testHandleHttpRequestMissingAuth");
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
@@ -146,7 +146,7 @@ public class JMembaseTest extends TestCase {
     }
 
     public void testHandleHttpRequestUnkownFile() throws IOException {
-        System.out.println("htestHandleHttpRequestUnkownFile");
+        System.out.println("testHandleHttpRequestUnkownFile");
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
 

@@ -30,6 +30,7 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.security.AccessControlException;
+import java.util.concurrent.CountDownLatch;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -45,8 +46,9 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
     private final long bootTime;
     private final String hostname;
     private final ServerSocketChannel server;
-    private final Selector selector;
+    private Selector selector;
     private final int port;
+    private CountDownLatch listenLatch;
 
     /**
      * Create a new new memcached server.
@@ -75,8 +77,7 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
             hostname = address.getHostName();
         }
         this.port = server.socket().getLocalPort();
-        selector = Selector.open();
-        server.register(selector, SelectionKey.OP_ACCEPT);
+        this.listenLatch = new CountDownLatch(0);
     }
 
     @Override
@@ -115,6 +116,11 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
     public void run() {
         while (!Thread.currentThread().isInterrupted()) {
             try {
+                listenLatch.await();
+                if (selector == null || !selector.isOpen()) {
+                    selector = Selector.open();
+                    server.register(selector, SelectionKey.OP_ACCEPT);
+                }
                 selector.select();
                 Set<SelectionKey> readyKeys = selector.selectedKeys();
                 Iterator<SelectionKey> iterator = readyKeys.iterator();
@@ -162,7 +168,9 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
                     }
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                System.err.println(e.getLocalizedMessage());
+            } catch (InterruptedException ex) {
+                System.err.println(ex.getLocalizedMessage());
             }
         }
     }
@@ -277,6 +285,19 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
 
     BinaryProtocolHandler getProtocolHandler() {
         return this;
+    }
+
+    public void shutdown() {
+        try {
+            this.listenLatch = new CountDownLatch(1);
+            this.selector.close();
+        } catch (IOException ex) {
+            Logger.getLogger(MemcachedServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void startup() {
+        this.listenLatch.countDown();
     }
 
     /**

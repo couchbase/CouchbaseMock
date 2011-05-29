@@ -47,10 +47,12 @@ public class JMembase implements HttpRequestHandler, Runnable {
     private final MemcachedServer servers[];
     private final int numVBuckets;
     private final HttpServer httpServer;
+    private final BucketType defaultBucketType;
 
-    public JMembase(int port, int numNodes, int numVBuckets) throws IOException {
+    public JMembase(int port, int numNodes, int numVBuckets, JMembase.BucketType type) throws IOException {
         this.numVBuckets = numVBuckets;
         datastore = new DataStore(numVBuckets);
+        this.defaultBucketType = type;
         servers = new MemcachedServer[numNodes];
         for (int ii = 0; ii < servers.length; ii++) {
             servers[ii] = new MemcachedServer(0, datastore);
@@ -66,7 +68,18 @@ public class JMembase implements HttpRequestHandler, Runnable {
         httpServer = new HttpServer(port);
     }
 
+    public JMembase(int port, int numNodes, int numVBuckets) throws IOException {
+        this(port, numNodes, numVBuckets, BucketType.BASE);
+    }
+
     private byte[] getBucketJSON() {
+        switch (this.defaultBucketType) {
+            case CACHE: return getCacheBucketDefaultJSON();
+            default: return getMembaseBucketDefaultJSON();
+        }
+    }
+
+    private byte[] getMembaseBucketDefaultJSON() {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         pw.print("{");
@@ -123,6 +136,86 @@ public class JMembase implements HttpRequestHandler, Runnable {
         return sw.toString().getBytes();
     }
 
+        private byte[] getCacheBucketDefaultJSON() {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        pw.print("{");
+        JSON.addElement(pw, "name", "cache", true);
+        JSON.addElement(pw, "authType", "sasl", true);
+        //    "basicStats": {
+        //        "diskUsed": 0,
+        //        "hitRatio": 0,
+        //        "itemCount": 10001,
+        //        "memUsed": 27007687,
+        //        "opsPerSec": 0,
+        //        "quotaPercentUsed": 10.061147436499596
+        //    },
+        JSON.addElement(pw, "bucketType", "memcached", true);
+        JSON.addElement(pw, "flushCacheUri", "/pools/default/buckets/default/controller/doFlush", true);
+        JSON.addElement(pw, "name", "default", true);
+        JSON.addElement(pw, "nodeLocator", "ketama", true);
+        // NOTE: nodes are done with the code below, but this listing is kept for future reference
+        //    "nodes": [
+        //        {
+        //            "clusterCompatibility": 1,
+        //            "clusterMembership": "active",
+        //            "hostname": "127.0.0.1:8091",
+        //            "mcdMemoryAllocated": 2985,
+        //            "mcdMemoryReserved": 2985,
+        //            "memoryFree": 285800000,
+        //            "memoryTotal": 3913584000.0,
+        //            "os": "i386-apple-darwin9.8.0",
+        //            "ports": {
+        //                "direct": 11210,
+        //                "proxy": 11211
+        //            },
+        //            "replication": 1.0,
+        //            "status": "unhealthy",
+        //            "uptime": "4204",
+        //            "version": "1.6.5"
+        //        }
+        //    ],
+        pw.print("\"nodes\":[");
+        for (int ii = 0; ii < servers.length; ++ii) {
+            pw.print(servers[ii].toString());
+            if (ii != servers.length - 1) {
+                pw.print(",");
+            }
+        }
+        pw.print("],");
+        JSON.addElement(pw, "proxyPort", 0, true);
+        //    "quota": {
+        //        "ram": 268435456,
+        //        "rawRAM": 268435456
+        //    },
+        JSON.addElement(pw, "replicaNumber", 0, true);
+        JSON.addElement(pw, "saslPassword", "", true);
+        //    "stats": {
+        //        "uri": "/pools/default/buckets/default/stats"
+        //    },
+        JSON.addElement(pw, "streamingUri", "/pools/default/bucketsStreaming/default", true);
+        JSON.addElement(pw, "uri", "/pools/default/buckets/default", false);
+
+        pw.print("}");
+        pw.flush();
+        return sw.toString().getBytes();
+    }
+
+    private byte[] getPoolsJSON() {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        pw.print("{\"pools\":[{\"name\":\"default\",\"uri\":\"/pools/default\","
+                + "\"streamingUri\":\"/poolsStreaming/default\"}],\"isAdminCreds\":true,"
+                + "\"implementationVersion\":\"1.6.5\",\"componentsVersion\":{\"kernel\":\"2.13.4\","
+                + "\"mnesia\":\"4.4.12\",\"stdlib\":\"1.16.4\",\"os_mon\":\"2.2.4\","
+                + "\"ns_server\":\"1.6.5\",\"menelaus\":\"1.6.5\",\"sasl\":\"2.1.8\"}}");
+        pw.flush();
+        return sw.toString().getBytes();
+    }
+
+
+
+
     /**
      * Program entry point
      * @param args Command line arguments
@@ -137,6 +230,8 @@ public class JMembase implements HttpRequestHandler, Runnable {
         }
         membase.run();
     }
+
+
 
     boolean authorize(String auth) {
         if (auth == null) {
@@ -170,7 +265,7 @@ public class JMembase implements HttpRequestHandler, Runnable {
 //            return;
 //        }
 
-	String requestedPath = request.getRequestedUri().getPath();
+        String requestedPath = request.getRequestedUri().getPath();
         if (requestedPath.equals("/pools/default/bucketsStreaming/default")) {
             try {
                 // Success
@@ -211,6 +306,22 @@ public class JMembase implements HttpRequestHandler, Runnable {
         }
     }
 
+    public void failSome(float percentage) {
+        for (int ii = 0; ii < servers.length; ii++) {
+            if (ii % percentage == 0) {
+                servers[ii].shutdown();
+            }
+        }
+    }
+
+    public void fixSome(float percentage) {
+        for (int ii = 0; ii < servers.length; ii++) {
+            if (ii % percentage == 0) {
+                servers[ii].shutdown();
+            }
+        }
+    }
+
     public void close() {
         httpServer.close();
     }
@@ -244,4 +355,9 @@ public class JMembase implements HttpRequestHandler, Runnable {
             } while (t != null);
         }
     }
+
+    public enum BucketType {
+        CACHE, BASE
+    }
+
 }
