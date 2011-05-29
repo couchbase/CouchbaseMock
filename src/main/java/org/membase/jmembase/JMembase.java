@@ -220,7 +220,7 @@ public class JMembase implements HttpRequestHandler, Runnable {
         List<Thread> threads = new ArrayList<Thread>();
 
         for (int ii = 0; ii < servers.length; ii++) {
-            Thread t = new Thread(servers[ii]);
+            Thread t = new Thread(servers[ii], "mock memcached " + ii);
             t.setDaemon(true);
             t.start();
             threads.add(t);
