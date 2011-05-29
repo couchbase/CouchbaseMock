@@ -165,12 +165,13 @@ public class JMembase implements HttpRequestHandler, Runnable {
 
     @Override
     public void handleHttpRequest(HttpRequest request) {
-        if (!authorize(request.getHeader("Authorization"))) {
-            request.setReasonCode(HttpReasonCode.Unauthorized);
-            return;
-        }
+//        if (!authorize(request.getHeader("Authorization"))) {
+//            request.setReasonCode(HttpReasonCode.Unauthorized);
+//            return;
+//        }
 
-        if (request.getRequestedUri().getPath().equals("/pools/default/bucketsStreaming/default")) {
+	String requestedPath = request.getRequestedUri().getPath();
+        if (requestedPath.equals("/pools/default/bucketsStreaming/default")) {
             try {
                 // Success
                 request.setReasonCode(HttpReasonCode.OK);
@@ -182,12 +183,23 @@ public class JMembase implements HttpRequestHandler, Runnable {
                 request.resetResponse();
                 request.setReasonCode(HttpReasonCode.Internal_Server_Error);
             }
-        } else if(request.getRequestedUri().getPath().equals("/pools/default/buckets/default")) {
+        } else if(requestedPath.equals("/pools/default/buckets/default")) {
             try {
                 // Success
                 request.setReasonCode(HttpReasonCode.OK);
                 OutputStream os = request.getOutputStream();
                 os.write(getBucketJSON());
+            } catch (IOException ex) {
+                Logger.getLogger(JMembase.class.getName()).log(Level.SEVERE, null, ex);
+                request.resetResponse();
+                request.setReasonCode(HttpReasonCode.Internal_Server_Error);
+            }
+        } else if(requestedPath.equals("/pools")) {
+            try {
+                // Success
+                request.setReasonCode(HttpReasonCode.OK);
+                OutputStream os = request.getOutputStream();
+                os.write(getPoolsJSON());
             } catch (IOException ex) {
                 Logger.getLogger(JMembase.class.getName()).log(Level.SEVERE, null, ex);
                 request.resetResponse();

@@ -15,6 +15,8 @@
  */
 package org.membase.jmembase.memcached;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.membase.jmembase.util.JSON;
 import java.io.IOException;
 import java.io.PrintWriter;
