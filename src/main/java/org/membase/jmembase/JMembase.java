@@ -260,10 +260,10 @@ public class JMembase implements HttpRequestHandler, Runnable {
 
     @Override
     public void handleHttpRequest(HttpRequest request) {
-//        if (!authorize(request.getHeader("Authorization"))) {
-//            request.setReasonCode(HttpReasonCode.Unauthorized);
-//            return;
-//        }
+        if (!authorize(request.getHeader("Authorization"))) {
+            request.setReasonCode(HttpReasonCode.Unauthorized);
+            return;
+        }
 
         String requestedPath = request.getRequestedUri().getPath();
         if (requestedPath.equals("/pools/default/bucketsStreaming/default")) {
