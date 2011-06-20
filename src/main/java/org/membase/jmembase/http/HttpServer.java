@@ -18,6 +18,7 @@ package org.membase.jmembase.http;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.ClosedChannelException;
+import java.nio.channels.ClosedSelectorException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -66,7 +67,7 @@ public class HttpServer {
     }
 
     public void serve(HttpRequestHandler requestHandler) {
-        while (!Thread.currentThread().isInterrupted()) {
+        while (!Thread.currentThread().isInterrupted() && selector.isOpen()) {
             try {
                 // @todo this should be blocking and we should just interrupt
                 //       the selector when one of the client behaviors change!
@@ -105,6 +106,9 @@ public class HttpServer {
                         }
                     } catch (ClosedChannelException exp) {
                         // just ditch this client..
+                    } catch (ClosedSelectorException e) {
+                        // TODO: This should be logged somewhere
+                        System.err.println("Selector closed while polling");
                     }
                 }
             } catch (IOException e) {
