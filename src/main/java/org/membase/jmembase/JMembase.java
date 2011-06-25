@@ -224,14 +224,13 @@ public class JMembase implements HttpRequestHandler, Runnable {
      * @param args Command line arguments
      */
     public static void main(String[] args) {
-        JMembase membase = null;
         try {
-            membase = new JMembase(8091, 100, 4096);
+            JMembase membase = new JMembase(8091, 100, 4096);
+            membase.run();
         } catch (Exception e) {
             System.err.print("Fatal error! failed to create socket: ");
             System.err.println(e.getLocalizedMessage());
         }
-        membase.run();
     }
 
 
