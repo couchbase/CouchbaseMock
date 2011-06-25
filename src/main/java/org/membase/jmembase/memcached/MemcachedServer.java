@@ -102,7 +102,8 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         sb.append(System.getProperty("os.version"));
         JSON.addElement(pw, "os", sb.toString().replaceAll(" ", "_"), true);
         pw.print("\"ports\":{");
-        JSON.addElement(pw, "direct", port, false);
+        JSON.addElement(pw, "direct", port, true);
+        JSON.addElement(pw, "proxy", 0, false); //todo this should be fixed (Vitaly.R)
         pw.print("}}");
         pw.flush();
         return sw.toString();
@@ -135,7 +136,7 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
                     MemcachedConnection client = (MemcachedConnection) key.attachment();
 
                     if (client != null) {
-                        assert key.isAcceptable() == false;
+                        assert key.isAcceptable();
 
                         try {
 

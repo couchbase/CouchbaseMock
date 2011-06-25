@@ -18,6 +18,7 @@ package org.membase.jmembase;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.membase.jmembase.http.HttpRequest;
+import org.membase.jmembase.http.HttpRequestImpl;
 import org.membase.jmembase.util.JSON;
 import org.membase.jmembase.memcached.DataStore;
 import org.membase.jmembase.memcached.MemcachedServer;
@@ -209,9 +210,9 @@ public class JMembase implements HttpRequestHandler, Runnable {
         PrintWriter pw = new PrintWriter(sw);
         pw.print("{\"pools\":[{\"name\":\"default\",\"uri\":\"/pools/default\","
                 + "\"streamingUri\":\"/poolsStreaming/default\"}],\"isAdminCreds\":true,"
-                + "\"implementationVersion\":\"1.6.5\",\"componentsVersion\":{\"kernel\":\"2.13.4\","
-                + "\"mnesia\":\"4.4.12\",\"stdlib\":\"1.16.4\",\"os_mon\":\"2.2.4\","
-                + "\"ns_server\":\"1.6.5\",\"menelaus\":\"1.6.5\",\"sasl\":\"2.1.8\"}}");
+                + "\"uuid\":\"f0918647-73a6-4001-15e8-264500000190\",\"implementationVersion\":\"1.7.0\","
+                + "\"componentsVersion\":{\"os_mon\":\"2.2.5\",\"mnesia\":\"4.4.17\",\"kernel\":\"2.14.3\","
+                + "\"sasl\":\"2.1.9.3\",\"ns_server\":\"1.7.0\",\"stdlib\":\"1.17.3\"}}");
         pw.flush();
         return sw.toString().getBytes();
     }
@@ -275,6 +276,12 @@ public class JMembase implements HttpRequestHandler, Runnable {
                 request.setChunkedResponse(true);
                 OutputStream os = request.getOutputStream();
                 os.write(getBucketJSON());
+
+                //this need to be to sent END marker to client
+                HttpRequestImpl req = (HttpRequestImpl) request;
+                req.encodeResponse();
+                os = request.getOutputStream();
+                os.write("\n\n\n\n".getBytes());
             } catch (IOException ex) {
                 Logger.getLogger(JMembase.class.getName()).log(Level.SEVERE, null, ex);
                 request.resetResponse();
@@ -284,8 +291,36 @@ public class JMembase implements HttpRequestHandler, Runnable {
             try {
                 // Success
                 request.setReasonCode(HttpReasonCode.OK);
+
+                String output = new String(getMembaseBucketDefaultJSON());
                 OutputStream os = request.getOutputStream();
-                os.write(getBucketJSON());
+                os.write(("[" + output + "]").getBytes()); //todo should be refactored (Vitaly R.)
+            } catch (IOException ex) {
+                Logger.getLogger(JMembase.class.getName()).log(Level.SEVERE, null, ex);
+                request.resetResponse();
+                request.setReasonCode(HttpReasonCode.Internal_Server_Error);
+            }
+        } else if ("/poolsStreaming/default".equals(requestedPath)) {
+            try {
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                pw.print("{\"buckets\":{\"uri\":\"/pools/default/bucketsStreaming/default\"}}");
+                pw.flush();
+                OutputStream os = request.getOutputStream();
+                os.write(sw.toString().getBytes());
+            } catch (IOException ex) {
+                Logger.getLogger(JMembase.class.getName()).log(Level.SEVERE, null, ex);
+                request.resetResponse();
+                request.setReasonCode(HttpReasonCode.Internal_Server_Error);
+            }
+        } else if ("/pools/default".equals(requestedPath)) {
+            try {
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                pw.print("{\"buckets\":{\"uri\":\"/pools/default/buckets/default\"}}");
+                pw.flush();
+                OutputStream os = request.getOutputStream();
+                os.write(sw.toString().getBytes());
             } catch (IOException ex) {
                 Logger.getLogger(JMembase.class.getName()).log(Level.SEVERE, null, ex);
                 request.resetResponse();
