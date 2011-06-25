@@ -49,13 +49,13 @@ public class JMembase implements HttpRequestHandler, Runnable {
     private final HttpServer httpServer;
     private final BucketType defaultBucketType;
 
-    public JMembase(int port, int numNodes, int numVBuckets, JMembase.BucketType type) throws IOException {
+    public JMembase(int port, int numNodes, int bucketStartPort, int numVBuckets, JMembase.BucketType type) throws IOException {
         this.numVBuckets = numVBuckets;
         datastore = new DataStore(numVBuckets);
         this.defaultBucketType = type;
         servers = new MemcachedServer[numNodes];
         for (int ii = 0; ii < servers.length; ii++) {
-            servers[ii] = new MemcachedServer(0, datastore);
+            servers[ii] = new MemcachedServer((bucketStartPort == 0 ? 0 : bucketStartPort + ii), datastore);
         }
 
         // Let's start distribute the vbuckets across the servers
@@ -68,6 +68,9 @@ public class JMembase implements HttpRequestHandler, Runnable {
         httpServer = new HttpServer(port);
     }
 
+    public JMembase(int port, int numNodes, int numVBuckets, JMembase.BucketType type) throws IOException {
+        this(port, numNodes, 0, numVBuckets, type);
+    }
     public JMembase(int port, int numNodes, int numVBuckets) throws IOException {
         this(port, numNodes, numVBuckets, BucketType.BASE);
     }
