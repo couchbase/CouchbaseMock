@@ -1,8 +1,7 @@
 Hi!
 
-JMembase is a super-scaled down test server I'm going to be using to test
-libmembase. It is not designed to be used in production environments, only
-to verify that libmembase works as intended.
+CouchbaseMock is a super-scaled down test server to use for testing
+of "smart clients" for Couchbase.
 
 I've tried to keep the dependency list as short as possible and rather
 implement the basic functionality I need instead of adding dependencies to

@@ -13,7 +13,7 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package org.membase.jmembase.http;
+package org.couchbase.mock.http;
 
 /**
  * A mapping between the reason codes and their textual representation.

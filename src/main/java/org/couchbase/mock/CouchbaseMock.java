@@ -13,26 +13,29 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package org.membase.jmembase;
+package org.couchbase.mock;
 
+import java.util.ArrayList;
 import java.util.logging.Level;
+import java.util.List;
 import java.util.logging.Logger;
-import org.membase.jmembase.http.HttpRequest;
-import org.membase.jmembase.http.HttpRequestImpl;
-import org.membase.jmembase.util.JSON;
-import org.membase.jmembase.memcached.DataStore;
-import org.membase.jmembase.memcached.MemcachedServer;
+import java.util.Random;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import org.membase.jmembase.http.HttpReasonCode;
-import org.membase.jmembase.http.HttpRequestHandler;
-import org.membase.jmembase.http.HttpServer;
-import org.membase.jmembase.util.Base64;
+
+import org.couchbase.mock.http.HttpReasonCode;
+import org.couchbase.mock.http.HttpRequest;
+import org.couchbase.mock.http.HttpRequestHandler;
+import org.couchbase.mock.http.HttpRequestImpl;
+import org.couchbase.mock.http.HttpServer;
+import org.couchbase.mock.memcached.DataStore;
+import org.couchbase.mock.memcached.MemcachedServer;
+import org.couchbase.mock.util.Base64;
+import org.couchbase.mock.util.JSON;
+
 
 /**
  * This is a super-scaled down version of something that might look like
@@ -42,7 +45,7 @@ import org.membase.jmembase.util.Base64;
  *
  * @author Trond Norbye
  */
-public class JMembase implements HttpRequestHandler, Runnable {
+public class CouchbaseMock implements HttpRequestHandler, Runnable {
 
     private final DataStore datastore;
     private final MemcachedServer servers[];
@@ -50,7 +53,7 @@ public class JMembase implements HttpRequestHandler, Runnable {
     private final HttpServer httpServer;
     private final BucketType defaultBucketType;
 
-    public JMembase(int port, int numNodes, int bucketStartPort, int numVBuckets, JMembase.BucketType type) throws IOException {
+    public CouchbaseMock(int port, int numNodes, int bucketStartPort, int numVBuckets, CouchbaseMock.BucketType type) throws IOException {
         this.numVBuckets = numVBuckets;
         datastore = new DataStore(numVBuckets);
         this.defaultBucketType = type;
@@ -69,11 +72,12 @@ public class JMembase implements HttpRequestHandler, Runnable {
         httpServer = new HttpServer(port);
     }
 
-    public JMembase(int port, int numNodes, int numVBuckets, JMembase.BucketType type) throws IOException {
+    public CouchbaseMock(int port, int numNodes, int numVBuckets, CouchbaseMock.BucketType type) throws IOException {
         this(port, numNodes, 0, numVBuckets, type);
     }
-    public JMembase(int port, int numNodes, int numVBuckets) throws IOException {
-        this(port, numNodes, numVBuckets, BucketType.BASE);
+
+    public CouchbaseMock(int port, int numNodes, int numVBuckets) throws IOException {
+	this(port, numNodes, numVBuckets, BucketType.BASE);
     }
 
     private byte[] getBucketJSON() {
@@ -226,8 +230,8 @@ public class JMembase implements HttpRequestHandler, Runnable {
      */
     public static void main(String[] args) {
         try {
-            JMembase membase = new JMembase(8091, 100, 4096);
-            membase.run();
+            CouchbaseMock mock = new CouchbaseMock(8091, 100, 4096);
+            mock.run();
         } catch (Exception e) {
             System.err.print("Fatal error! failed to create socket: ");
             System.err.println(e.getLocalizedMessage());
@@ -283,7 +287,7 @@ public class JMembase implements HttpRequestHandler, Runnable {
                 os = request.getOutputStream();
                 os.write("\n\n\n\n".getBytes());
             } catch (IOException ex) {
-                Logger.getLogger(JMembase.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(CouchbaseMock.class.getName()).log(Level.SEVERE, null, ex);
                 request.resetResponse();
                 request.setReasonCode(HttpReasonCode.Internal_Server_Error);
             }
@@ -296,7 +300,7 @@ public class JMembase implements HttpRequestHandler, Runnable {
                 OutputStream os = request.getOutputStream();
                 os.write(("[" + output + "]").getBytes()); //todo should be refactored (Vitaly R.)
             } catch (IOException ex) {
-                Logger.getLogger(JMembase.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(CouchbaseMock.class.getName()).log(Level.SEVERE, null, ex);
                 request.resetResponse();
                 request.setReasonCode(HttpReasonCode.Internal_Server_Error);
             }
@@ -309,7 +313,7 @@ public class JMembase implements HttpRequestHandler, Runnable {
                 OutputStream os = request.getOutputStream();
                 os.write(sw.toString().getBytes());
             } catch (IOException ex) {
-                Logger.getLogger(JMembase.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(CouchbaseMock.class.getName()).log(Level.SEVERE, null, ex);
                 request.resetResponse();
                 request.setReasonCode(HttpReasonCode.Internal_Server_Error);
             }
@@ -322,7 +326,7 @@ public class JMembase implements HttpRequestHandler, Runnable {
                 OutputStream os = request.getOutputStream();
                 os.write(sw.toString().getBytes());
             } catch (IOException ex) {
-                Logger.getLogger(JMembase.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(CouchbaseMock.class.getName()).log(Level.SEVERE, null, ex);
                 request.resetResponse();
                 request.setReasonCode(HttpReasonCode.Internal_Server_Error);
             }
@@ -333,7 +337,7 @@ public class JMembase implements HttpRequestHandler, Runnable {
                 OutputStream os = request.getOutputStream();
                 os.write(getPoolsJSON());
             } catch (IOException ex) {
-                Logger.getLogger(JMembase.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(CouchbaseMock.class.getName()).log(Level.SEVERE, null, ex);
                 request.resetResponse();
                 request.setReasonCode(HttpReasonCode.Internal_Server_Error);
             }
@@ -386,7 +390,7 @@ public class JMembase implements HttpRequestHandler, Runnable {
                     t.join();
                     t = null;
                 } catch (InterruptedException ex) {
-                    Logger.getLogger(JMembase.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(CouchbaseMock.class.getName()).log(Level.SEVERE, null, ex);
                     t.interrupt();
                 }
             } while (t != null);

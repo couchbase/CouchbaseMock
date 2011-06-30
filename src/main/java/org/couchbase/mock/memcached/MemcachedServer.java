@@ -13,14 +13,15 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package org.membase.jmembase.memcached;
+package org.couchbase.mock.memcached;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.membase.jmembase.util.JSON;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -29,10 +30,14 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+
 import java.security.AccessControlException;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.Iterator;
 import java.util.Set;
+
+import org.couchbase.mock.util.JSON;
 
 /**
  * This is a small implementation of a Memcached server. It listens

@@ -13,7 +13,7 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package org.membase.jmembase;
+package org.couchbase.mock;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -21,11 +21,15 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
+
 import java.net.Socket;
+
 import junit.framework.TestCase;
-import org.membase.jmembase.http.HttpReasonCode;
-import org.membase.jmembase.http.HttpRequestImpl;
-import org.membase.jmembase.util.Base64;
+
+import org.couchbase.mock.CouchbaseMock;
+import org.couchbase.mock.http.HttpReasonCode;
+import org.couchbase.mock.http.HttpRequestImpl;
+import org.couchbase.mock.util.Base64;
 
 /**
  * Basic testing of JMembase
@@ -37,14 +41,14 @@ public class JMembaseTest extends TestCase {
     public JMembaseTest(String testName) {
         super(testName);
     }
-    JMembase instance;
+    CouchbaseMock instance;
     Thread thread;
 
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        instance = new JMembase(8091, 100, 4096);
+        instance = new CouchbaseMock(8091, 100, 4096);
         thread = new Thread(instance);
         thread.start();
     }

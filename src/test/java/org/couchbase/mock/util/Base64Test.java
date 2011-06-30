@@ -13,7 +13,9 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package org.membase.jmembase.util;
+package org.couchbase.mock.util;
+
+import org.couchbase.mock.util.Base64;
 
 import junit.framework.TestCase;
 

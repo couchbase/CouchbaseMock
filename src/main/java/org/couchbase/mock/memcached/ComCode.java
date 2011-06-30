@@ -14,7 +14,7 @@
  *   limitations under the License.
  */
 
-package org.membase.jmembase.memcached;
+package org.couchbase.mock.memcached;
 
 /**
  * @author Trond Norbye

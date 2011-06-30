@@ -13,16 +13,20 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
-package org.membase.jmembase.memcached;
-
-import java.io.IOException;
+package org.couchbase.mock.http;
 
 /**
+ * The web server will fire this callback whenever a new request
+ * arrives on the wire...
  *
  * @author Trond Norbye
  */
-public interface BinaryProtocolHandler {
-    public void execute(BinaryCommand cmd, MemcachedConnection client)
-            throws IOException;
+public interface HttpRequestHandler {
+    /**
+     * Handle the given http request. The server may wish to cache
+     * the request and send chuncs at a later time..
+     *
+     * @param request the object representing the request
+     */
+    public void handleHttpRequest(HttpRequest request);
 }

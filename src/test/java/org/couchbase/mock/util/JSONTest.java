@@ -13,7 +13,7 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package org.membase.jmembase.util;
+package org.couchbase.mock.util;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
