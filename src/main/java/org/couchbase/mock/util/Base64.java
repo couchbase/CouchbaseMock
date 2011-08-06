@@ -36,40 +36,52 @@ public class Base64 {
     private Base64() {
     }
 
+    private static void encodeRest(StringBuilder out, byte[] s, int num) {
+        long val;
+        if (num == 2) {
+            val = ((s[0] << 16) | (s[1] << 8));
+        } else {
+            val = ((s[0] << 16));
+        }
+
+        out.append(code[(int)((val >> 18) & 63)]);
+        out.append(code[(int)((val >> 12) & 63)]);
+
+        if (num == 2) {
+            out.append(code[(int)((val >> 6) & 63)]);
+        } else {
+            out.append('=');
+        }
+
+        out.append('=');
+    }
+
+    private static void encodeTriplet(StringBuilder out, byte[] s) throws IOException {
+        int val = ((s[0] << 16) | ((s[1]) << 8) | s[2]);
+        out.append(code[(val >> 18) & 63]);
+        out.append(code[(val >> 12) & 63]);
+        out.append(code[(val >> 6) & 63]);
+        out.append(code[(val & 63)]);
+    }
+
+    @SuppressWarnings("fallthrough")
     private static boolean encode(StringBuilder out, InputStream in) throws IOException {
         byte s[] = new byte[3];
         int num = in.read(s);
-        int val;
+
         switch (num) {
             case 3:
-                val = ((s[0] << 16) | ((s[1]) << 8) | s[2]);
-                break;
+                encodeTriplet(out, s);
+                return true;
             case 2:
-                val = ((s[0] << 16) | (s[1] << 8));
-                break;
             case 1:
-                val = ((s[0] << 16));
-                break;
-            default:
+                encodeRest(out, s, num);
+            // FALLTHROUGH
+            case -1:
                 return false;
+            default:
+                throw new AssertionError("Invalid length! " + num);
         }
-
-
-        out.append(code[(val >> 18) & 63]);
-        out.append(code[(val >> 12) & 63]);
-        if (num == 1) {
-            out.append('=');
-        } else {
-            out.append(code[(val >> 6) & 63]);
-        }
-
-        if (num == 3) {
-            out.append(code[(val & 63)]);
-        } else {
-            out.append('=');
-        }
-
-        return num == 3;
     }
 
     /**
