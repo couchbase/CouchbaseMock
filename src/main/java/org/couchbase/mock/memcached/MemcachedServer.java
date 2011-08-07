@@ -100,7 +100,7 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         JSON.addElement(pw, "hostname", hostname, true);
         JSON.addElement(pw, "clusterCompatibility", 1, true);
         JSON.addElement(pw, "version", "9.9.9", true);
-        StringBuffer sb = new StringBuffer(System.getProperty("os.arch"));
+        StringBuilder sb = new StringBuilder(System.getProperty("os.arch"));
         sb.append("-");
         sb.append(System.getProperty("os.name"));
         sb.append("-");
