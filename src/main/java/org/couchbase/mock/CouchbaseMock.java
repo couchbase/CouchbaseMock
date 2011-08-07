@@ -35,7 +35,9 @@ import org.couchbase.mock.memcached.DataStore;
 import org.couchbase.mock.memcached.MemcachedServer;
 import org.couchbase.mock.util.Base64;
 import org.couchbase.mock.util.JSON;
-
+import org.couchbase.mock.util.Getopt;
+import org.couchbase.mock.util.Getopt.CommandLineOption;
+import org.couchbase.mock.util.Getopt.Entry;
 
 /**
  * This is a super-scaled down version of something that might look like
@@ -229,9 +231,36 @@ public class CouchbaseMock implements HttpRequestHandler, Runnable {
      * @param args Command line arguments
      */
     public static void main(String[] args) {
+        int port = 8091;
+        int nodes = 100;
+        int vbuckets = 4096;
+
+        Getopt getopt = new Getopt();
+        getopt.addOption(new CommandLineOption('p', "--port", true)).
+                addOption(new CommandLineOption('n', "--nodes", true)).
+                addOption(new CommandLineOption('v', "--vbuckets", true)).
+                addOption(new CommandLineOption('?', "--help", false));
+
+        List<Entry> options = getopt.parse(args);
+        for (Entry e : options) {
+            if (e.key.equals("-p") || e.key.equals("--port")) {
+                port = Integer.parseInt(e.value);
+            } else if (e.key.equals("-n") || e.key.equals("--nodes")) {
+                nodes = Integer.parseInt(e.value);
+            } else if (e.key.equals("-v") || e.key.equals("--vbuckets")) {
+                vbuckets = Integer.parseInt(e.value);
+            } else if (e.key.equals("-?") || e.key.equals("--help")) {
+                System.out.println("Usage: --port=REST-port --nodes=#nodes --vbuckets=#vbuckets");
+                System.out.println("  Default values: REST-port: 8091");
+                System.out.println("                  #nodes   :  100");
+                System.out.println("                  #vbuckets: 4096");
+                System.exit(0);
+            }
+        }
+
         try {
-            CouchbaseMock mock = new CouchbaseMock(8091, 100, 4096);
-            mock.run();
+           CouchbaseMock mock = new CouchbaseMock(port, nodes, vbuckets);
+           mock.run();
         } catch (Exception e) {
             System.err.print("Fatal error! failed to create socket: ");
             System.err.println(e.getLocalizedMessage());
