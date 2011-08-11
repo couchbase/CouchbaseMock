@@ -22,10 +22,12 @@ import java.util.logging.Logger;
 import java.util.Random;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import java.net.Socket;
 import org.couchbase.mock.http.HttpReasonCode;
 import org.couchbase.mock.http.HttpRequest;
 import org.couchbase.mock.http.HttpRequestHandler;
@@ -48,6 +50,53 @@ import org.couchbase.mock.util.Getopt.Entry;
  * @author Trond Norbye
  */
 public class CouchbaseMock implements HttpRequestHandler, Runnable {
+
+    private void setupHarakiriMonitor(String host) {
+        int idx = host.indexOf(':');
+        String h = host.substring(0, idx);
+        int p = Integer.parseInt(host.substring(idx + 1));
+        try {
+            HarakiriMonitor m = new HarakiriMonitor(h, p, httpServer.getPort(), true);
+            Thread t = new Thread(m, "HarakiriMonitor");
+            t.start();
+        } catch (Throwable t) {
+            System.err.println("Failed to set up harakiri monitor: " + t.getMessage());
+            System.exit(1);
+        }
+    }
+
+    protected static class HarakiriMonitor implements Runnable {
+        private final boolean terminate;
+        private final InputStream stream;
+
+        public HarakiriMonitor(String host, int port, int httpPort, boolean terminate) throws IOException {
+            this.terminate = terminate;
+            Socket s = new Socket(host, port);
+            stream = s.getInputStream();
+            String http = "" + httpPort + '\0';
+            s.getOutputStream().write(http.getBytes());
+            s.getOutputStream().flush();
+        }
+
+        @Override
+        public void run() {
+            boolean closed = false;
+            while (!closed) {
+                try {
+                    if (stream.read() == -1) {
+                        closed = true;
+                    }
+                } catch (IOException e) {
+                    // not exactly true, but who cares..
+                    closed = true;
+                }
+            }
+
+            if (terminate) {
+                System.exit(1);
+            }
+        }
+    }
 
     private final DataStore datastore;
     private final MemcachedServer servers[];
@@ -234,11 +283,13 @@ public class CouchbaseMock implements HttpRequestHandler, Runnable {
         int port = 8091;
         int nodes = 100;
         int vbuckets = 4096;
+        String harakirimonitor = null;
 
         Getopt getopt = new Getopt();
         getopt.addOption(new CommandLineOption('p', "--port", true)).
                 addOption(new CommandLineOption('n', "--nodes", true)).
                 addOption(new CommandLineOption('v', "--vbuckets", true)).
+                addOption(new CommandLineOption('\0', "--harakiri-monitor", true)).
                 addOption(new CommandLineOption('?', "--help", false));
 
         List<Entry> options = getopt.parse(args);
@@ -249,8 +300,14 @@ public class CouchbaseMock implements HttpRequestHandler, Runnable {
                 nodes = Integer.parseInt(e.value);
             } else if (e.key.equals("-v") || e.key.equals("--vbuckets")) {
                 vbuckets = Integer.parseInt(e.value);
+            } else if (e.key.equals("--harakiri-monitor")) {
+                int idx = e.value.indexOf(':');
+                if (idx == -1) {
+                    System.err.println("ERROR: --harakiri-monitor requires host:port");
+                }
+                harakirimonitor = e.value;
             } else if (e.key.equals("-?") || e.key.equals("--help")) {
-                System.out.println("Usage: --port=REST-port --nodes=#nodes --vbuckets=#vbuckets");
+                System.out.println("Usage: --port=REST-port --nodes=#nodes --vbuckets=#vbuckets --harakiri-monitor=host:port");
                 System.out.println("  Default values: REST-port: 8091");
                 System.out.println("                  #nodes   :  100");
                 System.out.println("                  #vbuckets: 4096");
@@ -260,6 +317,9 @@ public class CouchbaseMock implements HttpRequestHandler, Runnable {
 
         try {
            CouchbaseMock mock = new CouchbaseMock(port, nodes, vbuckets);
+           if (harakirimonitor != null) {
+               mock.setupHarakiriMonitor(harakirimonitor);
+           }
            mock.run();
         } catch (Exception e) {
             System.err.print("Fatal error! failed to create socket: ");

@@ -22,11 +22,13 @@ import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
 
+import java.net.ServerSocket;
 import java.net.Socket;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import junit.framework.TestCase;
 
-import org.couchbase.mock.CouchbaseMock;
 import org.couchbase.mock.http.HttpReasonCode;
 import org.couchbase.mock.http.HttpRequestImpl;
 import org.couchbase.mock.util.Base64;
@@ -43,7 +45,6 @@ public class JMembaseTest extends TestCase {
     }
     CouchbaseMock instance;
     Thread thread;
-
 
     @Override
     protected void setUp() throws Exception {
@@ -169,5 +170,42 @@ public class JMembaseTest extends TestCase {
         }
         instance.handleHttpRequest(request);
         assert (request.getReasonCode() == HttpReasonCode.Not_Found);
+    }
+
+    public void testHarakirMonitorInvalidHost() throws IOException {
+        System.out.println("testHarakirMonitorInvalidHost");
+        try {
+            CouchbaseMock.HarakiriMonitor m = new CouchbaseMock.HarakiriMonitor("ItWouldSuckIfYouHadAHostNamedThis", 0, 8091, false);
+            fail("I was not expecting to be able to connect to: \"ItWouldSuckIfYouHadAHostNamedThis:0\"");
+        } catch (Throwable t) {
+        }
+    }
+
+    public void testHarakirMonitorInvalidPort() throws IOException {
+        System.out.println("testHarakirMonitorInvalidPort");
+        try {
+            CouchbaseMock.HarakiriMonitor m = new CouchbaseMock.HarakiriMonitor(null, 0, 8091, false);
+            fail("I was not expecting to be able to connect to port 0");
+        } catch (Throwable t) {
+        }
+    }
+
+    public void testHarakirMonitor() throws IOException {
+        System.out.println("testHarakirMonitor");
+        ServerSocket server = new ServerSocket(0);
+        CouchbaseMock.HarakiriMonitor m;
+        m = new CouchbaseMock.HarakiriMonitor(null, server.getLocalPort(), 8091, false);
+
+        Thread t = new Thread(m);
+        t.start();
+        server.close();
+
+        while (t.isAlive()) {
+            try {
+                t.join();
+            } catch (InterruptedException ex) {
+                Logger.getLogger(JMembaseTest.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
 }

@@ -53,6 +53,10 @@ public class HttpServer {
         server.register(selector, SelectionKey.OP_ACCEPT);
     }
 
+    public int getPort() {
+        return server.socket().getLocalPort();
+    }
+
     public void close() {
         try {
             selector.close();
