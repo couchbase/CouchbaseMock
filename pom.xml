@@ -16,6 +16,10 @@
     </license>
   </licenses>
 
+  <scm>
+    <url>https://github.com/couchbase/CouchbaseMock</url>
+  </scm>
+
   <build>
     <plugins>
       <plugin>
