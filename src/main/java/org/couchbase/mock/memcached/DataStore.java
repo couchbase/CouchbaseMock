@@ -15,6 +15,7 @@
  */
 package org.couchbase.mock.memcached;
 
+import org.couchbase.mock.memcached.protocol.ErrorCode;
 import java.security.AccessControlException;
 import java.util.Map;
 

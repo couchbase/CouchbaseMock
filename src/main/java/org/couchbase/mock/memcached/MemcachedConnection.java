@@ -15,10 +15,13 @@
  */
 package org.couchbase.mock.memcached;
 
+import org.couchbase.mock.memcached.protocol.BinaryResponse;
+import org.couchbase.mock.memcached.protocol.BinaryCommand;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import org.couchbase.mock.memcached.protocol.CommandFactory;
 
 /**
  * @author Trond Norbye
@@ -47,7 +50,7 @@ public class MemcachedConnection {
         }
         if (input.position() == header.length) {
             if (command == null) {
-                command = new BinaryCommand(input);
+                command = CommandFactory.create(input);
             }
 
             if (command.complete()) {
@@ -58,7 +61,7 @@ public class MemcachedConnection {
         }
     }
 
-    public void sendResponse(BinaryResponse response) throws IOException {
+    public void sendResponse(BinaryResponse response) {
         output.add(response.getBuffer());
     }
 

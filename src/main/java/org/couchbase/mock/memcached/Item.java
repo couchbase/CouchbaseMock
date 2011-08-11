@@ -27,7 +27,7 @@ public class Item {
     private byte[] value;
     private long cas;
 
-    Item(String key, int flags, int exptime, byte[] value, long cas) {
+    public Item(String key, int flags, int exptime, byte[] value, long cas) {
         this.key = key;
         this.flags = flags;
         this.exptime = exptime;

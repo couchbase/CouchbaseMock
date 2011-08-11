@@ -19,7 +19,7 @@ import java.io.PrintWriter;
 
 /**
  * Small utility class to make the escaping a little less pain ;-)
- * 
+ *
  * @author Trond Norbye
  */
 public class JSON {

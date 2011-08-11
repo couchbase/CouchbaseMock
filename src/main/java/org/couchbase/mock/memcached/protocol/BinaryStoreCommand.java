@@ -1,5 +1,5 @@
 /**
- *     Copyright 2011 Membase, Inc.
+ *     Copyright 2011 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -13,17 +13,25 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
+package org.couchbase.mock.memcached.protocol;
 
-package org.couchbase.mock.memcached;
-
-import org.couchbase.mock.memcached.protocol.BinaryCommand;
-import java.io.IOException;
+import java.net.ProtocolException;
+import java.nio.ByteBuffer;
+import org.couchbase.mock.memcached.Item;
 
 /**
- *
  * @author Trond Norbye
  */
-public interface BinaryProtocolHandler {
-    public void execute(BinaryCommand cmd, MemcachedConnection client)
-            throws IOException;
+public class BinaryStoreCommand extends BinaryCommand {
+    BinaryStoreCommand(ByteBuffer header) throws ProtocolException {
+        super(header);
+    }
+
+    public Item getItem() {
+        int flags = bodyBuffer.getInt(0);
+        int exptime = bodyBuffer.getInt(4);
+
+        return new Item(getKey(), flags, exptime, getValue(), cas);
+    }
+
 }

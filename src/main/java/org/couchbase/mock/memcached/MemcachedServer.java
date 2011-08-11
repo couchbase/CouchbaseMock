@@ -15,6 +15,10 @@
  */
 package org.couchbase.mock.memcached;
 
+import org.couchbase.mock.memcached.protocol.BinaryResponse;
+import org.couchbase.mock.memcached.protocol.ComCode;
+import org.couchbase.mock.memcached.protocol.ErrorCode;
+import org.couchbase.mock.memcached.protocol.BinaryCommand;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -54,6 +58,7 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
     private Selector selector;
     private final int port;
     private CountDownLatch listenLatch;
+    private CommandExecutor[] executors = new CommandExecutor[0xff];
 
     /**
      * Create a new new memcached server.
@@ -66,6 +71,29 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
      */
     public MemcachedServer(String hostname, int port, DataStore datastore) throws IOException {
         this.datastore = datastore;
+
+        UnknownCommandExecutor unknownHandler = new UnknownCommandExecutor();
+        for (int ii = 0; ii < executors.length; ++ii) {
+            executors[ii] = unknownHandler;
+        }
+
+        executors[ComCode.ADD.cc()] = new StoreCommandExecutor();
+        executors[ComCode.ADDQ.cc()] = executors[ComCode.ADD.cc()];
+        executors[ComCode.SET.cc()] = executors[ComCode.ADD.cc()];
+        executors[ComCode.SETQ.cc()] = executors[ComCode.ADD.cc()];
+        executors[ComCode.REPLACE.cc()] = executors[ComCode.ADD.cc()];
+        executors[ComCode.REPLACEQ.cc()] = executors[ComCode.ADD.cc()];
+        executors[ComCode.DELETE.cc()] = new DeleteCommandExecutor();
+        executors[ComCode.DELETEQ.cc()] = executors[ComCode.DELETE.cc()];
+        executors[ComCode.GET.cc()] = new GetCommandExecutor();
+        executors[ComCode.GETQ.cc()] = executors[ComCode.GET.cc()];
+        executors[ComCode.GETK.cc()] = executors[ComCode.GET.cc()];
+        executors[ComCode.GETKQ.cc()] = executors[ComCode.GET.cc()];
+        executors[ComCode.INCREMENT.cc()] = new ArithmeticCommandExecutor();
+        executors[ComCode.INCREMENTQ.cc()] = executors[ComCode.INCREMENT.cc()];
+        executors[ComCode.DECREMENT.cc()] = executors[ComCode.INCREMENT.cc()];
+        executors[ComCode.DECREMENTQ.cc()] = executors[ComCode.INCREMENT.cc()];
+
         bootTime = System.currentTimeMillis() / 1000;
         server = ServerSocketChannel.open();
         server.configureBlocking(false);
@@ -89,6 +117,10 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         }
         this.port = server.socket().getLocalPort();
         this.listenLatch = new CountDownLatch(0);
+    }
+
+    public DataStore getDatastore() {
+        return datastore;
     }
 
     @Override
@@ -198,100 +230,10 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
     @Override
     public void execute(BinaryCommand cmd, MemcachedConnection client)
             throws IOException {
-        BinaryResponse res = null;
-        ErrorCode err;
-        Item item;
         try {
-            switch (cmd.getComCode()) {
-                case ADD:
-                case ADDQ:
-                    item = cmd.getItem();
-                    err = datastore.add(this, cmd.getVBucketId(), item);
-                    res = new BinaryResponse(cmd, err, item.getCas());
-                    break;
-                case REPLACE:
-                case REPLACEQ:
-                    item = cmd.getItem();
-                    err = datastore.replace(this, cmd.getVBucketId(), item);
-                    res = new BinaryResponse(cmd, err, item.getCas());
-                    break;
-                case SET:
-                case SETQ:
-                    item = cmd.getItem();
-                    err = datastore.set(this, cmd.getVBucketId(), item);
-                    res = new BinaryResponse(cmd, err, item.getCas());
-                    break;
-
-                case DELETE:
-                case DELETEQ:
-                    err = datastore.delete(this, cmd.getVBucketId(),
-                            cmd.getKey(), cmd.getCas());
-                    res = new BinaryResponse(cmd, err);
-                    break;
-
-                case STAT:
-                    res = new BinaryResponse(cmd, ErrorCode.SUCCESS);
-                    break;
-
-                case NOOP:
-                    res = new BinaryResponse(cmd, ErrorCode.SUCCESS);
-                    break;
-
-                case GET:
-                case GETQ:
-                case GETK:
-                case GETKQ:
-                    item = datastore.get(this, cmd.getVBucketId(), cmd.getKey());
-                    if (item == null) {
-                        res = new BinaryResponse(cmd, ErrorCode.KEY_ENOENT);
-                    } else {
-                        res = new BinaryResponse(cmd, item);
-                    }
-                    break;
-
-                case APPEND:
-                case APPENDQ:
-                case PREPEND:
-                case PREPENDQ:
-                case VERSION:
-                case FLUSH:
-                case FLUSHQ:
-                case QUIT:
-                case QUITQ:
-                case INCREMENT:
-                case INCREMENTQ:
-                case DECREMENT:
-                case DECREMENTQ:
-
-                default:
-                    res = new BinaryResponse(cmd, ErrorCode.UNKNOWN_COMMAND);
-            }
+            executors[cmd.getComCode().cc()].execute(cmd, this, client);
         } catch (AccessControlException ex) {
-            res = new BinaryResponse(cmd, ErrorCode.NOT_MY_VBUCKET);
-        }
-
-        if (res != null) {
-            switch (res.getComCode()) {
-                case GETQ:
-                case GETKQ:
-                    if (res.getErrorCode() == ErrorCode.KEY_ENOENT) {
-                        res = null;
-                    }
-                    break;
-                case ADDQ:
-                case SETQ:
-                case REPLACEQ:
-                    if (res.getErrorCode() == ErrorCode.SUCCESS) {
-                        res = null;
-                    }
-                    break;
-                default:
-                    ;
-            }
-
-            if (res != null) {
-                client.sendResponse(res);
-            }
+            client.sendResponse(new BinaryResponse(cmd, ErrorCode.NOT_MY_VBUCKET));
         }
     }
 
