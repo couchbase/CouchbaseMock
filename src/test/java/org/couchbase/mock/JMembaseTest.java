@@ -49,7 +49,7 @@ public class JMembaseTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        instance = new CouchbaseMock(8091, 100, 4096);
+        instance = new CouchbaseMock(null, 8091, 100, 4096);
         thread = new Thread(instance);
         thread.start();
     }

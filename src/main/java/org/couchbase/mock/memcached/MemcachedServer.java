@@ -58,28 +58,34 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
     /**
      * Create a new new memcached server.
      *
+     * @param hostname The hostname to bind to (null == any)
      * @param port The port this server should listen to (0 to choose an
      *             ephemeral port)
      * @param datastore
      * @throws IOException If we fail to create the server socket
      */
-    public MemcachedServer(int port, DataStore datastore) throws IOException {
+    public MemcachedServer(String hostname, int port, DataStore datastore) throws IOException {
         this.datastore = datastore;
         bootTime = System.currentTimeMillis() / 1000;
         server = ServerSocketChannel.open();
         server.configureBlocking(false);
-        server.socket().bind(new InetSocketAddress(port));
-        InetAddress address = server.socket().getInetAddress();
-        if (address.isAnyLocalAddress()) {
-            String name;
-            try {
-                name = InetAddress.getLocalHost().getHostAddress();
-            } catch (UnknownHostException ex) {
-                name = "localhost";
-            }
-            hostname = name;
+        if (hostname != null && !hostname.equals("*")) {
+            server.socket().bind(new InetSocketAddress(hostname, port));
+            this.hostname = hostname;
         } else {
-            hostname = address.getHostName();
+            server.socket().bind(new InetSocketAddress(port));
+            InetAddress address = server.socket().getInetAddress();
+            if (address.isAnyLocalAddress()) {
+                String name;
+                try {
+                    name = InetAddress.getLocalHost().getHostAddress();
+                } catch (UnknownHostException ex) {
+                    name = "localhost";
+                }
+                this.hostname = name;
+            } else {
+                this.hostname = address.getHostName();
+            }
         }
         this.port = server.socket().getLocalPort();
         this.listenLatch = new CountDownLatch(0);
@@ -315,7 +321,7 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
     public static void main(String[] args) {
         try {
             DataStore ds = new DataStore(1024);
-            MemcachedServer server = new MemcachedServer(11211, ds);
+            MemcachedServer server = new MemcachedServer(null, 11211, ds);
             for (int ii = 0; ii < 1024; ++ii) {
                 ds.setOwnership(ii, server);
             }

@@ -104,13 +104,13 @@ public class CouchbaseMock implements HttpRequestHandler, Runnable {
     private final HttpServer httpServer;
     private final BucketType defaultBucketType;
 
-    public CouchbaseMock(int port, int numNodes, int bucketStartPort, int numVBuckets, CouchbaseMock.BucketType type) throws IOException {
+    public CouchbaseMock(String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, CouchbaseMock.BucketType type) throws IOException {
         this.numVBuckets = numVBuckets;
         datastore = new DataStore(numVBuckets);
         this.defaultBucketType = type;
         servers = new MemcachedServer[numNodes];
         for (int ii = 0; ii < servers.length; ii++) {
-            servers[ii] = new MemcachedServer((bucketStartPort == 0 ? 0 : bucketStartPort + ii), datastore);
+            servers[ii] = new MemcachedServer(hostname, (bucketStartPort == 0 ? 0 : bucketStartPort + ii), datastore);
         }
 
         // Let's start distribute the vbuckets across the servers
@@ -123,12 +123,12 @@ public class CouchbaseMock implements HttpRequestHandler, Runnable {
         httpServer = new HttpServer(port);
     }
 
-    public CouchbaseMock(int port, int numNodes, int numVBuckets, CouchbaseMock.BucketType type) throws IOException {
-        this(port, numNodes, 0, numVBuckets, type);
+    public CouchbaseMock(String hostname, int port, int numNodes, int numVBuckets, CouchbaseMock.BucketType type) throws IOException {
+        this(hostname, port, numNodes, 0, numVBuckets, type);
     }
 
-    public CouchbaseMock(int port, int numNodes, int numVBuckets) throws IOException {
-	this(port, numNodes, numVBuckets, BucketType.BASE);
+    public CouchbaseMock(String hostname, int port, int numNodes, int numVBuckets) throws IOException {
+	this(hostname, port, numNodes, numVBuckets, BucketType.BASE);
     }
 
     private byte[] getBucketJSON() {
@@ -284,9 +284,11 @@ public class CouchbaseMock implements HttpRequestHandler, Runnable {
         int nodes = 100;
         int vbuckets = 4096;
         String harakirimonitor = null;
+        String hostname = null;
 
         Getopt getopt = new Getopt();
-        getopt.addOption(new CommandLineOption('p', "--port", true)).
+        getopt.addOption(new CommandLineOption('h', "--host", true)).
+                addOption(new CommandLineOption('p', "--port", true)).
                 addOption(new CommandLineOption('n', "--nodes", true)).
                 addOption(new CommandLineOption('v', "--vbuckets", true)).
                 addOption(new CommandLineOption('\0', "--harakiri-monitor", true)).
@@ -294,7 +296,9 @@ public class CouchbaseMock implements HttpRequestHandler, Runnable {
 
         List<Entry> options = getopt.parse(args);
         for (Entry e : options) {
-            if (e.key.equals("-p") || e.key.equals("--port")) {
+            if (e.key.equals("-h") || e.key.equals("--host")) {
+                hostname = e.value;
+            } else if (e.key.equals("-p") || e.key.equals("--port")) {
                 port = Integer.parseInt(e.value);
             } else if (e.key.equals("-n") || e.key.equals("--nodes")) {
                 nodes = Integer.parseInt(e.value);
@@ -307,7 +311,7 @@ public class CouchbaseMock implements HttpRequestHandler, Runnable {
                 }
                 harakirimonitor = e.value;
             } else if (e.key.equals("-?") || e.key.equals("--help")) {
-                System.out.println("Usage: --port=REST-port --nodes=#nodes --vbuckets=#vbuckets --harakiri-monitor=host:port");
+                System.out.println("Usage: --host=hostname --port=REST-port --nodes=#nodes --vbuckets=#vbuckets --harakiri-monitor=host:port");
                 System.out.println("  Default values: REST-port: 8091");
                 System.out.println("                  #nodes   :  100");
                 System.out.println("                  #vbuckets: 4096");
@@ -316,7 +320,7 @@ public class CouchbaseMock implements HttpRequestHandler, Runnable {
         }
 
         try {
-           CouchbaseMock mock = new CouchbaseMock(port, nodes, vbuckets);
+           CouchbaseMock mock = new CouchbaseMock(hostname, port, nodes, vbuckets);
            if (harakirimonitor != null) {
                mock.setupHarakiriMonitor(harakirimonitor);
            }
