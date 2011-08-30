@@ -20,6 +20,12 @@
     <url>https://github.com/couchbase/CouchbaseMock</url>
   </scm>
 
+  <distributionManagement>
+    <repository>
+      <id>ssh-repository</id>
+      <url>scpexe://cb-web01.couchbase.com/var/www/domains/membase.org/files/htdocs/maven2</url>
+    </repository>
+  </distributionManagement>
   <build>
     <plugins>
       <plugin>
@@ -57,6 +63,13 @@
           </configuration>
       </plugin>
     </plugins>
+    <extensions>
+      <extension>
+        <groupId>org.apache.maven.wagon</groupId>
+         <artifactId>wagon-ssh-external</artifactId>
+         <version>1.0</version>
+      </extension>
+    </extensions>
   </build>
   <dependencies>
     <dependency>
