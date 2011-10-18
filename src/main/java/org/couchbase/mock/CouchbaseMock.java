@@ -103,6 +103,7 @@ public class CouchbaseMock implements HttpRequestHandler, Runnable {
     private final int numVBuckets;
     private final HttpServer httpServer;
     private final BucketType defaultBucketType;
+    private Credentials requiredHttpAuthorization;
 
     public CouchbaseMock(String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, CouchbaseMock.BucketType type) throws IOException {
         this.numVBuckets = numVBuckets;
@@ -121,6 +122,7 @@ public class CouchbaseMock implements HttpRequestHandler, Runnable {
         }
 
         httpServer = new HttpServer(port);
+        requiredHttpAuthorization = new Credentials("Administrator", "password");
     }
 
     public CouchbaseMock(String hostname, int port, int numNodes, int numVBuckets, CouchbaseMock.BucketType type) throws IOException {
@@ -129,6 +131,20 @@ public class CouchbaseMock implements HttpRequestHandler, Runnable {
 
     public CouchbaseMock(String hostname, int port, int numNodes, int numVBuckets) throws IOException {
 	this(hostname, port, numNodes, numVBuckets, BucketType.BASE);
+    }
+
+    public Credentials getRequiredHttpAuthorization() {
+        return requiredHttpAuthorization;
+    }
+
+    /**
+     * Set the required http basic authorization. To have no http auth at all, just provide
+     * <code>null</code>.
+     * @param requiredHttpAuthorization the credentials that need to be passed as Authorization header
+     *  (basic auth) when accessing the REST interface, or <code>null</code> if no http auth is wanted.
+     */
+    public void setRequiredHttpAuthorization(Credentials requiredHttpAuthorization) {
+        this.requiredHttpAuthorization = requiredHttpAuthorization;
     }
 
     private byte[] getBucketJSON() {
@@ -334,6 +350,9 @@ public class CouchbaseMock implements HttpRequestHandler, Runnable {
 
 
     boolean authorize(String auth) {
+        if (requiredHttpAuthorization == null) {
+            return true;
+        }
         if (auth == null) {
             return false;
         }
@@ -355,7 +374,7 @@ public class CouchbaseMock implements HttpRequestHandler, Runnable {
         String user = cred.substring(0, idx);
         String passwd = cred.substring(idx + 1);
 
-        return user.equals("Administrator") && passwd.equals("password");
+        return requiredHttpAuthorization.matches(user, passwd);
     }
 
     @Override
@@ -492,6 +511,60 @@ public class CouchbaseMock implements HttpRequestHandler, Runnable {
 
     public enum BucketType {
         CACHE, BASE
+    }
+
+    public static class Credentials {
+        private String username;
+        private String password;
+        public Credentials(String username, String password) {
+            this.username = username;
+            this.password = password;
+        }
+        boolean matches(String username, String password) {
+            return equals(new Credentials(username, password));
+        }
+        public String getUsername() {
+            return username;
+        }
+        public String getPassword() {
+            return password;
+        }
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((password == null) ? 0 : password.hashCode());
+            result = prime * result + ((username == null) ? 0 : username.hashCode());
+            return result;
+        }
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            Credentials other = (Credentials) obj;
+            if (password == null) {
+                if (other.password != null) {
+                    return false;
+                }
+            } else if (!password.equals(other.password)) {
+                return false;
+            }
+            if (username == null) {
+                if (other.username != null) {
+                    return false;
+                }
+            } else if (!username.equals(other.username)) {
+                return false;
+            }
+            return true;
+        }
     }
 
 }
