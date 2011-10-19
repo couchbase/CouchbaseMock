@@ -179,7 +179,6 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
                     MemcachedConnection client = (MemcachedConnection) key.attachment();
 
                     if (client != null) {
-                        assert key.isAcceptable();
 
                         try {
 
