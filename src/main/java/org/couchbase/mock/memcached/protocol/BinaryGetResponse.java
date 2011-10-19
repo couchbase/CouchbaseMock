@@ -16,6 +16,7 @@
  */
 package org.couchbase.mock.memcached.protocol;
 
+import java.nio.ByteBuffer;
 import org.couchbase.mock.memcached.Item;
 
 /**
@@ -28,10 +29,16 @@ public class BinaryGetResponse extends BinaryResponse {
     }
 
     public BinaryGetResponse(BinaryCommand command, Item item) {
-        super(command, ErrorCode.NOT_SUPPORTED);
+        super(create(command, item));
     }
-//    public BinaryResponse(BinaryCommand command, Item item) {
-//        create(command, item);
-//    }
+
+    private static ByteBuffer create(BinaryCommand command, Item item) {
+        final ByteBuffer message = BinaryResponse.create(command, ErrorCode.SUCCESS,
+                4 /* flags */, 0, item.getValue().length, 0);
+        message.putInt(item.getFlags());
+        message.put(item.getValue());
+        message.rewind();
+        return message;
+    }
 
 }
