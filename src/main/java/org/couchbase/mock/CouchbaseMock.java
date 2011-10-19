@@ -133,6 +133,13 @@ public class CouchbaseMock implements HttpRequestHandler, Runnable {
 	this(hostname, port, numNodes, numVBuckets, BucketType.BASE);
     }
 
+    /**
+     * The port of the http server providing the REST interface.
+     */
+    public int getHttpPort() {
+        return httpServer.getPort();
+    }
+
     public Credentials getRequiredHttpAuthorization() {
         return requiredHttpAuthorization;
     }
