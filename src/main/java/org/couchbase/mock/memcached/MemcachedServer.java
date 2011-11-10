@@ -165,7 +165,11 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
                     selector = Selector.open();
                     server.register(selector, SelectionKey.OP_ACCEPT);
                 }
-                selector.select();
+                if (selector.select() < 1) {
+                    // don't even try call other methods on selector
+                    // because it could be closed already by shutdown()
+                    continue;
+                }
                 Set<SelectionKey> readyKeys = selector.selectedKeys();
                 Iterator<SelectionKey> iterator = readyKeys.iterator();
 
