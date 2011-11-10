@@ -477,7 +477,7 @@ public class CouchbaseMock implements HttpRequestHandler, Runnable {
     public void fixSome(float percentage) {
         for (int ii = 0; ii < servers.length; ii++) {
             if (ii % percentage == 0) {
-                servers[ii].shutdown();
+                servers[ii].startup();
             }
         }
     }
