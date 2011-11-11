@@ -81,7 +81,7 @@ public class JMembaseTest extends TestCase {
         }
 
         instance.handleHttpRequest(request);
-        assert (request.getReasonCode() == HttpReasonCode.OK);
+        assertEquals(HttpReasonCode.OK, request.getReasonCode());
     }
 
     public void testHandleHttpRequestNetwork() throws IOException {
