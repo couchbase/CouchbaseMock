@@ -272,8 +272,7 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
             }
             server.run();
         } catch (IOException e) {
-            System.err.print("Fatal error! failed to create socket: ");
-            System.err.println(e.getLocalizedMessage());
+            Logger.getLogger(MemcachedServer.class.getName()).log(Level.SEVERE, "Fatal error! failed to create socket: ", e);
         }
     }
 }

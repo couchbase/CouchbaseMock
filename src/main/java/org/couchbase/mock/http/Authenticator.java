@@ -1,5 +1,5 @@
 /**
- *     Copyright 2011 Membase, Inc.
+ *     Copyright 2011 Couchbase, Inc.
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -15,18 +15,25 @@
  */
 package org.couchbase.mock.http;
 
+import com.sun.net.httpserver.BasicAuthenticator;
+
 /**
- * The web server will fire this callback whenever a new request
- * arrives on the wire...
  *
- * @author Trond Norbye
+ * @author Sergey Avseyev
  */
-public interface HttpRequestHandler {
-    /**
-     * Handle the given http request. The server may wish to cache
-     * the request and send chuncs at a later time..
-     *
-     * @param request the object representing the request
-     */
-    public void handleHttpRequest(HttpRequest request);
+public class Authenticator extends BasicAuthenticator {
+
+    private String username;
+    private String password;
+
+    public Authenticator(String username, String password) {
+        super("Couchbase Mock");
+        this.username = username;
+        this.password = password;
+    }
+
+    @Override
+    public boolean checkCredentials(String username, String password) {
+        return this.username.equals(username) && this.password.equals(password);
+    }
 }

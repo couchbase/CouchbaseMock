@@ -16,26 +16,25 @@
 package org.couchbase.mock;
 
 import java.io.BufferedReader;
+import java.io.OutputStream;
+import java.net.UnknownHostException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.io.StringReader;
 import java.io.StringWriter;
-
+import java.net.HttpURLConnection;
 import java.net.ServerSocket;
 import java.net.Socket;
-
+import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import junit.framework.TestCase;
 
-import org.couchbase.mock.http.HttpReasonCode;
-import org.couchbase.mock.http.HttpRequestImpl;
 import org.couchbase.mock.util.Base64;
 
 /**
  * Basic testing of JMembase
- * 
+ *
  * @author Trond Norbye
  */
 public class JMembaseTest extends TestCase {
@@ -46,130 +45,127 @@ public class JMembaseTest extends TestCase {
     CouchbaseMock instance;
     Thread thread;
 
+    private boolean serverIsReady(String host, int port) {
+        Socket socket = null;
+        try {
+            socket = new Socket(host, port);
+            return true;
+        } catch (UnknownHostException ex) {
+        } catch (IOException ex) {
+        } finally {
+            if (socket != null) {
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                }
+            }
+        }
+        return false;
+    }
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
         instance = new CouchbaseMock(null, 8091, 100, 4096);
-        thread = new Thread(instance);
-        thread.start();
+        instance.start();
+        do {
+            Thread.sleep(100);
+        } while (!serverIsReady("localhost", 8091));
     }
 
     @Override
     protected void tearDown() throws Exception {
-        thread.interrupt();
-        instance.close();
+        instance.stop();
         super.tearDown();
     }
 
     public void testHandleHttpRequest() throws IOException {
         System.out.println("testHandleHttpRequest");
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
+        URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/default");
+        HttpURLConnection conn = null;
 
-        pw.println("GET /pools/default/buckets/default HTTP/1.1");
-        pw.println("Authorization: Basic " + Base64.encode("Administrator:password"));
-        pw.println();
-        pw.flush();
-
-        BufferedReader r = new BufferedReader(new StringReader(sw.toString()));
-
-        HttpRequestImpl request = null;
         try {
-            request = new HttpRequestImpl(r);
+            conn = (HttpURLConnection) url.openConnection();
+            assertNotNull(conn);
+            conn.addRequestProperty("Authorization", "Basic " + Base64.encode("Administrator:password"));
+            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
         } catch (Exception ex) {
             fail(ex.getMessage());
         }
-
-        instance.handleHttpRequest(request);
-        assertEquals(HttpReasonCode.OK, request.getReasonCode());
     }
 
     public void testHandleHttpRequestNetwork() throws IOException {
-        System.out.println("testHandleHttpRequest");
+        System.out.println("testHandleHttpRequestNetwork");
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
 
-        pw.println("GET /pools/default/buckets/default HTTP/1.1");
-        pw.println("Authorization: Basic " + Base64.encode("Administrator:password"));
-        pw.println();
+        pw.print("GET /pools/default/buckets/default HTTP/1.1\r\n");
+        pw.print("Authorization: Basic " + Base64.encode("Administrator:password") + "\r\n");
+        pw.print("\r\n");
         pw.flush();
 
-        BufferedReader r = new BufferedReader(new StringReader(sw.toString()));
-
         Socket s = new Socket("localhost", 8091);
-        s.getOutputStream().write(sw.toString().getBytes());
-        s.getOutputStream().flush();
+        OutputStream out = s.getOutputStream();
+        out.write(sw.toString().getBytes());
+        out.flush();
 
         BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()));
-        while (in.readLine() != null) {
-            /* Do nothing */
+        int content_length = 0;
+        String header;
+        while ((header = in.readLine()).length() > 0) {
+            String[] tokens = header.split(": ");
+            if (tokens[0].equals("Content-Length")) {
+                content_length = Integer.parseInt(tokens[1]);
+            }
         }
+        char[] body = new char[content_length];
+        assertEquals(content_length, in.read(body));
         s.close();
     }
 
     public void brokenTestHandleHttpRequestMissingAuth() throws IOException {
         System.out.println("testHandleHttpRequestMissingAuth");
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
+        URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/default");
+        HttpURLConnection conn = null;
 
-        pw.println("GET /pools/default/buckets/default HTTP/1.1");
-        pw.println();
-        pw.flush();
-
-        BufferedReader r = new BufferedReader(new StringReader(sw.toString()));
-
-        HttpRequestImpl request = null;
         try {
-            request = new HttpRequestImpl(r);
+            conn = (HttpURLConnection) url.openConnection();
+            assertNotNull(conn);
+            assertEquals(HttpURLConnection.HTTP_UNAUTHORIZED, conn.getResponseCode());
         } catch (Exception ex) {
             fail(ex.getMessage());
         }
-        instance.handleHttpRequest(request);
-        assert (request.getReasonCode() == HttpReasonCode.Unauthorized);
     }
 
     public void testHandleHttpRequestIncorrectCred() throws IOException {
-        System.out.println("testHandleHttpRequestUnkownFile");
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
+        System.out.println("testHandleHttpRequestIncorrectCred");
+        URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/default");
+        HttpURLConnection conn = null;
 
-        pw.println("GET /pools/default/buckets/default HTTP/1.1");
-        pw.println("Authorization: Basic " + Base64.encode("Bubba:TheHut"));
-        pw.println();
-        pw.flush();
-
-        BufferedReader r = new BufferedReader(new StringReader(sw.toString()));
-
-        HttpRequestImpl request = null;
         try {
-            request = new HttpRequestImpl(r);
+            conn = (HttpURLConnection) url.openConnection();
+            assertNotNull(conn);
+            conn.addRequestProperty("Authorization", "Basic " + Base64.encode("Bubba:TheHut"));
+            assertEquals(HttpURLConnection.HTTP_UNAUTHORIZED, conn.getResponseCode());
         } catch (Exception ex) {
             fail(ex.getMessage());
         }
-        instance.handleHttpRequest(request);
-        assert (request.getReasonCode() == HttpReasonCode.Unauthorized);
+
     }
 
     public void testHandleHttpRequestUnkownFile() throws IOException {
         System.out.println("testHandleHttpRequestUnkownFile");
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
+        URL url = new URL("http://localhost:" + instance.getHttpPort() + "/");
+        HttpURLConnection conn = null;
 
-        pw.println("GET / HTTP/1.1");
-        pw.println("Authorization: Basic " + Base64.encode("Administrator:password"));
-        pw.println();
-        pw.flush();
-
-        BufferedReader r = new BufferedReader(new StringReader(sw.toString()));
-
-        HttpRequestImpl request = null;
         try {
-            request = new HttpRequestImpl(r);
+            conn = (HttpURLConnection) url.openConnection();
+            assertNotNull(conn);
+            conn.addRequestProperty("Authorization", "Basic " + Base64.encode("Administrator:password"));
+            assertEquals(HttpURLConnection.HTTP_NOT_FOUND, conn.getResponseCode());
         } catch (Exception ex) {
             fail(ex.getMessage());
         }
-        instance.handleHttpRequest(request);
-        assert (request.getReasonCode() == HttpReasonCode.Not_Found);
     }
 
     public void testHarakirMonitorInvalidHost() throws IOException {

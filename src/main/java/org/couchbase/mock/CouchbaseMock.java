@@ -15,27 +15,21 @@
  */
 package org.couchbase.mock;
 
+import com.sun.net.httpserver.HttpServer;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.List;
 import java.util.logging.Logger;
-
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
-import org.couchbase.mock.http.HttpReasonCode;
-import org.couchbase.mock.http.HttpRequest;
-import org.couchbase.mock.http.HttpRequestHandler;
-import org.couchbase.mock.http.HttpRequestImpl;
-import org.couchbase.mock.http.HttpServer;
-import org.couchbase.mock.util.Base64;
+import org.couchbase.mock.http.Authenticator;
+import org.couchbase.mock.http.PoolsHandler;
 import org.couchbase.mock.util.Getopt;
 import org.couchbase.mock.util.Getopt.CommandLineOption;
 import org.couchbase.mock.util.Getopt.Entry;
@@ -48,14 +42,21 @@ import org.couchbase.mock.util.Getopt.Entry;
  *
  * @author Trond Norbye
  */
-public class CouchbaseMock implements HttpRequestHandler, Runnable {
+public class CouchbaseMock {
+
+    private final Map<String, Bucket> buckets;
+    private final String poolName = "default";
+    private int port = 8091;
+    private HttpServer httpServer;
+    private Authenticator authenticator;
+    private ArrayList<Thread> nodeThreads;
 
     private void setupHarakiriMonitor(String host) {
         int idx = host.indexOf(':');
         String h = host.substring(0, idx);
         int p = Integer.parseInt(host.substring(idx + 1));
         try {
-            HarakiriMonitor m = new HarakiriMonitor(h, p, httpServer.getPort(), true);
+            HarakiriMonitor m = new HarakiriMonitor(h, p, port, true);
             Thread t = new Thread(m, "HarakiriMonitor");
             t.start();
         } catch (Throwable t) {
@@ -64,7 +65,22 @@ public class CouchbaseMock implements HttpRequestHandler, Runnable {
         }
     }
 
-    protected static class HarakiriMonitor implements Runnable {
+    /**
+     * @return the poolName
+     */
+    public String getPoolName() {
+        return poolName;
+    }
+
+    /**
+     * @return the buckets
+     */
+    public Map<String, Bucket> getBuckets() {
+        return buckets;
+    }
+
+    public static class HarakiriMonitor implements Runnable {
+
         private final boolean terminate;
         private final InputStream stream;
 
@@ -97,11 +113,6 @@ public class CouchbaseMock implements HttpRequestHandler, Runnable {
         }
     }
 
-    private final HttpServer httpServer;
-    private final Map<String, Bucket> buckets;
-    private Credentials requiredHttpAuthorization;
-    private static final String poolName = "default";
-
     public CouchbaseMock(String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, CouchbaseMock.BucketType type) throws IOException {
         Bucket bucket = null;
         switch (type) {
@@ -118,8 +129,8 @@ public class CouchbaseMock implements HttpRequestHandler, Runnable {
         buckets = new HashMap<String, Bucket>();
         buckets.put("default", bucket);
 
-        httpServer = new HttpServer(port);
-        requiredHttpAuthorization = new Credentials("Administrator", "password");
+        this.port = port;
+        authenticator = new Authenticator("Administrator", "password");
     }
 
     public CouchbaseMock(String hostname, int port, int numNodes, int numVBuckets, CouchbaseMock.BucketType type) throws IOException {
@@ -134,11 +145,11 @@ public class CouchbaseMock implements HttpRequestHandler, Runnable {
      * The port of the http server providing the REST interface.
      */
     public int getHttpPort() {
-        return httpServer.getPort();
+        return port;
     }
 
-    public Credentials getRequiredHttpAuthorization() {
-        return requiredHttpAuthorization;
+    public Authenticator getAuthenticator() {
+        return authenticator;
     }
 
     /**
@@ -147,22 +158,9 @@ public class CouchbaseMock implements HttpRequestHandler, Runnable {
      * @param requiredHttpAuthorization the credentials that need to be passed as Authorization header
      *  (basic auth) when accessing the REST interface, or <code>null</code> if no http auth is wanted.
      */
-    public void setRequiredHttpAuthorization(Credentials requiredHttpAuthorization) {
-        this.requiredHttpAuthorization = requiredHttpAuthorization;
+    public void setAuthenticator(Authenticator authenticator) {
+        this.authenticator = authenticator;
     }
-
-    private byte[] getPoolsJSON() {
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        pw.print("{\"pools\":[{\"name\":\"" + poolName + "\",\"uri\":\"/pools/" + poolName +"\","
-                + "\"streamingUri\":\"/poolsStreaming/"+ poolName +"\"}],\"isAdminCreds\":true,"
-                + "\"uuid\":\"f0918647-73a6-4001-15e8-264500000190\",\"implementationVersion\":\"1.7.0\","
-                + "\"componentsVersion\":{\"os_mon\":\"2.2.5\",\"mnesia\":\"4.4.17\",\"kernel\":\"2.14.3\","
-                + "\"sasl\":\"2.1.9.3\",\"ns_server\":\"1.7.0\",\"stdlib\":\"1.17.3\"}}");
-        pw.flush();
-        return sw.toString().getBytes();
-    }
-
 
     /**
      * Program entry point
@@ -209,156 +207,23 @@ public class CouchbaseMock implements HttpRequestHandler, Runnable {
         }
 
         try {
-           CouchbaseMock mock = new CouchbaseMock(hostname, port, nodes, vbuckets);
-           if (harakirimonitor != null) {
-               mock.setupHarakiriMonitor(harakirimonitor);
-           }
-           mock.run();
+            if (port == 0) {
+                ServerSocket server = new ServerSocket(0);
+                port = server.getLocalPort();
+                server.close();
+            }
+            CouchbaseMock mock = new CouchbaseMock(hostname, port, nodes, vbuckets);
+            if (harakirimonitor != null) {
+                mock.setupHarakiriMonitor(harakirimonitor);
+            }
+            mock.start();
         } catch (Exception e) {
-            System.err.print("Fatal error! failed to create socket: ");
-            System.err.println(e.getLocalizedMessage());
+            Logger.getLogger(CouchbaseMock.class.getName()).log(Level.SEVERE, "Fatal error! failed to create socket: ", e);
         }
-    }
-
-
-
-    boolean authorize(String auth) {
-        if (requiredHttpAuthorization == null) {
-            return true;
-        }
-        if (auth == null) {
-            return false;
-        }
-
-        String tokens[] = auth.split(" ");
-        if (tokens.length < 3) {
-            return false;
-        }
-
-        if (!tokens[1].equalsIgnoreCase("basic")) {
-            return false;
-        }
-
-        String cred = Base64.decode(tokens[2]);
-        int idx = cred.indexOf(":");
-        if (idx == -1) {
-            return false;
-        }
-        String user = cred.substring(0, idx);
-        String passwd = cred.substring(idx + 1);
-
-        return requiredHttpAuthorization.matches(user, passwd);
-    }
-
-    private boolean handlePoolsRequest(HttpRequest request, String[] tokens) {
-        if (tokens.length == 2) {
-            // GET /pools
-            try {
-                // Success
-                request.setReasonCode(HttpReasonCode.OK);
-                OutputStream os = request.getOutputStream();
-                os.write(getPoolsJSON());
-            } catch (IOException ex) {
-                Logger.getLogger(CouchbaseMock.class.getName()).log(Level.SEVERE, null, ex);
-                request.resetResponse();
-                request.setReasonCode(HttpReasonCode.Internal_Server_Error);
-            }
-            return true;
-        } else {
-            if (!poolName.equals(tokens[2])) {
-                return false; // unknown pool
-            }
-
-            if (tokens.length == 3) {
-                // GET /pools/:poolName
-                try {
-                    StringWriter sw = new StringWriter();
-                    PrintWriter pw = new PrintWriter(sw);
-                    pw.print("{\"buckets\":{\"uri\":\"/pools/" + poolName + "/buckets/default\"}}");
-                    pw.flush();
-                    OutputStream os = request.getOutputStream();
-                    os.write(sw.toString().getBytes());
-                } catch (IOException ex) {
-                    Logger.getLogger(CouchbaseMock.class.getName()).log(Level.SEVERE, null, ex);
-                    request.resetResponse();
-                    request.setReasonCode(HttpReasonCode.Internal_Server_Error);
-                }
-                return true;
-            }
-
-            Bucket bucket;
-            if ("buckets".equals(tokens[3])) {
-                try {
-                    OutputStream os = request.getOutputStream();
-                    if (tokens.length == 5 && (bucket = buckets.get(tokens[4])) != null) {
-                        // GET /pools/:poolName/buckets/:bucketName
-                        request.setReasonCode(HttpReasonCode.OK);
-                        os.write(bucket.getJSON().getBytes()); //todo should be refactored (Vitaly R.)
-                    } else {
-                        // GET /pools/:poolName/buckets
-                        os.write(("[").getBytes());
-                        for (Bucket bb : buckets.values()) {
-                            os.write(bb.getJSON().getBytes());
-                        }
-                        os.write(("]" ).getBytes());
-                    }
-                }
-                catch (IOException ex) {
-                    Logger.getLogger(CouchbaseMock.class.getName()).log(Level.SEVERE, null, ex);
-                    request.resetResponse();
-                    request.setReasonCode(HttpReasonCode.Internal_Server_Error);
-                }
-                return true;
-            } else if ("bucketsStreaming".equals(tokens[3]) && tokens.length == 5 && (bucket = buckets.get(tokens[4])) != null) {
-                // GET /pools/:poolName/bucketsStreaming/:bucketName
-                try {
-                    // Success
-                    request.setReasonCode(HttpReasonCode.OK);
-                    request.setChunkedResponse(true);
-                    OutputStream os = request.getOutputStream();
-                    os.write(bucket.getJSON().getBytes());
-
-                    //this need to be to sent END marker to client
-                    HttpRequestImpl req = (HttpRequestImpl) request;
-                    req.encodeResponse();
-                    os = request.getOutputStream();
-                    os.write("\n\n\n\n".getBytes());
-                }
-                catch (IOException ex) {
-                    Logger.getLogger(CouchbaseMock.class.getName()).log(Level.SEVERE, null, ex);
-                    request.resetResponse();
-                    request.setReasonCode(HttpReasonCode.Internal_Server_Error);
-                }
-                return true;
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public void handleHttpRequest(HttpRequest request) {
-        if (!authorize(request.getHeader("Authorization"))) {
-            request.setReasonCode(HttpReasonCode.Unauthorized);
-            return;
-        }
-
-        String requestedPath = request.getRequestedUri().getPath();
-
-        String[] tokens = requestedPath.split("/");
-
-        if (tokens.length > 1 && tokens[0].length() == 0) {
-            if ("pools".equals(tokens[1])) {
-                if (handlePoolsRequest(request, tokens)) {
-                    return ;
-                }
-            }
-        }
-
-        request.setReasonCode(HttpReasonCode.Not_Found);
     }
 
     public void failSome(String name, float percentage) {
-        Bucket bucket = buckets.get(name);
+        Bucket bucket = getBuckets().get(name);
         if (bucket != null) {
             bucket.failSome(percentage);
         }
@@ -366,30 +231,19 @@ public class CouchbaseMock implements HttpRequestHandler, Runnable {
     }
 
     public void fixSome(String name, float percentage) {
-        Bucket bucket = buckets.get(name);
+        Bucket bucket = getBuckets().get(name);
         if (bucket != null) {
             bucket.fixSome(percentage);
         }
     }
 
-    public void close() {
-        httpServer.close();
-    }
-
-    @Override
-    public void run() {
-        List<Thread> threads = new ArrayList<Thread>();
-        for (String s : buckets.keySet()) {
-            Bucket bucket = buckets.get(s);
-            bucket.start(threads);
+    public void stop() {
+        if (httpServer != null) {
+            httpServer.stop(0);
+            httpServer = null;
         }
 
-        httpServer.serve(this);
-
-        // clear my interrupted status..
-        Thread.interrupted();
-
-        for (Thread t : threads) {
+        for (Thread t : nodeThreads) {
             t.interrupt();
             do {
                 try {
@@ -403,62 +257,28 @@ public class CouchbaseMock implements HttpRequestHandler, Runnable {
         }
     }
 
+    /*
+     * Start cluster in background
+     */
+    public void start() {
+        nodeThreads = new ArrayList<Thread>();
+        for (String s : getBuckets().keySet()) {
+            Bucket bucket = getBuckets().get(s);
+            bucket.start(nodeThreads);
+        }
+
+        try {
+            httpServer = HttpServer.create(new InetSocketAddress(port), 10);
+            httpServer.createContext("/pools", new PoolsHandler(this)).setAuthenticator(authenticator);
+            httpServer.start();
+        } catch (IOException ex) {
+            Logger.getLogger(CouchbaseMock.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }
+
     public enum BucketType {
+
         CACHE, BASE
     }
-
-    public static class Credentials {
-        private String username;
-        private String password;
-        public Credentials(String username, String password) {
-            this.username = username;
-            this.password = password;
-        }
-        boolean matches(String username, String password) {
-            return equals(new Credentials(username, password));
-        }
-        public String getUsername() {
-            return username;
-        }
-        public String getPassword() {
-            return password;
-        }
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + ((password == null) ? 0 : password.hashCode());
-            result = prime * result + ((username == null) ? 0 : username.hashCode());
-            return result;
-        }
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            Credentials other = (Credentials) obj;
-            if (password == null) {
-                if (other.password != null) {
-                    return false;
-                }
-            } else if (!password.equals(other.password)) {
-                return false;
-            }
-            if (username == null) {
-                if (other.username != null) {
-                    return false;
-                }
-            } else if (!username.equals(other.username)) {
-                return false;
-            }
-            return true;
-        }
-    }
-
 }

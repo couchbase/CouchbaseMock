@@ -59,7 +59,6 @@ public class StoreCommandExecutor implements CommandExecutor {
         if (err == ErrorCode.SUCCESS && (cc == ComCode.ADDQ || cc == ComCode.SETQ || cc == ComCode.REPLACEQ)) {
             return;
         }
-
         client.sendResponse(new BinaryStoreResponse(command, err, item.getCas()));
     }
 }
