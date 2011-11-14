@@ -46,7 +46,7 @@ public class PoolsHandler implements HttpHandler {
         OutputStream body = exchange.getResponseBody();
         byte[] payload;
 
-        if (path.matches("^/pools$")) {
+        if (path.matches("^/pools/?$")) {
             // GET /pools
             payload = getPoolsJSON().getBytes();
             exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, payload.length);
@@ -81,13 +81,16 @@ public class PoolsHandler implements HttpHandler {
             String[] tokens = path.split("/");
             Bucket bucket = mock.getBuckets().get(tokens[tokens.length - 1]);
             exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, 0);
-            body.write(bucket.getJSON().getBytes());
-            body.write("\n\n\n\n".getBytes());
-            body.flush();
+            do {
+                body.write(bucket.getJSON().getBytes());
+                body.write("\n\n\n\n".getBytes());
+                body.flush();
+            } while (mock.waitForUpdate());
         } else {
             exchange.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, -1);
         }
         body.close();
+
     }
 
     protected String getPoolsJSON() {

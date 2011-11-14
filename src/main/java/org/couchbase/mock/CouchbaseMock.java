@@ -16,18 +16,23 @@
 package org.couchbase.mock;
 
 import com.sun.net.httpserver.HttpServer;
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.List;
 import java.util.logging.Logger;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import org.couchbase.mock.http.Authenticator;
 import org.couchbase.mock.http.PoolsHandler;
 import org.couchbase.mock.util.Getopt;
@@ -50,13 +55,15 @@ public class CouchbaseMock {
     private HttpServer httpServer;
     private Authenticator authenticator;
     private ArrayList<Thread> nodeThreads;
+    private final Lock configLock = new ReentrantLock();
+    private Condition configInSync = configLock.newCondition();
 
     private void setupHarakiriMonitor(String host) {
         int idx = host.indexOf(':');
         String h = host.substring(0, idx);
         int p = Integer.parseInt(host.substring(idx + 1));
         try {
-            HarakiriMonitor m = new HarakiriMonitor(h, p, port, true);
+            HarakiriMonitor m = new HarakiriMonitor(h, p, port, true, this);
             Thread t = new Thread(m, "HarakiriMonitor");
             t.start();
         } catch (Throwable t) {
@@ -79,15 +86,32 @@ public class CouchbaseMock {
         return buckets;
     }
 
+    private void failover(String bucketName, int idx) {
+        Bucket bucket = buckets.get(bucketName);
+        if (bucket != null) {
+            bucket.failover(idx);
+        }
+    }
+
+    private void respawn(String bucketName, int idx) {
+        Bucket bucket = buckets.get(bucketName);
+        if (bucket != null) {
+            bucket.respawn(idx);
+        }
+    }
+
     public static class HarakiriMonitor implements Runnable {
 
         private final boolean terminate;
-        private final InputStream stream;
+        private final BufferedReader stream;
+        private final CouchbaseMock mock;
 
-        public HarakiriMonitor(String host, int port, int httpPort, boolean terminate) throws IOException {
+        public HarakiriMonitor(String host, int port, int httpPort, boolean terminate, CouchbaseMock mock) throws IOException {
+            this.mock = mock;
             this.terminate = terminate;
             Socket s = new Socket(host, port);
-            stream = s.getInputStream();
+            stream = new BufferedReader(new InputStreamReader(s.getInputStream()));
+
             String http = "" + httpPort + '\0';
             s.getOutputStream().write(http.getBytes());
             s.getOutputStream().flush();
@@ -96,10 +120,38 @@ public class CouchbaseMock {
         @Override
         public void run() {
             boolean closed = false;
+            String[] tokens;
+            String command, bucket, packet;
+            int idx;
             while (!closed) {
                 try {
-                    if (stream.read() == -1) {
+                    packet = stream.readLine();
+                    if (packet == null) {
                         closed = true;
+                    } else if (mock != null) {
+                        /* format (bucket name is optional):
+                         *
+                         *     failover,123,default
+                         *     respawn,123,default
+                         */
+                        tokens = packet.split(",");
+                        if (tokens.length >= 2) {
+                            try {
+                                command = tokens[0];
+                                idx = Integer.parseInt(tokens[1].trim());
+                                if (tokens.length == 3) {
+                                    bucket = tokens[2];
+                                } else {
+                                    bucket = "default";
+                                }
+                                if ("failover".equals(command)) {
+                                    mock.failover(bucket, idx);
+                                } else if ("respawn".equals(command)) {
+                                    mock.respawn(bucket, idx);
+                                }
+                            } catch (NumberFormatException ex) {
+                            }
+                        }
                     }
                 } catch (IOException e) {
                     // not exactly true, but who cares..
@@ -117,10 +169,10 @@ public class CouchbaseMock {
         Bucket bucket = null;
         switch (type) {
             case CACHE:
-                bucket = new CacheBucket("default", hostname, port, numNodes, bucketStartPort, numVBuckets);
+                bucket = new CacheBucket("default", hostname, port, numNodes, bucketStartPort, numVBuckets, this);
                 break;
             case BASE:
-                bucket = new MembaseBucket("default", hostname, port, numNodes, bucketStartPort, numVBuckets);
+                bucket = new MembaseBucket("default", hostname, port, numNodes, bucketStartPort, numVBuckets, this);
                 break;
             default:
                 throw new FileNotFoundException("I don't know about this type...");
@@ -222,6 +274,27 @@ public class CouchbaseMock {
         }
     }
 
+    public void configUpdated() {
+        configLock.lock();
+        try {
+            configInSync.signalAll();
+        } finally {
+            configLock.unlock();
+        }
+    }
+
+    public boolean waitForUpdate() {
+        configLock.lock();
+        try {
+            configInSync.await();
+        } catch (InterruptedException ex) {
+            return false;
+        } finally {
+            configLock.unlock();
+        }
+        return true;
+    }
+
     public void failSome(String name, float percentage) {
         Bucket bucket = getBuckets().get(name);
         if (bucket != null) {
@@ -270,6 +343,7 @@ public class CouchbaseMock {
         try {
             httpServer = HttpServer.create(new InetSocketAddress(port), 10);
             httpServer.createContext("/pools", new PoolsHandler(this)).setAuthenticator(authenticator);
+            httpServer.setExecutor(Executors.newCachedThreadPool());
             httpServer.start();
         } catch (IOException ex) {
             Logger.getLogger(CouchbaseMock.class.getName()).log(Level.SEVERE, null, ex);

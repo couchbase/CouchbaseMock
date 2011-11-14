@@ -21,16 +21,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import net.sf.json.JSONObject;
+import org.couchbase.mock.memcached.MemcachedServer;
 
 /**
  * Representation of a CacheBucket (aka memcached)
  *
  * @author Trond Norbye
  */
-public class CacheBucket extends Bucket
-{
+public class CacheBucket extends Bucket {
+
+    public CacheBucket(String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, CouchbaseMock cluster) throws IOException {
+        super(name, hostname, port, numNodes, bucketStartPort, numVBuckets, cluster);
+    }
+
     public CacheBucket(String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets) throws IOException {
-        super(name, hostname, port, numNodes, bucketStartPort, numVBuckets);
+        super(name, hostname, port, numNodes, bucketStartPort, numVBuckets, null);
     }
 
     @Override
@@ -50,8 +55,8 @@ public class CacheBucket extends Bucket
         map.put("uri", "/pools/" + poolName + "/buckets/" + name);
 
         List<String> nodes = new ArrayList<String>();
-        for (int ii = 0; ii < servers.length; ++ii) {
-            nodes.add(servers[ii].toString());
+        for (MemcachedServer server : activeServers()) {
+            nodes.add(server.toString());
         }
         map.put("nodes", nodes);
 

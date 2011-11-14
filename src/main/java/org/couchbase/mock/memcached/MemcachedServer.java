@@ -42,6 +42,7 @@ import java.util.Map;
 import java.util.Set;
 
 import net.sf.json.JSONObject;
+import org.couchbase.mock.CouchbaseMock;
 
 /**
  * This is a small implementation of a Memcached server. It listens
@@ -59,6 +60,8 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
     private final int port;
     private CountDownLatch listenLatch;
     private CommandExecutor[] executors = new CommandExecutor[0xff];
+    private final CouchbaseMock cluster;
+    private boolean active = true;
 
     /**
      * Create a new new memcached server.
@@ -67,9 +70,11 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
      * @param port The port this server should listen to (0 to choose an
      *             ephemeral port)
      * @param datastore
+     * @param cluster
      * @throws IOException If we fail to create the server socket
      */
-    public MemcachedServer(String hostname, int port, DataStore datastore) throws IOException {
+    public MemcachedServer(String hostname, int port, DataStore datastore, CouchbaseMock cluster) throws IOException {
+        this.cluster = cluster;
         this.datastore = datastore;
 
         UnknownCommandExecutor unknownHandler = new UnknownCommandExecutor();
@@ -244,6 +249,10 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         try {
             this.listenLatch = new CountDownLatch(1);
             this.selector.close();
+            this.active = false;
+            if (cluster != null) {
+                cluster.configUpdated();
+            }
         } catch (IOException ex) {
             Logger.getLogger(MemcachedServer.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -251,6 +260,10 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
 
     public void startup() {
         this.listenLatch.countDown();
+        this.active = true;
+        if (cluster != null) {
+            cluster.configUpdated();
+        }
     }
 
     /**
@@ -262,7 +275,7 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
     public static void main(String[] args) {
         try {
             DataStore ds = new DataStore(1024);
-            MemcachedServer server = new MemcachedServer(null, 11211, ds);
+            MemcachedServer server = new MemcachedServer(null, 11211, ds, null);
             for (int ii = 0; ii < 1024; ++ii) {
                 ds.setOwnership(ii, server);
             }
@@ -270,5 +283,12 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         } catch (IOException e) {
             Logger.getLogger(MemcachedServer.class.getName()).log(Level.SEVERE, "Fatal error! failed to create socket: ", e);
         }
+    }
+
+    /**
+     * @return the active
+     */
+    public boolean isActive() {
+        return active;
     }
 }

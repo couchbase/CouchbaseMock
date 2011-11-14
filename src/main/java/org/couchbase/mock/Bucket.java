@@ -16,6 +16,7 @@
 package org.couchbase.mock;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import org.couchbase.mock.memcached.DataStore;
@@ -26,31 +27,28 @@ import org.couchbase.mock.memcached.MemcachedServer;
  * @author trond
  */
 public abstract class Bucket {
+
     protected final DataStore datastore;
     protected final MemcachedServer servers[];
     protected final int numVBuckets;
     protected final String poolName = "default";
     protected final String name;
+    protected final CouchbaseMock cluster;
 
     public String getBucketUri() {
         return "/pools/" + poolName + "/bucketsStreaming/" + name;
     }
 
-    public Bucket(String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets) throws IOException {
+    public Bucket(String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, CouchbaseMock cluster) throws IOException {
+        this.cluster = cluster;
         this.name = name;
         this.numVBuckets = numVBuckets;
         datastore = new DataStore(numVBuckets);
         servers = new MemcachedServer[numNodes];
         for (int ii = 0; ii < servers.length; ii++) {
-            servers[ii] = new MemcachedServer(hostname, (bucketStartPort == 0 ? 0 : bucketStartPort + ii), datastore);
+            servers[ii] = new MemcachedServer(hostname, (bucketStartPort == 0 ? 0 : bucketStartPort + ii), datastore, cluster);
         }
-
-        // Let's start distribute the vbuckets across the servers
-        Random random = new Random();
-        for (int ii = 0; ii < numVBuckets; ++ii) {
-            int idx = random.nextInt(servers.length);
-            datastore.setOwnership(ii, servers[idx]);
-        }
+        rebalance();
     }
 
     public abstract String getJSON();
@@ -64,12 +62,25 @@ public abstract class Bucket {
     }
 
     void fixSome(float percentage) {
-
         for (int ii = 0; ii < servers.length; ii++) {
             if (ii % percentage == 0) {
                 servers[ii].startup();
             }
         }
+    }
+
+    public void failover(int index) {
+        if (index >= 0 && index < servers.length) {
+            servers[index].shutdown();
+        }
+        rebalance();
+    }
+
+    public void respawn(int index) {
+        if (index >= 0 && index < servers.length) {
+            servers[index].startup();
+        }
+        rebalance();
     }
 
     void start(List<Thread> threads) {
@@ -78,6 +89,26 @@ public abstract class Bucket {
             t.setDaemon(true);
             t.start();
             threads.add(t);
+        }
+    }
+
+    public List<MemcachedServer> activeServers() {
+        ArrayList<MemcachedServer> active = new ArrayList<MemcachedServer>(servers.length);
+        for (int ii = 0; ii < servers.length; ii++) {
+            if (servers[ii].isActive()) {
+                active.add(servers[ii]);
+            }
+        }
+        return active;
+    }
+
+    public final void rebalance() {
+        // Let's start distribute the vbuckets across the servers
+        Random random = new Random();
+        List<MemcachedServer> nodes = activeServers();
+        for (int ii = 0; ii < numVBuckets; ++ii) {
+            int idx = random.nextInt(nodes.size());
+            datastore.setOwnership(ii, nodes.get(idx));
         }
     }
 

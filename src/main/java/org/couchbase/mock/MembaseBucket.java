@@ -31,13 +31,18 @@ import org.couchbase.mock.memcached.MemcachedServer;
  */
 public class MembaseBucket extends Bucket {
 
+    public MembaseBucket(String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, CouchbaseMock cluster) throws IOException {
+        super(name, hostname, port, numNodes, bucketStartPort, numVBuckets, cluster);
+    }
+
     public MembaseBucket(String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets) throws IOException {
-        super(name, hostname, port, numNodes, bucketStartPort, numVBuckets);
+        super(name, hostname, port, numNodes, bucketStartPort, numVBuckets, null);
     }
 
     @Override
     public String getJSON() {
         Map<String, Object> map = new HashMap<String, Object>();
+        List<MemcachedServer> active = activeServers();
         map.put("name", name);
         map.put("bucketType", "membase");
         map.put("authType", "sasl");
@@ -47,8 +52,8 @@ public class MembaseBucket extends Bucket {
         map.put("streamingUri", "/pools/" + poolName + "/bucketsStreaming/" + name);
         map.put("flushCacheUri", "/pools/" + poolName + "/buckets/" + name + "/controller/doFlush");
         List<String> nodes = new ArrayList<String>();
-        for (int ii = 0; ii < servers.length; ++ii) {
-            nodes.add(servers[ii].toString());
+        for (MemcachedServer server : active) {
+            nodes.add(server.toString());
         }
         map.put("nodes", nodes);
 
@@ -64,20 +69,15 @@ public class MembaseBucket extends Bucket {
         vbm.put("hashAlgorithm", "CRC");
         vbm.put("numReplicas", 0);
         List<String> serverList = new ArrayList<String>();
-        for (int ii = 0; ii < servers.length; ++ii) {
-            serverList.add(servers[ii].getSocketName());
+        for (MemcachedServer server : active) {
+            serverList.add(server.getSocketName());
         }
         vbm.put("serverList", serverList);
         ArrayList<ArrayList<Integer>> m = new ArrayList<ArrayList<Integer>>();
         for (short ii = 0; ii < numVBuckets; ++ii) {
             MemcachedServer resp = datastore.getVBucket(ii).getOwner();
             ArrayList<Integer> line = new ArrayList<Integer>();
-            for (int jj = 0; jj < servers.length; ++jj) {
-                if (resp == servers[jj]) {
-                    line.add(jj);
-                    break;
-                }
-            }
+            line.add(active.indexOf(resp));
             m.add(line);
         }
         vbm.put("vBucketMap", m);

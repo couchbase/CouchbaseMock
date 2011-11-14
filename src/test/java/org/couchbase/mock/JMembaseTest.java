@@ -16,6 +16,7 @@
 package org.couchbase.mock;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.UnknownHostException;
 import java.io.IOException;
@@ -172,7 +173,7 @@ public class JMembaseTest extends TestCase {
     public void testHarakirMonitorInvalidHost() throws IOException {
         System.out.println("testHarakirMonitorInvalidHost");
         try {
-            CouchbaseMock.HarakiriMonitor m = new CouchbaseMock.HarakiriMonitor("ItWouldSuckIfYouHadAHostNamedThis", 0, port, false);
+            CouchbaseMock.HarakiriMonitor m = new CouchbaseMock.HarakiriMonitor("ItWouldSuckIfYouHadAHostNamedThis", 0, port, false, null);
             fail("I was not expecting to be able to connect to: \"ItWouldSuckIfYouHadAHostNamedThis:0\"");
         } catch (Throwable t) {
         }
@@ -181,7 +182,7 @@ public class JMembaseTest extends TestCase {
     public void testHarakirMonitorInvalidPort() throws IOException {
         System.out.println("testHarakirMonitorInvalidPort");
         try {
-            CouchbaseMock.HarakiriMonitor m = new CouchbaseMock.HarakiriMonitor(null, 0, port, false);
+            CouchbaseMock.HarakiriMonitor m = new CouchbaseMock.HarakiriMonitor(null, 0, port, false, null);
             fail("I was not expecting to be able to connect to port 0");
         } catch (Throwable t) {
         }
@@ -191,7 +192,7 @@ public class JMembaseTest extends TestCase {
         System.out.println("testHarakirMonitor");
         ServerSocket server = new ServerSocket(0);
         CouchbaseMock.HarakiriMonitor m;
-        m = new CouchbaseMock.HarakiriMonitor(null, server.getLocalPort(), port, false);
+        m = new CouchbaseMock.HarakiriMonitor(null, server.getLocalPort(), port, false, null);
 
         Thread t = new Thread(m);
         t.start();
@@ -204,5 +205,67 @@ public class JMembaseTest extends TestCase {
                 Logger.getLogger(JMembaseTest.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+    }
+
+    private String readConfig(InputStream stream) {
+        int bb, lf = 0;
+        StringBuilder cfg = new StringBuilder();
+
+        do {
+            try {
+                bb = stream.read();
+                if (bb == '\n') {
+                    lf++;
+                } else {
+                    lf = 0;
+                    cfg.append(bb);
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(JMembaseTest.class.getName()).log(Level.SEVERE, null, ex);
+                return null;
+            }
+        } while (lf < 4);
+        return cfg.toString();
+    }
+
+    public void testConfigStreaming() throws IOException {
+        System.out.println("testConfigStreaming");
+        ServerSocket server = new ServerSocket(0);
+        CouchbaseMock.HarakiriMonitor m = new CouchbaseMock.HarakiriMonitor(null, server.getLocalPort(), port, true, instance);
+        Thread t = new Thread(m, "HarakiriMonitor");
+        t.start();
+        Socket client = server.accept();
+        InputStream cin = client.getInputStream();
+        OutputStream cout = client.getOutputStream();
+        StringBuilder rport = new StringBuilder();
+        char cc;
+        while ((cc = (char) cin.read()) > 0) {
+            rport.append(cc);
+        }
+        assertEquals(rport.toString(), Integer.toString(port));
+
+        Bucket defaultBucket = instance.getBuckets().get("default");
+        URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/bucketsStreaming/default");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.addRequestProperty("Authorization", "Basic " + Base64.encode("Administrator:password"));
+        InputStream stream = conn.getInputStream();
+        String currCfg, nextCfg;
+
+        currCfg = readConfig(stream);
+        assertEquals(100, defaultBucket.activeServers().size());
+
+        cout.write("failover,1,default\n".getBytes());
+        nextCfg = readConfig(stream);
+        assertNotSame(currCfg, nextCfg);
+        assertEquals(99, defaultBucket.activeServers().size());
+        currCfg = nextCfg;
+
+        cout.write("respawn,1,default\n".getBytes());
+        nextCfg = readConfig(stream);
+        assertNotSame(currCfg, nextCfg);
+        assertEquals(100, defaultBucket.activeServers().size());
+
+        server.close();
+        t.interrupt();
     }
 }
