@@ -43,6 +43,7 @@ public class JMembaseTest extends TestCase {
         super(testName);
     }
     CouchbaseMock instance;
+    int port = 18091;
     Thread thread;
 
     private boolean serverIsReady(String host, int port) {
@@ -66,11 +67,11 @@ public class JMembaseTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        instance = new CouchbaseMock(null, 8091, 100, 4096);
+        instance = new CouchbaseMock(null, port, 100, 4096);
         instance.start();
         do {
             Thread.sleep(100);
-        } while (!serverIsReady("localhost", 8091));
+        } while (!serverIsReady("localhost", port));
     }
 
     @Override
@@ -104,7 +105,7 @@ public class JMembaseTest extends TestCase {
         pw.print("\r\n");
         pw.flush();
 
-        Socket s = new Socket("localhost", 8091);
+        Socket s = new Socket("localhost", port);
         OutputStream out = s.getOutputStream();
         out.write(sw.toString().getBytes());
         out.flush();
@@ -171,7 +172,7 @@ public class JMembaseTest extends TestCase {
     public void testHarakirMonitorInvalidHost() throws IOException {
         System.out.println("testHarakirMonitorInvalidHost");
         try {
-            CouchbaseMock.HarakiriMonitor m = new CouchbaseMock.HarakiriMonitor("ItWouldSuckIfYouHadAHostNamedThis", 0, 8091, false);
+            CouchbaseMock.HarakiriMonitor m = new CouchbaseMock.HarakiriMonitor("ItWouldSuckIfYouHadAHostNamedThis", 0, port, false);
             fail("I was not expecting to be able to connect to: \"ItWouldSuckIfYouHadAHostNamedThis:0\"");
         } catch (Throwable t) {
         }
@@ -180,7 +181,7 @@ public class JMembaseTest extends TestCase {
     public void testHarakirMonitorInvalidPort() throws IOException {
         System.out.println("testHarakirMonitorInvalidPort");
         try {
-            CouchbaseMock.HarakiriMonitor m = new CouchbaseMock.HarakiriMonitor(null, 0, 8091, false);
+            CouchbaseMock.HarakiriMonitor m = new CouchbaseMock.HarakiriMonitor(null, 0, port, false);
             fail("I was not expecting to be able to connect to port 0");
         } catch (Throwable t) {
         }
@@ -190,7 +191,7 @@ public class JMembaseTest extends TestCase {
         System.out.println("testHarakirMonitor");
         ServerSocket server = new ServerSocket(0);
         CouchbaseMock.HarakiriMonitor m;
-        m = new CouchbaseMock.HarakiriMonitor(null, server.getLocalPort(), 8091, false);
+        m = new CouchbaseMock.HarakiriMonitor(null, server.getLocalPort(), port, false);
 
         Thread t = new Thread(m);
         t.start();
