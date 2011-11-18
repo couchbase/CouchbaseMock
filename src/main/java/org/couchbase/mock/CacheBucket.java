@@ -16,13 +16,16 @@
 package org.couchbase.mock;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import org.couchbase.mock.util.JSON;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import net.sf.json.JSONObject;
 
 /**
+ * Representation of a CacheBucket (aka memcached)
  *
- * @author trond
+ * @author Trond Norbye
  */
 public class CacheBucket extends Bucket
 {
@@ -32,31 +35,26 @@ public class CacheBucket extends Bucket
 
     @Override
     public String getJSON() {
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        pw.print("{");
-        JSON.addElement(pw, "name", "cache", true);
-        JSON.addElement(pw, "authType", "sasl", true);
-        JSON.addElement(pw, "bucketType", "memcached", true);
-        JSON.addElement(pw, "flushCacheUri", "/pools/" + poolName + "/buckets/" + name + "/controller/doFlush", true);
-        JSON.addElement(pw, "name", "default", true);
-        JSON.addElement(pw, "nodeLocator", "ketama", true);
-        pw.print("\"nodes\":[");
-        for (int ii = 0; ii < servers.length; ++ii) {
-            pw.print(servers[ii].toString());
-            if (ii != servers.length - 1) {
-                pw.print(",");
-            }
-        }
-        pw.print("],");
-        JSON.addElement(pw, "proxyPort", 0, true);
-        JSON.addElement(pw, "replicaNumber", 0, true);
-        JSON.addElement(pw, "saslPassword", "", true);
-        JSON.addElement(pw, "streamingUri", "/pools/" + poolName + "/bucketsStreaming/" + name, true);
-        JSON.addElement(pw, "uri", "/pools/" + poolName + "/buckets/" + name, false);
+        Map<String, Object> map = new HashMap<String, Object>();
 
-        pw.print("}");
-        pw.flush();
-        return sw.toString();
+        map.put("name", name);
+        map.put("authType", "sasl");
+        map.put("bucketType", "memcached");
+
+        map.put("flushCacheUri", "/pools/" + poolName + "/buckets/" + name + "/controller/doFlush");
+        map.put("nodeLocator", "ketama");
+        map.put("proxyPort", 0);
+        map.put("replicaNumber", 0);
+        map.put("saslPassword", "");
+        map.put("streamingUri", "/pools/" + poolName + "/bucketsStreaming/" + name);
+        map.put("uri", "/pools/" + poolName + "/buckets/" + name);
+
+        List<String> nodes = new ArrayList<String>();
+        for (int ii = 0; ii < servers.length; ++ii) {
+            nodes.add(servers[ii].toString());
+        }
+        map.put("nodes", nodes);
+
+        return JSONObject.fromObject(map).toString();
     }
 }

@@ -18,12 +18,16 @@ package org.couchbase.mock;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import net.sf.json.JSONObject;
 import org.couchbase.mock.memcached.MemcachedServer;
-import org.couchbase.mock.util.JSON;
 
 /**
- *
- * @author trond
+ * Representation of a membase bucket
+ * @author Trond Norbye
  */
 public class MembaseBucket extends Bucket {
 
@@ -33,61 +37,52 @@ public class MembaseBucket extends Bucket {
 
     @Override
     public String getJSON() {
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("name", name);
+        map.put("bucketType", "membase");
+        map.put("authType", "sasl");
+        map.put("saslPassword", "");
+        map.put("proxyPort", 0);
+        map.put("uri", "/pools/" + poolName + "/buckets/" + name);
+        map.put("streamingUri", "/pools/" + poolName + "/bucketsStreaming/" + name);
+        map.put("flushCacheUri", "/pools/" + poolName + "/buckets/" + name + "/controller/doFlush");
+        List<String> nodes = new ArrayList<String>();
+        for (int ii = 0; ii < servers.length; ++ii) {
+            nodes.add(servers[ii].toString());
+        }
+        map.put("nodes", nodes);
 
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
-        pw.print("{");
-        JSON.addElement(pw, "name", name, true);
-        JSON.addElement(pw, "bucketType", "membase", true);
-        JSON.addElement(pw, "authType", "sasl", true);
-        JSON.addElement(pw, "saslPassword", "", true);
-        JSON.addElement(pw, "proxyPort", 0, true);
-        JSON.addElement(pw, "uri", "/pools/" + poolName + "/buckets/" + name, true);
-        JSON.addElement(pw, "streamingUri", "/pools/" + poolName + "/bucketsStreaming/" + name, true);
-        JSON.addElement(pw, "flushCacheUri", "/pools/" + poolName + "/buckets/" + name + "/controller/doFlush", true);
-        pw.print("\"nodes\":[");
+
+        Map<String, String>  stats = new HashMap<String, String>();
+        stats.put("uri", "/pools/" + poolName + "/buckets/" + name + "/stats");
+        map.put("stats", stats);
+        map.put("nodeLocator", "vbucket");
+
+        Map<String, Object> vbm = new HashMap<String, Object>();
+        vbm.put("hashAlgorithm", "CRC");
+        vbm.put("numReplicas", 0);
+        List<String> serverList = new ArrayList<String>();
         for (int ii = 0; ii < servers.length; ++ii) {
-            pw.print(servers[ii].toString());
-            if (ii != servers.length - 1) {
-                pw.print(",");
-            }
+            serverList.add(servers[ii].getSocketName());
         }
-        pw.print("],");
-        pw.print("\"stats\":{\"uri\":\"/pools/" + poolName + "/buckets/default/stats\"},");
-        JSON.addElement(pw, "nodeLocator", "vbucket", true);
-
-        pw.print("\"vBucketServerMap\":{");
-        JSON.addElement(pw, "hashAlgorithm", "CRC", true);
-        JSON.addElement(pw, "numReplicas", 0, true);
-
-        pw.print("\"serverList\":[");
-        for (int ii = 0; ii < servers.length; ++ii) {
-            pw.print('"');
-            pw.print(servers[ii].getSocketName());
-            pw.print('"');
-            if (ii != servers.length - 1) {
-                pw.print(',');
-            }
-        }
-
-        pw.print("],\"vBucketMap\":[");
-
+        vbm.put("serverList", serverList);
+        ArrayList<ArrayList<Integer>> m = new ArrayList<ArrayList<Integer>>();
         for (short ii = 0; ii < numVBuckets; ++ii) {
             MemcachedServer resp = datastore.getVBucket(ii).getOwner();
+            ArrayList<Integer> line = new ArrayList<Integer>();
             for (int jj = 0; jj < servers.length; ++jj) {
                 if (resp == servers[jj]) {
-                    pw.print("[" + jj + "]");
+                    line.add(jj);
                     break;
                 }
             }
-            if (ii != numVBuckets - 1) {
-                pw.print(",");
-            }
+            m.add(line);
         }
-
-        pw.print("]}}");
-        pw.flush();
-        return sw.toString();
+        vbm.put("vBucketMap", m);
+        map.put("vBucketServerMap", vbm);
+        return JSONObject.fromObject(map).toString();
 
     }
 }

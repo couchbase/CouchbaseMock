@@ -23,6 +23,9 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.HttpURLConnection;
+import java.util.HashMap;
+import java.util.Map;
+import net.sf.json.JSONObject;
 import org.couchbase.mock.Bucket;
 
 /**
@@ -45,7 +48,7 @@ public class PoolsHandler implements HttpHandler {
 
         if (path.matches("^/pools$")) {
             // GET /pools
-            payload = getPoolsJSON();
+            payload = getPoolsJSON().getBytes();
             exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, payload.length);
             body.write(payload);
         } else if (path.matches("^/pools/" + mock.getPoolName() + "$")) {
@@ -87,15 +90,16 @@ public class PoolsHandler implements HttpHandler {
         body.close();
     }
 
-    private byte[] getPoolsJSON() {
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        pw.print("{\"pools\":[{\"name\":\"" + mock.getPoolName() + "\",\"uri\":\"/pools/" + mock.getPoolName() + "\","
-                + "\"streamingUri\":\"/poolsStreaming/" + mock.getPoolName() + "\"}],\"isAdminCreds\":true,"
-                + "\"uuid\":\"f0918647-73a6-4001-15e8-264500000190\",\"implementationVersion\":\"1.7.0\","
-                + "\"componentsVersion\":{\"os_mon\":\"2.2.5\",\"mnesia\":\"4.4.17\",\"kernel\":\"2.14.3\","
-                + "\"sasl\":\"2.1.9.3\",\"ns_server\":\"1.7.0\",\"stdlib\":\"1.17.3\"}}");
-        pw.flush();
-        return sw.toString().getBytes();
+    protected String getPoolsJSON() {
+        Map<String, Object> pools = new HashMap<String, Object>();
+        pools.put("name", mock.getPoolName());
+        pools.put("uri", "/pools/" + mock.getPoolName());
+        pools.put("streamingUri", "/poolsStreaming/" + mock.getPoolName());
+
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("pools", pools);
+        map.put("isAdminCreds", Boolean.TRUE);
+
+        return JSONObject.fromObject(map).toString();
     }
 }

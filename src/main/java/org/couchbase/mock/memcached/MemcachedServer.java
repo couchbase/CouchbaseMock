@@ -23,8 +23,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -37,11 +35,13 @@ import java.nio.channels.SocketChannel;
 
 import java.security.AccessControlException;
 
+import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
-import org.couchbase.mock.util.JSON;
+import net.sf.json.JSONObject;
 
 /**
  * This is a small implementation of a Memcached server. It listens
@@ -125,31 +125,27 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
 
     @Override
     public String toString() {
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        pw.print("{");
-
+        Map<String, Object> map = new HashMap<String, Object>();
         long now = System.currentTimeMillis() / 1000;
         int uptime = (int) (now - bootTime);
-        JSON.addElement(pw, "uptime", uptime, true);
-        JSON.addElement(pw, "replication", 1, true);
-        JSON.addElement(pw, "clusterMembership", "active", true);
-        JSON.addElement(pw, "status", "healthy", true);
-        JSON.addElement(pw, "hostname", hostname, true);
-        JSON.addElement(pw, "clusterCompatibility", 1, true);
-        JSON.addElement(pw, "version", "9.9.9", true);
+        map.put("uptime", new Long(uptime));
+        map.put("replication", 1);
+        map.put("clusterMembership", "active");
+        map.put("status", "healthy");
+        map.put("hostname", hostname);
+        map.put("clusterCompatibility", 1);
+        map.put("version", "9.9.9");
         StringBuilder sb = new StringBuilder(System.getProperty("os.arch"));
         sb.append("-");
         sb.append(System.getProperty("os.name"));
         sb.append("-");
         sb.append(System.getProperty("os.version"));
-        JSON.addElement(pw, "os", sb.toString().replaceAll(" ", "_"), true);
-        pw.print("\"ports\":{");
-        JSON.addElement(pw, "direct", port, true);
-        JSON.addElement(pw, "proxy", 0, false); //todo this should be fixed (Vitaly.R)
-        pw.print("}}");
-        pw.flush();
-        return sw.toString();
+        map.put("os", sb.toString().replaceAll(" ", "_"));
+        Map<String, Integer> ports = new HashMap<String, Integer>();
+        ports.put("direct", port);
+        ports.put("proxy", 0); //todo this should be fixed (Vitaly.R)
+        map.put("ports", ports);
+        return JSONObject.fromObject(map).toString();
     }
 
     public String getSocketName() {
