@@ -15,6 +15,7 @@
  */
 package org.couchbase.mock.memcached;
 
+import java.nio.ByteBuffer;
 import org.couchbase.mock.memcached.protocol.BinaryResponse;
 import org.couchbase.mock.memcached.protocol.ComCode;
 import org.couchbase.mock.memcached.protocol.ErrorCode;
@@ -202,7 +203,10 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
                                 }
                             } else if (key.isWritable()) {
                                 SocketChannel channel = (SocketChannel) key.channel();
-                                channel.write(client.getOutputBuffer());
+                                ByteBuffer buf;
+                                while ((buf = client.getOutputBuffer()) != null) {
+                                    channel.write(buf);
+                                }
                             }
                         } catch (ClosedChannelException exp) {
                             // just ditch this client..

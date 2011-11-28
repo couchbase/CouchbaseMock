@@ -19,8 +19,8 @@ import org.couchbase.mock.memcached.protocol.BinaryResponse;
 import org.couchbase.mock.memcached.protocol.BinaryCommand;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedList;
+import java.util.Queue;
 import org.couchbase.mock.memcached.protocol.CommandFactory;
 
 /**
@@ -32,22 +32,16 @@ public class MemcachedConnection {
     private final byte header[];
     private BinaryCommand command;
     private final ByteBuffer input;
-    private final List<ByteBuffer> output;
+    private final Queue<ByteBuffer> output;
 
     public MemcachedConnection(MemcachedServer server) throws IOException {
         header = new byte[24];
         input = ByteBuffer.wrap(header);
         protocolHandler = server.getProtocolHandler();
-        output = new ArrayList<ByteBuffer>();
+        output = new LinkedList<ByteBuffer>();
     }
 
     public void step() throws IOException {
-        if (!output.isEmpty()) {
-            ByteBuffer b = output.get(0);
-            if (!b.hasRemaining()) {
-                output.remove(0);
-            }
-        }
         if (input.position() == header.length) {
             if (command == null) {
                 command = CommandFactory.create(input);
@@ -82,7 +76,7 @@ public class MemcachedConnection {
         if (output.isEmpty()) {
             return null;
         } else {
-            return output.get(0);
+            return output.remove();
         }
     }
 }
