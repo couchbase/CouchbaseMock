@@ -23,8 +23,9 @@ import org.couchbase.mock.memcached.DataStore;
 import org.couchbase.mock.memcached.MemcachedServer;
 
 /**
+ * Representation of the bucket in the membase concept.
  *
- * @author trond
+ * @author Trond Norbye
  */
 public abstract class Bucket {
 

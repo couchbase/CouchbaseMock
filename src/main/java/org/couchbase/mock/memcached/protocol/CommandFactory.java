@@ -37,6 +37,10 @@ public class CommandFactory {
         switch (cc) {
             case ADD:
             case ADDQ:
+            case APPEND:
+            case APPENDQ:
+            case PREPEND:
+            case PREPENDQ:
             case SET:
             case SETQ:
             case REPLACE:

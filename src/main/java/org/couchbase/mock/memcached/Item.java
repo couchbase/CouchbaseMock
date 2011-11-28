@@ -59,5 +59,17 @@ public class Item {
         cas = l;
     }
 
+    public void append(Item i) {
+        byte[] b = new byte[value.length + i.getValue().length];
+        System.arraycopy(b, 0, value, 0, value.length);
+        System.arraycopy(b, value.length, i.getValue(), 0, i.getValue().length);
+        value = b;
+    }
 
+    public void prepend(Item i) {
+        byte[] b = new byte[value.length + i.getValue().length];
+        System.arraycopy(b, 0, i.getValue(), 0, i.getValue().length);
+        System.arraycopy(b, i.getValue().length, value, 0, value.length);
+        value = b;
+    }
 }

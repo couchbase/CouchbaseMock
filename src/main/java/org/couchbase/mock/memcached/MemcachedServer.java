@@ -83,8 +83,20 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
             executors[ii] = unknownHandler;
         }
 
+        executors[ComCode.QUIT.cc()] = new QuitCommandExecutor();
+        executors[ComCode.QUITQ.cc()] = new QuitCommandExecutor();
+        executors[ComCode.FLUSH.cc()] = new FlushCommandExecutor();
+        executors[ComCode.FLUSHQ.cc()] = new FlushCommandExecutor();
+        executors[ComCode.NOOP.cc()] = new NoopCommandExecutor();
+        executors[ComCode.VERSION.cc()] = new VersionCommandExecutor();
+        executors[ComCode.STAT.cc()] = new StatCommandExecutor();
+        executors[ComCode.VERBOSITY.cc()] = new VerbosityCommandExecutor();
         executors[ComCode.ADD.cc()] = new StoreCommandExecutor();
         executors[ComCode.ADDQ.cc()] = executors[ComCode.ADD.cc()];
+        executors[ComCode.APPEND.cc()] = new AppendCommandExecutor();
+        executors[ComCode.APPENDQ.cc()] = new AppendCommandExecutor();
+        executors[ComCode.PREPEND.cc()] = new PrependCommandExecutor();
+        executors[ComCode.PREPENDQ.cc()] = new PrependCommandExecutor();
         executors[ComCode.SET.cc()] = executors[ComCode.ADD.cc()];
         executors[ComCode.SETQ.cc()] = executors[ComCode.ADD.cc()];
         executors[ComCode.REPLACE.cc()] = executors[ComCode.ADD.cc()];

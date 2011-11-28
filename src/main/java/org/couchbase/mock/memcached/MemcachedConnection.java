@@ -79,4 +79,8 @@ public class MemcachedConnection {
             return output.remove();
         }
     }
+
+    void shutdown() {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
 }

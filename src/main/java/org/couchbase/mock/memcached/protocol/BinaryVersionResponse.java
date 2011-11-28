@@ -14,21 +14,25 @@
  *  limitations under the License.
  *  under the License.
  */
-package org.couchbase.mock.memcached;
+package org.couchbase.mock.memcached.protocol;
 
-import org.couchbase.mock.memcached.protocol.BinaryResponse;
-import org.couchbase.mock.memcached.protocol.ErrorCode;
-import org.couchbase.mock.memcached.protocol.BinaryCommand;
+import java.nio.ByteBuffer;
 
 /**
- * Implementation of the noop command
  *
  * @author Trond Norbye <trond.norbye@gmail.com>
  */
-public class NoopCommandExecutor implements CommandExecutor {
+public class BinaryVersionResponse extends BinaryResponse {
 
-    @Override
-    public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
-        client.sendResponse(new BinaryResponse(cmd, ErrorCode.SUCCESS));
+    public BinaryVersionResponse(BinaryCommand command, String version) {
+        super(create(command, version));
+    }
+
+    private static ByteBuffer create(BinaryCommand command, String version) {
+        final ByteBuffer message = BinaryResponse.create(command, ErrorCode.SUCCESS,
+                0, 0, version.length(), 0);
+        message.put(version.getBytes());
+        message.rewind();
+        return message;
     }
 }

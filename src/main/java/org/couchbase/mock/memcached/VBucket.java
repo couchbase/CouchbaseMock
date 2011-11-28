@@ -49,4 +49,10 @@ public class VBucket {
     public synchronized MemcachedServer getOwner() {
         return owner;
     }
+
+    void flush(MemcachedServer server) {
+        if (owner == server) {
+            map.clear();
+        }
+    }
 }

@@ -28,7 +28,7 @@ import java.util.Map;
  */
 public class DataStore {
 
-    volatile long casCounter = 1;
+    private volatile long casCounter = 1;
     private VBucket vBucketMap[];
 
     public DataStore(int size) {
@@ -118,5 +118,11 @@ public class DataStore {
     Item get(MemcachedServer server, short vBucketId, String key) {
         Map<String, Item> map = getMap(server, vBucketId);
         return map.get(key);
+    }
+
+    void flush(MemcachedServer server) {
+        for (VBucket b : vBucketMap) {
+            b.flush(server);
+        }
     }
 }
