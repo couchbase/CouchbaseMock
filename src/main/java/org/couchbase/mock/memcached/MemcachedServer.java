@@ -158,21 +158,32 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         return hostname + ":" + port;
     }
 
+    private class ServerInactiveException extends RuntimeException {
+    }
+
+    private Selector selector() throws IOException {
+        if (selector == null || !selector.isOpen()) {
+            if (active) {
+                selector = Selector.open();
+                server.register(selector, SelectionKey.OP_ACCEPT);
+            } else {
+                throw new ServerInactiveException();
+            }
+        }
+        return selector;
+    }
+
     @Override
     public void run() {
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 listenLatch.await();
-                if (selector == null || !selector.isOpen()) {
-                    selector = Selector.open();
-                    server.register(selector, SelectionKey.OP_ACCEPT);
-                }
-                if (selector.select() < 1) {
+                if (selector().select() < 1) {
                     // don't even try call other methods on selector
                     // because it could be closed already by shutdown()
                     continue;
                 }
-                Set<SelectionKey> readyKeys = selector.selectedKeys();
+                Set<SelectionKey> readyKeys = selector().selectedKeys();
                 Iterator<SelectionKey> iterator = readyKeys.iterator();
 
                 // @todo we should probably drive the state machine until it
@@ -185,9 +196,7 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
                     MemcachedConnection client = (MemcachedConnection) key.attachment();
 
                     if (client != null) {
-
                         try {
-
                             if (key.isReadable()) {
                                 SocketChannel channel = (SocketChannel) key.channel();
 
@@ -196,9 +205,9 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
                                 } else {
                                     client.step();
                                     if (client.hasOutput()) {
-                                        channel.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE, client);
+                                        channel.register(selector(), SelectionKey.OP_READ | SelectionKey.OP_WRITE, client);
                                     } else {
-                                        channel.register(selector, SelectionKey.OP_READ, client);
+                                        channel.register(selector(), SelectionKey.OP_READ, client);
                                     }
                                 }
                             } else if (key.isWritable()) {
@@ -215,14 +224,16 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
                         if (key.isAcceptable()) {
                             SocketChannel cc = server.accept();
                             cc.configureBlocking(false);
-                            cc.register(selector, SelectionKey.OP_READ, new MemcachedConnection(this));
+                            cc.register(selector(), SelectionKey.OP_READ, new MemcachedConnection(this));
                         }
                     }
                 }
+            } catch (ServerInactiveException e) {
+                // skip and wait for listenLatch
             } catch (IOException e) {
-                System.err.println(e.getLocalizedMessage());
+                Logger.getLogger(MemcachedServer.class.getName()).log(Level.SEVERE, null, e);
             } catch (InterruptedException ex) {
-                System.err.println(ex.getLocalizedMessage());
+                Logger.getLogger(MemcachedServer.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
@@ -251,9 +262,11 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
 
     public void shutdown() {
         try {
-            this.listenLatch = new CountDownLatch(1);
-            this.selector.close();
-            this.active = false;
+            // now it's safe to update latch
+            listenLatch = new CountDownLatch(1);
+            active = false;
+            selector.close();
+            selector = null;
             if (cluster != null) {
                 cluster.configUpdated();
             }
@@ -263,8 +276,8 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
     }
 
     public void startup() {
-        this.listenLatch.countDown();
         this.active = true;
+        this.listenLatch.countDown();
         if (cluster != null) {
             cluster.configUpdated();
         }
