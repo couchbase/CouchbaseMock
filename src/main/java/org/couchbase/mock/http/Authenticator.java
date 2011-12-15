@@ -16,6 +16,12 @@
 package org.couchbase.mock.http;
 
 import com.sun.net.httpserver.BasicAuthenticator;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpPrincipal;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.couchbase.mock.Bucket;
 
 /**
  *
@@ -23,17 +29,44 @@ import com.sun.net.httpserver.BasicAuthenticator;
  */
 public class Authenticator extends BasicAuthenticator {
 
-    private String username;
-    private String password;
+    private String adminName;
+    private String adminPass;
+    private String bucketName;
+    private Map<String, Bucket> buckets;
 
-    public Authenticator(String username, String password) {
+    public Authenticator(String username, String password, Map<String, Bucket> buckets) {
         super("Couchbase Mock");
-        this.username = username;
-        this.password = password;
+        this.adminName = username;
+        this.adminPass = password;
+        this.buckets = buckets;
     }
 
     @Override
     public boolean checkCredentials(String username, String password) {
-        return this.username.equals(username) && this.password.equals(password);
+        if ("default".equals(bucketName) ||
+                (adminName.equals(username) && adminPass.equals(password))) {
+            return true;
+        }
+        Bucket bucket = buckets.get(bucketName);
+        if (bucket == null) {
+            return false;
+        }
+        return bucket.getPassword().equals(password);
     }
+
+    @Override
+    public Result authenticate(HttpExchange exchange) {
+        String requestPath = exchange.getRequestURI().getPath();
+        Matcher m = Pattern.compile("/pools/\\w+/buckets/(\\w+)/?.*").matcher(requestPath);
+        bucketName = "default";
+        if (m.find()) {
+            bucketName = m.group(1);
+        }
+        if (bucketName.equals("default")) {
+            return new Authenticator.Success(new HttpPrincipal("default", realm));
+        } else {
+            return super.authenticate(exchange);
+        }
+    }
+
 }

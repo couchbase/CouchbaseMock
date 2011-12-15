@@ -31,6 +31,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import junit.framework.TestCase;
 
+import org.couchbase.mock.Bucket.BucketType;
 import org.couchbase.mock.util.Base64;
 
 /**
@@ -68,7 +69,7 @@ public class JMembaseTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        instance = new CouchbaseMock(null, port, 100, 4096);
+        instance = new CouchbaseMock(null, port, 100, 4096, BucketType.BASE, "default:,protected:secret");
         instance.start();
         do {
             Thread.sleep(100);
@@ -83,13 +84,42 @@ public class JMembaseTest extends TestCase {
 
     public void testHandleHttpRequest() throws IOException {
         System.out.println("testHandleHttpRequest");
-        URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/default");
+        URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/protected");
+        HttpURLConnection conn = null;
+
+        try {
+            conn = (HttpURLConnection) url.openConnection();
+            assertNotNull(conn);
+            conn.addRequestProperty("Authorization", "Basic " + Base64.encode("protected:secret"));
+            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+        } catch (Exception ex) {
+            fail(ex.getMessage());
+        }
+    }
+
+    public void testAdministratorCouldAccessProtectedBuckets() throws IOException {
+        System.out.println("testHandleHttpRequest");
+        URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/protected");
         HttpURLConnection conn = null;
 
         try {
             conn = (HttpURLConnection) url.openConnection();
             assertNotNull(conn);
             conn.addRequestProperty("Authorization", "Basic " + Base64.encode("Administrator:password"));
+            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+        } catch (Exception ex) {
+            fail(ex.getMessage());
+        }
+    }
+
+    public void testDefaultBucketShouldBeAccessibleForEveryone() throws IOException {
+        System.out.println("testHandleHttpRequest");
+        URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/default");
+        HttpURLConnection conn = null;
+
+        try {
+            conn = (HttpURLConnection) url.openConnection();
+            assertNotNull(conn);
             assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
         } catch (Exception ex) {
             fail(ex.getMessage());
@@ -125,9 +155,9 @@ public class JMembaseTest extends TestCase {
         s.close();
     }
 
-    public void brokenTestHandleHttpRequestMissingAuth() throws IOException {
+    public void testHandleHttpRequestMissingAuth() throws IOException {
         System.out.println("testHandleHttpRequestMissingAuth");
-        URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/default");
+        URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/protected");
         HttpURLConnection conn = null;
 
         try {
@@ -141,7 +171,7 @@ public class JMembaseTest extends TestCase {
 
     public void testHandleHttpRequestIncorrectCred() throws IOException {
         System.out.println("testHandleHttpRequestIncorrectCred");
-        URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/default");
+        URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/protected");
         HttpURLConnection conn = null;
 
         try {

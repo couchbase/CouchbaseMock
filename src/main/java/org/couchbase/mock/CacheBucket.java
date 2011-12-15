@@ -30,8 +30,8 @@ import org.couchbase.mock.memcached.MemcachedServer;
  */
 public class CacheBucket extends Bucket {
 
-    public CacheBucket(String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, CouchbaseMock cluster) throws IOException {
-        super(name, hostname, port, numNodes, bucketStartPort, numVBuckets, cluster);
+    public CacheBucket(String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, CouchbaseMock cluster, String password) throws IOException {
+        super(name, hostname, port, numNodes, bucketStartPort, numVBuckets, cluster, password);
     }
 
     public CacheBucket(String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets) throws IOException {
@@ -50,7 +50,7 @@ public class CacheBucket extends Bucket {
         map.put("nodeLocator", "ketama");
         map.put("proxyPort", 0);
         map.put("replicaNumber", 0);
-        map.put("saslPassword", "");
+        map.put("saslPassword", getPassword());
         map.put("streamingUri", "/pools/" + poolName + "/bucketsStreaming/" + name);
         map.put("uri", "/pools/" + poolName + "/buckets/" + name);
 

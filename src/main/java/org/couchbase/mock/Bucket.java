@@ -15,6 +15,7 @@
  */
 package org.couchbase.mock;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,27 +30,49 @@ import org.couchbase.mock.memcached.MemcachedServer;
  */
 public abstract class Bucket {
 
+    public enum BucketType {
+        CACHE, BASE
+    }
+
     protected final DataStore datastore;
     protected final MemcachedServer servers[];
     protected final int numVBuckets;
     protected final String poolName = "default";
     protected final String name;
     protected final CouchbaseMock cluster;
+    protected final String password;
 
     public String getBucketUri() {
         return "/pools/" + poolName + "/bucketsStreaming/" + name;
     }
 
     public Bucket(String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, CouchbaseMock cluster) throws IOException {
+        this(name, hostname, port, numNodes, bucketStartPort, numVBuckets, cluster, "");
+    }
+
+    public Bucket(String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, CouchbaseMock cluster, String password) throws IOException {
         this.cluster = cluster;
         this.name = name;
         this.numVBuckets = numVBuckets;
+        this.password = password;
         datastore = new DataStore(numVBuckets);
         servers = new MemcachedServer[numNodes];
         for (int ii = 0; ii < servers.length; ii++) {
             servers[ii] = new MemcachedServer(hostname, (bucketStartPort == 0 ? 0 : bucketStartPort + ii), datastore, cluster);
         }
         rebalance();
+    }
+
+    public static Bucket create(BucketType type, String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, CouchbaseMock cluster, String password) throws IOException {
+          switch (type) {
+                case CACHE:
+                    return new CacheBucket(name, hostname, port, numNodes, bucketStartPort, numVBuckets, cluster, password);
+                case BASE:
+                    return new MembaseBucket(name, hostname, port, numNodes, bucketStartPort, numVBuckets, cluster, password);
+                default:
+                    throw new FileNotFoundException("I don't know about this type...");
+            }
+
     }
 
     public abstract String getJSON();
@@ -111,6 +134,10 @@ public abstract class Bucket {
             int idx = random.nextInt(nodes.size());
             datastore.setOwnership(ii, nodes.get(idx));
         }
+    }
+
+    public String getPassword() {
+        return password;
     }
 
 }

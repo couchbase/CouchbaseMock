@@ -100,6 +100,12 @@ public enum ComCode {
             return APPENDQ;
         case 0x1a:
             return PREPENDQ;
+        case 0x20:
+            return SASL_LIST_MECHS;
+        case 0x21:
+            return SASL_AUTH;
+        case 0x22:
+            return SASL_STEP;
         default:
             return ILLEGAL;
         }
@@ -163,6 +169,12 @@ public enum ComCode {
             return "appendq";
         case PREPENDQ:
             return "prependq";
+        case SASL_LIST_MECHS:
+            return "sasl_list_mechs";
+        case SASL_AUTH:
+            return "sasl_auth";
+        case SASL_STEP:
+            return "sasl_step";
 
         default:
             return "unknown";

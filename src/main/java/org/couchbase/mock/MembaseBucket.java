@@ -31,8 +31,8 @@ import org.couchbase.mock.memcached.MemcachedServer;
  */
 public class MembaseBucket extends Bucket {
 
-    public MembaseBucket(String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, CouchbaseMock cluster) throws IOException {
-        super(name, hostname, port, numNodes, bucketStartPort, numVBuckets, cluster);
+    public MembaseBucket(String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, CouchbaseMock cluster, String password) throws IOException {
+        super(name, hostname, port, numNodes, bucketStartPort, numVBuckets, cluster, password);
     }
 
     public MembaseBucket(String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets) throws IOException {
@@ -46,7 +46,7 @@ public class MembaseBucket extends Bucket {
         map.put("name", name);
         map.put("bucketType", "membase");
         map.put("authType", "sasl");
-        map.put("saslPassword", "");
+        map.put("saslPassword", getPassword());
         map.put("proxyPort", 0);
         map.put("uri", "/pools/" + poolName + "/buckets/" + name);
         map.put("streamingUri", "/pools/" + poolName + "/bucketsStreaming/" + name);

@@ -43,6 +43,7 @@ import java.util.Map;
 import java.util.Set;
 
 import net.sf.json.JSONObject;
+import org.couchbase.mock.Bucket;
 import org.couchbase.mock.CouchbaseMock;
 
 /**
@@ -111,6 +112,9 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         executors[ComCode.INCREMENTQ.cc()] = executors[ComCode.INCREMENT.cc()];
         executors[ComCode.DECREMENT.cc()] = executors[ComCode.INCREMENT.cc()];
         executors[ComCode.DECREMENTQ.cc()] = executors[ComCode.INCREMENT.cc()];
+        executors[ComCode.SASL_LIST_MECHS.cc()] = new SaslCommandExecutor();
+        executors[ComCode.SASL_AUTH.cc()] = executors[ComCode.SASL_LIST_MECHS.cc()];
+        executors[ComCode.SASL_STEP.cc()] = executors[ComCode.SASL_LIST_MECHS.cc()];
 
         bootTime = System.currentTimeMillis() / 1000;
         server = ServerSocketChannel.open();
@@ -248,6 +252,11 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
                 Logger.getLogger(MemcachedServer.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+    }
+
+    public Map<String, Bucket> getBuckets()
+    {
+        return cluster.getBuckets();
     }
 
     /*
