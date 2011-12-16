@@ -40,11 +40,11 @@ public class MembaseBucketTest extends TestCase {
     }
 
     /**
-     * Test of getJSON method, of class MembaseBucket.
+     * Test of getJSON method, of class CouchbaseBucket.
      */
     public void testGetJSON() throws IOException {
         System.out.println("getJSON");
-        MembaseBucket instance = new MembaseBucket("membase", "localhost", 0, 100, 0, 100);
+        CouchbaseBucket instance = new CouchbaseBucket("membase", "localhost", 0, 100, 0, 100);
         String result = instance.getJSON();
     }
 }

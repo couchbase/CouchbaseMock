@@ -69,7 +69,7 @@ public class JMembaseTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        instance = new CouchbaseMock(null, port, 100, 4096, BucketType.BASE, "default:,protected:secret");
+        instance = new CouchbaseMock(null, port, 100, 4096, BucketType.COUCHBASE, "default:,protected:secret");
         instance.start();
         do {
             Thread.sleep(100);

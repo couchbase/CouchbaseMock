@@ -43,7 +43,7 @@ public class CacheBucketTest extends TestCase {
      */
     public void testGetJSON() throws IOException {
         System.out.println("getJSON");
-        CacheBucket instance = new CacheBucket("default", "localhost", 0, 1, 0, 1);
+        MemcacheBucket instance = new MemcacheBucket("default", "localhost", 0, 1, 0, 1);
         String result = instance.getJSON();
     }
 }

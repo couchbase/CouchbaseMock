@@ -202,7 +202,7 @@ public class CouchbaseMock {
     }
 
     public CouchbaseMock(String hostname, int port, int numNodes, int numVBuckets) throws IOException {
-        this(hostname, port, numNodes, numVBuckets, BucketType.BASE);
+        this(hostname, port, numNodes, numVBuckets, BucketType.COUCHBASE);
     }
 
     /**
@@ -284,7 +284,7 @@ public class CouchbaseMock {
                 port = server.getLocalPort();
                 server.close();
             }
-            CouchbaseMock mock = new CouchbaseMock(hostname, port, nodes, vbuckets, BucketType.BASE, bucketsSpec);
+            CouchbaseMock mock = new CouchbaseMock(hostname, port, nodes, vbuckets, BucketType.COUCHBASE, bucketsSpec);
             if (harakirimonitor != null) {
                 mock.setupHarakiriMonitor(harakirimonitor);
             }

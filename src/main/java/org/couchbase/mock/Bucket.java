@@ -31,7 +31,7 @@ import org.couchbase.mock.memcached.MemcachedServer;
 public abstract class Bucket {
 
     public enum BucketType {
-        CACHE, BASE
+        MEMCACHE, COUCHBASE
     }
 
     protected final DataStore datastore;
@@ -65,10 +65,10 @@ public abstract class Bucket {
 
     public static Bucket create(BucketType type, String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, CouchbaseMock cluster, String password) throws IOException {
           switch (type) {
-                case CACHE:
-                    return new CacheBucket(name, hostname, port, numNodes, bucketStartPort, numVBuckets, cluster, password);
-                case BASE:
-                    return new MembaseBucket(name, hostname, port, numNodes, bucketStartPort, numVBuckets, cluster, password);
+                case MEMCACHE:
+                    return new MemcacheBucket(name, hostname, port, numNodes, bucketStartPort, numVBuckets, cluster, password);
+                case COUCHBASE:
+                    return new CouchbaseBucket(name, hostname, port, numNodes, bucketStartPort, numVBuckets, cluster, password);
                 default:
                     throw new FileNotFoundException("I don't know about this type...");
             }
