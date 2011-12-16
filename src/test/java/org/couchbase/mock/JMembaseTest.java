@@ -31,7 +31,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import junit.framework.TestCase;
 
-import org.couchbase.mock.Bucket.BucketType;
 import org.couchbase.mock.util.Base64;
 
 /**
@@ -69,7 +68,7 @@ public class JMembaseTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        instance = new CouchbaseMock(null, port, 100, 4096, BucketType.COUCHBASE, "default:,protected:secret");
+        instance = new CouchbaseMock(null, port, 100, 4096, "default:,protected:secret");
         instance.start();
         do {
             Thread.sleep(100);
