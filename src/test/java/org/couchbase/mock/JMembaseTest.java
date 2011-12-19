@@ -27,11 +27,18 @@ import java.net.HttpURLConnection;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import junit.framework.TestCase;
 
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+import net.sf.json.JSONSerializer;
 import org.couchbase.mock.util.Base64;
+
 
 /**
  * Basic testing of JMembase
@@ -120,6 +127,30 @@ public class JMembaseTest extends TestCase {
             conn = (HttpURLConnection) url.openConnection();
             assertNotNull(conn);
             assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+        } catch (Exception ex) {
+            fail(ex.getMessage());
+        }
+    }
+
+    public void testProtectedBucketsShouldBeFilteredOutFromList() throws IOException {
+        System.out.println("testProtectedBucketsShouldBeFilteredOutFromList");
+        URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets");
+        HttpURLConnection conn = null;
+
+        try {
+            conn = (HttpURLConnection) url.openConnection();
+            assertNotNull(conn);
+            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+            StringBuilder sb = new StringBuilder();
+            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            String line;
+            while ((line = in.readLine()) != null) {
+                sb.append(line);
+            }
+            JSONArray json = (JSONArray)JSONSerializer.toJSON(sb.toString());
+            assertEquals(1, json.size());
+            JSONObject bucket = (JSONObject) json.get(0);
+            assertEquals("default", bucket.get("name"));
         } catch (Exception ex) {
             fail(ex.getMessage());
         }

@@ -43,12 +43,12 @@ public class Authenticator extends BasicAuthenticator {
 
     @Override
     public boolean checkCredentials(String username, String password) {
-        if ("default".equals(bucketName) ||
-                (adminName.equals(username) && adminPass.equals(password))) {
+        if (adminName.equals(username) && adminPass.equals(password)) {
             return true;
         }
-        Bucket bucket = buckets.get(bucketName);
-        if (bucket == null) {
+
+        Bucket bucket = buckets.get(username);
+        if (bucket == null || !bucketName.equals(username)) {
             return false;
         }
         return bucket.getPassword().equals(password);
@@ -58,15 +58,22 @@ public class Authenticator extends BasicAuthenticator {
     public Result authenticate(HttpExchange exchange) {
         String requestPath = exchange.getRequestURI().getPath();
         Matcher m = Pattern.compile("/pools/\\w+/buckets/(\\w+)/?.*").matcher(requestPath);
-        bucketName = "default";
+        bucketName = null;
         if (m.find()) {
             bucketName = m.group(1);
         }
-        if (bucketName.equals("default")) {
-            return new Authenticator.Success(new HttpPrincipal("default", realm));
-        } else {
-            return super.authenticate(exchange);
+
+        if (!exchange.getRequestHeaders().containsKey("Authorization")) {
+            Bucket bucket = buckets.get(bucketName);
+            if (bucket == null || bucket.getPassword().isEmpty()) {
+                return new Authenticator.Success(new HttpPrincipal("", realm));
+            }
         }
+        return super.authenticate(exchange);
+    }
+
+    public String getAdminName() {
+        return adminName;
     }
 
 }

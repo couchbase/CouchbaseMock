@@ -24,6 +24,7 @@ import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.util.HashMap;
 import java.util.Map;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.couchbase.mock.Bucket;
 
@@ -43,6 +44,7 @@ public class PoolsHandler implements HttpHandler {
     public void handle(HttpExchange exchange) throws IOException {
         String path = exchange.getRequestURI().getPath();
         OutputStream body = exchange.getResponseBody();
+        String bucketName = exchange.getPrincipal().getName();
         byte[] payload;
 
         if (path.matches("^/pools/?$")) {
@@ -59,13 +61,15 @@ public class PoolsHandler implements HttpHandler {
             body.write(payload);
         } else if (path.matches("^/pools/" + mock.getPoolName() + "/buckets$")) {
             // GET /pools/:poolName/buckets
-            StringWriter sw = new StringWriter();
-            sw.append("[");
-            for (Bucket bb : mock.getBuckets().values()) {
-                sw.append(bb.getJSON());
+            JSONArray buckets = new JSONArray();
+            for (Bucket bucket : mock.getBuckets().values()) {
+                if (mock.getAuthenticator().getAdminName().equals(bucketName) ||    // Administrator
+                        (bucketName.isEmpty() && bucket.getPassword().isEmpty()) || // Public
+                        bucket.getName().equals(bucketName)) {                      // Protected
+                    buckets.add(JSONObject.fromObject(bucket.getJSON()));
+                }
             }
-            sw.append("]");
-            payload = sw.toString().getBytes();
+            payload = buckets.toString().getBytes();
             exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, payload.length);
             body.write(payload);
         } else if (path.matches("^/pools/" + mock.getPoolName() + "/buckets/[^/]+$")) {

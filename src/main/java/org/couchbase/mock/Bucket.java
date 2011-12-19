@@ -140,4 +140,7 @@ public abstract class Bucket {
         return password;
     }
 
+    public String getName() {
+        return name;
+    }
 }
