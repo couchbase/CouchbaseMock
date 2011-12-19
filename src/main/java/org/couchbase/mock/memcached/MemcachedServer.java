@@ -37,13 +37,12 @@ import java.nio.channels.SocketChannel;
 import java.security.AccessControlException;
 
 import java.util.HashMap;
-import java.util.concurrent.CountDownLatch;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 
 import net.sf.json.JSONObject;
 import org.couchbase.mock.Bucket;
+import org.couchbase.mock.Bucket.BucketType;
 import org.couchbase.mock.CouchbaseMock;
 
 /**
@@ -62,11 +61,13 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
     private final int port;
     private CommandExecutor[] executors = new CommandExecutor[0xff];
     private final CouchbaseMock cluster;
+    private final BucketType type;
     private boolean active = true;
 
     /**
      * Create a new new memcached server.
      *
+     * @param type
      * @param hostname The hostname to bind to (null == any)
      * @param port The port this server should listen to (0 to choose an
      *             ephemeral port)
@@ -74,7 +75,8 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
      * @param cluster
      * @throws IOException If we fail to create the server socket
      */
-    public MemcachedServer(String hostname, int port, DataStore datastore, CouchbaseMock cluster) throws IOException {
+    public MemcachedServer(BucketType type, String hostname, int port, DataStore datastore, CouchbaseMock cluster) throws IOException {
+        this.type = type;
         this.cluster = cluster;
         this.datastore = datastore;
 
@@ -298,7 +300,7 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
     public static void main(String[] args) {
         try {
             DataStore ds = new DataStore(1024);
-            MemcachedServer server = new MemcachedServer(null, 11211, ds, null);
+            MemcachedServer server = new MemcachedServer(BucketType.COUCHBASE, null, 11211, ds, null);
             for (int ii = 0; ii < 1024; ++ii) {
                 ds.setOwnership(ii, server);
             }
@@ -313,5 +315,12 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
      */
     public boolean isActive() {
         return active;
+    }
+
+    /**
+     * @return the type
+     */
+    public BucketType getType() {
+        return type;
     }
 }

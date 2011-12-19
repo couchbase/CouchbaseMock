@@ -57,8 +57,16 @@ public abstract class Bucket {
         this.password = password;
         datastore = new DataStore(numVBuckets);
         servers = new MemcachedServer[numNodes];
+        BucketType type;
+        if (this.getClass() == MemcacheBucket.class) {
+            type = BucketType.MEMCACHE;
+        } else if (this.getClass() == CouchbaseBucket.class) {
+            type = BucketType.COUCHBASE;
+        } else {
+            throw new FileNotFoundException("I don't know about this type...");
+        }
         for (int ii = 0; ii < servers.length; ii++) {
-            servers[ii] = new MemcachedServer(hostname, (bucketStartPort == 0 ? 0 : bucketStartPort + ii), datastore, cluster);
+            servers[ii] = new MemcachedServer(type, hostname, (bucketStartPort == 0 ? 0 : bucketStartPort + ii), datastore, cluster);
         }
         rebalance();
     }

@@ -18,6 +18,7 @@ package org.couchbase.mock.memcached;
 import org.couchbase.mock.memcached.protocol.ErrorCode;
 import java.security.AccessControlException;
 import java.util.Map;
+import org.couchbase.mock.Bucket.BucketType;
 
 /**
  * A small little datastore.. Please note that since this is a dummy
@@ -47,7 +48,7 @@ public class DataStore {
     }
 
     private Map<String, Item> getMap(MemcachedServer server, short vbucket) throws AccessControlException {
-        if (vbucket >= vBucketMap.length) {
+        if (vbucket >= vBucketMap.length && server.getType() == BucketType.COUCHBASE) {
             // Illegal vbucket.. just report as no access..
             throw new AccessControlException("Illegal vbucket");
         }

@@ -27,9 +27,6 @@ import java.net.HttpURLConnection;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import junit.framework.TestCase;
@@ -104,7 +101,7 @@ public class JMembaseTest extends TestCase {
     }
 
     public void testAdministratorCouldAccessProtectedBuckets() throws IOException {
-        System.out.println("testHandleHttpRequest");
+        System.out.println("testAdministratorCouldAccessProtectedBuckets");
         URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/protected");
         HttpURLConnection conn = null;
 
@@ -119,7 +116,7 @@ public class JMembaseTest extends TestCase {
     }
 
     public void testDefaultBucketShouldBeAccessibleForEveryone() throws IOException {
-        System.out.println("testHandleHttpRequest");
+        System.out.println("testDefaultBucketShouldBeAccessibleForEveryone");
         URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/default");
         HttpURLConnection conn = null;
 
@@ -230,8 +227,8 @@ public class JMembaseTest extends TestCase {
         }
     }
 
-    public void testHarakirMonitorInvalidHost() throws IOException {
-        System.out.println("testHarakirMonitorInvalidHost");
+    public void testHarakiriMonitorInvalidHost() throws IOException {
+        System.out.println("testHarakiriMonitorInvalidHost");
         try {
             CouchbaseMock.HarakiriMonitor m = new CouchbaseMock.HarakiriMonitor("ItWouldSuckIfYouHadAHostNamedThis", 0, port, false, null);
             fail("I was not expecting to be able to connect to: \"ItWouldSuckIfYouHadAHostNamedThis:0\"");
@@ -239,8 +236,8 @@ public class JMembaseTest extends TestCase {
         }
     }
 
-    public void testHarakirMonitorInvalidPort() throws IOException {
-        System.out.println("testHarakirMonitorInvalidPort");
+    public void testHarakiriMonitorInvalidPort() throws IOException {
+        System.out.println("testHarakiriMonitorInvalidPort");
         try {
             CouchbaseMock.HarakiriMonitor m = new CouchbaseMock.HarakiriMonitor(null, 0, port, false, null);
             fail("I was not expecting to be able to connect to port 0");
@@ -248,8 +245,8 @@ public class JMembaseTest extends TestCase {
         }
     }
 
-    public void testHarakirMonitor() throws IOException {
-        System.out.println("testHarakirMonitor");
+    public void testHarakiriMonitor() throws IOException {
+        System.out.println("testHarakiriMonitor");
         ServerSocket server = new ServerSocket(0);
         CouchbaseMock.HarakiriMonitor m;
         m = new CouchbaseMock.HarakiriMonitor(null, server.getLocalPort(), port, false, null);

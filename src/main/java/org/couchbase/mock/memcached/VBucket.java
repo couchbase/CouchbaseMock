@@ -19,6 +19,7 @@ package org.couchbase.mock.memcached;
 import java.security.AccessControlException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import org.couchbase.mock.Bucket.BucketType;
 
 /**
  *
@@ -40,7 +41,7 @@ public class VBucket {
     }
 
     public synchronized Map<String, Item> getMap(MemcachedServer server) {
-        if (server != owner) {
+        if (server.getType() == BucketType.COUCHBASE && server != owner) {
             throw new AccessControlException("Not my VBucket");
         }
         return map;
