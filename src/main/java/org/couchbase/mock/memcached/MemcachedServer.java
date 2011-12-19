@@ -60,7 +60,6 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
     private final ServerSocketChannel server;
     private Selector selector;
     private final int port;
-    private CountDownLatch listenLatch;
     private CommandExecutor[] executors = new CommandExecutor[0xff];
     private final CouchbaseMock cluster;
     private boolean active = true;
@@ -117,6 +116,7 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         executors[ComCode.SASL_STEP.cc()] = executors[ComCode.SASL_LIST_MECHS.cc()];
 
         bootTime = System.currentTimeMillis() / 1000;
+        selector = Selector.open();
         server = ServerSocketChannel.open();
         server.configureBlocking(false);
         if (hostname != null && !hostname.equals("*")) {
@@ -138,7 +138,7 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
             }
         }
         this.port = server.socket().getLocalPort();
-        this.listenLatch = new CountDownLatch(0);
+        server.register(selector, SelectionKey.OP_ACCEPT);
     }
 
     public DataStore getDatastore() {
@@ -174,82 +174,76 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         return hostname + ":" + port;
     }
 
-    private class ServerInactiveException extends RuntimeException {
-    }
-
-    private Selector selector() throws IOException {
-        if (selector == null || !selector.isOpen()) {
-            if (active) {
-                selector = Selector.open();
-                server.register(selector, SelectionKey.OP_ACCEPT);
-            } else {
-                throw new ServerInactiveException();
-            }
-        }
-        return selector;
-    }
-
     @Override
     public void run() {
-        while (!Thread.currentThread().isInterrupted()) {
-            try {
-                listenLatch.await();
-                if (selector().select() < 1) {
-                    // don't even try call other methods on selector
-                    // because it could be closed already by shutdown()
+        try {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    selector.select();
+                    if (!active) {
+                        // server is suspended: ignore all events
+                        selector.selectedKeys().clear();
+                        continue;
+                    }
+                } catch (IOException ex) {
                     continue;
                 }
-                Set<SelectionKey> readyKeys = selector().selectedKeys();
-                Iterator<SelectionKey> iterator = readyKeys.iterator();
 
-                // @todo we should probably drive the state machine until it
-                // step doesn't do any progress to avoid jumping back to the
-                // core
-                while (iterator.hasNext()) {
-                    SelectionKey key = iterator.next();
-                    iterator.remove();
+                try {
+                    Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
 
-                    MemcachedConnection client = (MemcachedConnection) key.attachment();
+                    // @todo we should probably drive the state machine until it
+                    // step doesn't do any progress to avoid jumping back to the
+                    // core
+                    while (iterator.hasNext()) {
+                        SelectionKey key = iterator.next();
+                        iterator.remove();
 
-                    if (client != null) {
-                        try {
-                            if (key.isReadable()) {
-                                SocketChannel channel = (SocketChannel) key.channel();
+                        MemcachedConnection client = (MemcachedConnection) key.attachment();
 
-                                if (channel.read(client.getInputBuffer()) == -1) {
-                                    channel.close();
-                                } else {
-                                    client.step();
-                                    if (client.hasOutput()) {
-                                        channel.register(selector(), SelectionKey.OP_READ | SelectionKey.OP_WRITE, client);
+                        if (client != null) {
+                            try {
+                                if (key.isReadable()) {
+                                    SocketChannel channel = (SocketChannel) key.channel();
+
+                                    if (channel.read(client.getInputBuffer()) == -1) {
+                                        channel.close();
                                     } else {
-                                        channel.register(selector(), SelectionKey.OP_READ, client);
+                                        client.step();
+                                        if (client.hasOutput()) {
+                                            channel.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE, client);
+                                        } else {
+                                            channel.register(selector, SelectionKey.OP_READ, client);
+                                        }
+                                    }
+                                } else if (key.isWritable()) {
+                                    SocketChannel channel = (SocketChannel) key.channel();
+                                    ByteBuffer buf;
+                                    while ((buf = client.getOutputBuffer()) != null) {
+                                        channel.write(buf);
                                     }
                                 }
-                            } else if (key.isWritable()) {
-                                SocketChannel channel = (SocketChannel) key.channel();
-                                ByteBuffer buf;
-                                while ((buf = client.getOutputBuffer()) != null) {
-                                    channel.write(buf);
-                                }
+                            } catch (ClosedChannelException exp) {
+                                // just ditch this client..
                             }
-                        } catch (ClosedChannelException exp) {
-                            // just ditch this client..
-                        }
-                    } else {
-                        if (key.isAcceptable()) {
-                            SocketChannel cc = server.accept();
-                            cc.configureBlocking(false);
-                            cc.register(selector(), SelectionKey.OP_READ, new MemcachedConnection(this));
+                        } else {
+                            if (key.isAcceptable()) {
+                                SocketChannel cc = server.accept();
+                                cc.configureBlocking(false);
+                                cc.register(selector, SelectionKey.OP_READ, new MemcachedConnection(this));
+                            }
                         }
                     }
+                } catch (IOException e) {
+                    Logger.getLogger(MemcachedServer.class.getName()).log(Level.SEVERE, null, e);
                 }
-            } catch (ServerInactiveException e) {
-                // skip and wait for listenLatch
+            }
+        } finally {
+            try {
+                server.close();
+                selector.close();
             } catch (IOException e) {
                 Logger.getLogger(MemcachedServer.class.getName()).log(Level.SEVERE, null, e);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(MemcachedServer.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
@@ -282,23 +276,14 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
     }
 
     public void shutdown() {
-        try {
-            // now it's safe to update latch
-            listenLatch = new CountDownLatch(1);
-            active = false;
-            selector.close();
-            selector = null;
-            if (cluster != null) {
-                cluster.configUpdated();
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(MemcachedServer.class.getName()).log(Level.SEVERE, null, ex);
+        active = false;
+        if (cluster != null) {
+            cluster.configUpdated();
         }
     }
 
     public void startup() {
-        this.active = true;
-        this.listenLatch.countDown();
+        active = true;
         if (cluster != null) {
             cluster.configUpdated();
         }
