@@ -17,6 +17,7 @@ package org.couchbase.mock;
 
 import com.sun.net.httpserver.HttpServer;
 import java.io.BufferedReader;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.List;
@@ -28,6 +29,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -57,13 +59,14 @@ public class CouchbaseMock {
     private ArrayList<Thread> nodeThreads;
     private final Lock configLock = new ReentrantLock();
     private Condition configInSync = configLock.newCondition();
+    private final CountDownLatch startupLatch;
 
     private void setupHarakiriMonitor(String host) {
         int idx = host.indexOf(':');
         String h = host.substring(0, idx);
         int p = Integer.parseInt(host.substring(idx + 1));
         try {
-            HarakiriMonitor m = new HarakiriMonitor(h, p, port, true, this);
+            HarakiriMonitor m = new HarakiriMonitor(h, p, true, this);
             Thread t = new Thread(m, "HarakiriMonitor");
             t.start();
         } catch (Throwable t) {
@@ -103,18 +106,17 @@ public class CouchbaseMock {
     public static class HarakiriMonitor implements Runnable {
 
         private final boolean terminate;
-        private final BufferedReader stream;
+        private final Socket sock;
+        private final BufferedReader input;
         private final CouchbaseMock mock;
+        private final OutputStream output;
 
-        public HarakiriMonitor(String host, int port, int httpPort, boolean terminate, CouchbaseMock mock) throws IOException {
+        public HarakiriMonitor(String host, int port, boolean terminate, CouchbaseMock mock) throws IOException {
             this.mock = mock;
             this.terminate = terminate;
-            Socket s = new Socket(host, port);
-            stream = new BufferedReader(new InputStreamReader(s.getInputStream()));
-
-            String http = "" + httpPort + '\0';
-            s.getOutputStream().write(http.getBytes());
-            s.getOutputStream().flush();
+            sock = new Socket(host, port);
+            input = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+            output = sock.getOutputStream();
         }
 
         @Override
@@ -123,9 +125,19 @@ public class CouchbaseMock {
             String[] tokens;
             String command, bucket, packet;
             int idx;
+            String http = "" + mock.getHttpPort() + '\0';
+            try {
+                mock.waitForStartup();
+                output.write(http.getBytes());
+                output.flush();
+            } catch (InterruptedException ex) {
+                closed = true;
+            } catch (IOException ex) {
+                closed = true;
+            }
             while (!closed) {
                 try {
-                    packet = stream.readLine();
+                    packet = input.readLine();
                     if (packet == null) {
                         closed = true;
                     } else if (mock != null) {
@@ -166,7 +178,8 @@ public class CouchbaseMock {
     }
 
     public CouchbaseMock(String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, String bucketSpec) throws IOException {
-            buckets = new HashMap<String, Bucket>();
+        startupLatch = new CountDownLatch(1);
+        buckets = new HashMap<String, Bucket>();
         try {
             Bucket bucket;
 
@@ -205,6 +218,10 @@ public class CouchbaseMock {
 
     public CouchbaseMock(String hostname, int port, int numNodes, int numVBuckets, String bucketSpec) throws IOException {
         this(hostname, port, numNodes, 0, numVBuckets, bucketSpec);
+    }
+
+    public void waitForStartup() throws InterruptedException {
+        startupLatch.await();
     }
 
     /**
@@ -368,6 +385,7 @@ public class CouchbaseMock {
             httpServer.createContext("/pools", new PoolsHandler(this)).setAuthenticator(authenticator);
             httpServer.setExecutor(Executors.newCachedThreadPool());
             httpServer.start();
+            startupLatch.countDown();
         } catch (IOException ex) {
             Logger.getLogger(CouchbaseMock.class.getName()).log(Level.SEVERE, null, ex);
         }

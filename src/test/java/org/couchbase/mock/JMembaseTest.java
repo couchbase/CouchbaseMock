@@ -230,7 +230,7 @@ public class JMembaseTest extends TestCase {
     public void testHarakiriMonitorInvalidHost() throws IOException {
         System.out.println("testHarakiriMonitorInvalidHost");
         try {
-            CouchbaseMock.HarakiriMonitor m = new CouchbaseMock.HarakiriMonitor("ItWouldSuckIfYouHadAHostNamedThis", 0, port, false, null);
+            CouchbaseMock.HarakiriMonitor m = new CouchbaseMock.HarakiriMonitor("ItWouldSuckIfYouHadAHostNamedThis", 0, false, instance);
             fail("I was not expecting to be able to connect to: \"ItWouldSuckIfYouHadAHostNamedThis:0\"");
         } catch (Throwable t) {
         }
@@ -239,7 +239,7 @@ public class JMembaseTest extends TestCase {
     public void testHarakiriMonitorInvalidPort() throws IOException {
         System.out.println("testHarakiriMonitorInvalidPort");
         try {
-            CouchbaseMock.HarakiriMonitor m = new CouchbaseMock.HarakiriMonitor(null, 0, port, false, null);
+            CouchbaseMock.HarakiriMonitor m = new CouchbaseMock.HarakiriMonitor(null, 0, false, instance);
             fail("I was not expecting to be able to connect to port 0");
         } catch (Throwable t) {
         }
@@ -249,7 +249,7 @@ public class JMembaseTest extends TestCase {
         System.out.println("testHarakiriMonitor");
         ServerSocket server = new ServerSocket(0);
         CouchbaseMock.HarakiriMonitor m;
-        m = new CouchbaseMock.HarakiriMonitor(null, server.getLocalPort(), port, false, null);
+        m = new CouchbaseMock.HarakiriMonitor(null, server.getLocalPort(), false, instance);
 
         Thread t = new Thread(m);
         t.start();
@@ -288,7 +288,7 @@ public class JMembaseTest extends TestCase {
     public void testConfigStreaming() throws IOException {
         System.out.println("testConfigStreaming");
         ServerSocket server = new ServerSocket(0);
-        CouchbaseMock.HarakiriMonitor m = new CouchbaseMock.HarakiriMonitor(null, server.getLocalPort(), port, true, instance);
+        CouchbaseMock.HarakiriMonitor m = new CouchbaseMock.HarakiriMonitor(null, server.getLocalPort(), true, instance);
         Thread t = new Thread(m, "HarakiriMonitor");
         t.start();
         Socket client = server.accept();
