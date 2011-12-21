@@ -264,22 +264,17 @@ public class JMembaseTest extends TestCase {
         }
     }
 
-    private String readConfig(InputStream stream) {
+    private String readConfig(InputStream stream) throws IOException {
         int bb, lf = 0;
         StringBuilder cfg = new StringBuilder();
 
         do {
-            try {
-                bb = stream.read();
-                if (bb == '\n') {
-                    lf++;
-                } else {
-                    lf = 0;
-                    cfg.append(bb);
-                }
-            } catch (IOException ex) {
-                Logger.getLogger(JMembaseTest.class.getName()).log(Level.SEVERE, null, ex);
-                return null;
+            bb = stream.read();
+            if (bb == '\n') {
+                lf++;
+            } else {
+                lf = 0;
+                cfg.append(bb);
             }
         } while (lf < 4);
         return cfg.toString();
@@ -288,9 +283,7 @@ public class JMembaseTest extends TestCase {
     public void testConfigStreaming() throws IOException {
         System.out.println("testConfigStreaming");
         ServerSocket server = new ServerSocket(0);
-        CouchbaseMock.HarakiriMonitor m = new CouchbaseMock.HarakiriMonitor(null, server.getLocalPort(), true, instance);
-        Thread t = new Thread(m, "HarakiriMonitor");
-        t.start();
+        instance.setupHarakiriMonitor("localhost:" + server.getLocalPort(), false);
         Socket client = server.accept();
         InputStream cin = client.getInputStream();
         OutputStream cout = client.getOutputStream();
@@ -323,6 +316,6 @@ public class JMembaseTest extends TestCase {
         assertEquals(100, defaultBucket.activeServers().size());
 
         server.close();
-        t.interrupt();
+        instance.getMonitor().stop();
     }
 }

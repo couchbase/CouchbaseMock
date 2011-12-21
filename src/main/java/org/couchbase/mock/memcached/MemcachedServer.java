@@ -279,16 +279,10 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
 
     public void shutdown() {
         active = false;
-        if (cluster != null) {
-            cluster.configUpdated();
-        }
     }
 
     public void startup() {
         active = true;
-        if (cluster != null) {
-            cluster.configUpdated();
-        }
     }
 
     /**

@@ -29,11 +29,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Observable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import org.couchbase.mock.Bucket.BucketType;
 import org.couchbase.mock.http.Authenticator;
 import org.couchbase.mock.http.PoolsHandler;
@@ -57,22 +55,15 @@ public class CouchbaseMock {
     private HttpServer httpServer;
     private Authenticator authenticator;
     private ArrayList<Thread> nodeThreads;
-    private final Lock configLock = new ReentrantLock();
-    private Condition configInSync = configLock.newCondition();
     private final CountDownLatch startupLatch;
+    private HarakiriMonitor monitor;
 
-    private void setupHarakiriMonitor(String host) {
+    public void setupHarakiriMonitor(String host, boolean terminate) throws IOException {
         int idx = host.indexOf(':');
         String h = host.substring(0, idx);
         int p = Integer.parseInt(host.substring(idx + 1));
-        try {
-            HarakiriMonitor m = new HarakiriMonitor(h, p, true, this);
-            Thread t = new Thread(m, "HarakiriMonitor");
-            t.start();
-        } catch (Throwable t) {
-            System.err.println("Failed to set up harakiri monitor: " + t.getMessage());
-            System.exit(1);
-        }
+        monitor = new HarakiriMonitor(h, p, terminate, this);
+        monitor.start();
     }
 
     /**
@@ -103,13 +94,18 @@ public class CouchbaseMock {
         }
     }
 
-    public static class HarakiriMonitor implements Runnable {
+    public HarakiriMonitor getMonitor() {
+        return monitor;
+    }
+
+    public static class HarakiriMonitor extends Observable implements Runnable {
 
         private final boolean terminate;
-        private final Socket sock;
-        private final BufferedReader input;
         private final CouchbaseMock mock;
-        private final OutputStream output;
+        private BufferedReader input;
+        private OutputStream output;
+        private Socket sock;
+        private Thread thread;
 
         public HarakiriMonitor(String host, int port, boolean terminate, CouchbaseMock mock) throws IOException {
             this.mock = mock;
@@ -117,6 +113,17 @@ public class CouchbaseMock {
             sock = new Socket(host, port);
             input = new BufferedReader(new InputStreamReader(sock.getInputStream()));
             output = sock.getOutputStream();
+        }
+
+        public void start()
+        {
+            thread = new Thread(this, "HarakiriMonitor");
+            thread.start();
+        }
+
+        public void stop()
+        {
+            thread.interrupt();
         }
 
         @Override
@@ -158,8 +165,12 @@ public class CouchbaseMock {
                                 }
                                 if ("failover".equals(command)) {
                                     mock.failover(bucket, idx);
+                                    setChanged();
+                                    notifyObservers();
                                 } else if ("respawn".equals(command)) {
                                     mock.respawn(bucket, idx);
+                                    setChanged();
+                                    notifyObservers();
                                 }
                             } catch (NumberFormatException ex) {
                             }
@@ -306,33 +317,12 @@ public class CouchbaseMock {
             }
             CouchbaseMock mock = new CouchbaseMock(hostname, port, nodes, vbuckets, bucketsSpec);
             if (harakirimonitor != null) {
-                mock.setupHarakiriMonitor(harakirimonitor);
+                mock.setupHarakiriMonitor(harakirimonitor, true);
             }
             mock.start();
         } catch (Exception e) {
             Logger.getLogger(CouchbaseMock.class.getName()).log(Level.SEVERE, "Fatal error! failed to create socket: ", e);
         }
-    }
-
-    public void configUpdated() {
-        configLock.lock();
-        try {
-            configInSync.signalAll();
-        } finally {
-            configLock.unlock();
-        }
-    }
-
-    public boolean waitForUpdate() {
-        configLock.lock();
-        try {
-            configInSync.await();
-        } catch (InterruptedException ex) {
-            return false;
-        } finally {
-            configLock.unlock();
-        }
-        return true;
     }
 
     public void failSome(String name, float percentage) {

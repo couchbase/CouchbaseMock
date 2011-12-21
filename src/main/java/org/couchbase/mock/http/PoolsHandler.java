@@ -15,6 +15,9 @@
  */
 package org.couchbase.mock.http;
 
+import java.util.Observable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.couchbase.mock.CouchbaseMock;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -24,6 +27,8 @@ import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Observer;
+import java.util.concurrent.CountDownLatch;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.couchbase.mock.Bucket;
@@ -33,6 +38,33 @@ import org.couchbase.mock.Bucket;
  * @author Sergey Avseyev
  */
 public class PoolsHandler implements HttpHandler {
+
+    private class ConfigObserver implements Observer {
+        private final OutputStream output;
+        private final Bucket bucket;
+        private final CountDownLatch complete;
+
+        public ConfigObserver(Bucket bucket, OutputStream output, CountDownLatch complete) {
+            this.bucket = bucket;
+            this.output = output;
+            this.complete = complete;
+        }
+
+        @Override
+        public void update(Observable o, Object arg) {
+            try {
+                byte[] data = bucket.getJSON().getBytes();
+                int n = data.length;
+                output.write(data);
+                output.write("\n\n\n\n".getBytes());
+                output.flush();
+            } catch (IOException ex) {
+                o.deleteObserver(this);
+                complete.countDown();
+            }
+        }
+
+    }
 
     private final CouchbaseMock mock;
 
@@ -46,6 +78,7 @@ public class PoolsHandler implements HttpHandler {
         OutputStream body = exchange.getResponseBody();
         String bucketName = exchange.getPrincipal().getName();
         byte[] payload;
+        boolean chunked = false;
 
         if (path.matches("^/pools/?$")) {
             // GET /pools
@@ -83,16 +116,30 @@ public class PoolsHandler implements HttpHandler {
             // GET /pools/:poolName/bucketsStreaming/:bucketName
             String[] tokens = path.split("/");
             Bucket bucket = mock.getBuckets().get(tokens[tokens.length - 1]);
-            exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, 0);
-            do {
-                body.write(bucket.getJSON().getBytes());
+            if (bucket != null) {
+                exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, 0);
+                chunked = true;
+                byte[] data = bucket.getJSON().getBytes();
+                body.write(data);
                 body.write("\n\n\n\n".getBytes());
                 body.flush();
-            } while (mock.waitForUpdate());
+                CountDownLatch completed = new CountDownLatch(1);
+                ConfigObserver observer = new ConfigObserver(bucket, body, completed);
+                mock.getMonitor().addObserver(observer);
+                try {
+                    completed.await();
+                } catch (InterruptedException ex) {
+                    exchange.sendResponseHeaders(HttpURLConnection.HTTP_INTERNAL_ERROR, -1);
+                }
+            } else {
+                exchange.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, -1);
+            }
         } else {
             exchange.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, -1);
         }
-        body.close();
+        if (!chunked) {
+            body.close();
+        }
 
     }
 
