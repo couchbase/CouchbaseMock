@@ -57,10 +57,10 @@ public class Authenticator extends BasicAuthenticator {
     @Override
     public Result authenticate(HttpExchange exchange) {
         String requestPath = exchange.getRequestURI().getPath();
-        Matcher m = Pattern.compile("/pools/\\w+/buckets/(\\w+)/?.*").matcher(requestPath);
+        Matcher m = Pattern.compile("/pools/\\w+/buckets(Streaming)?/(\\w+)/?.*").matcher(requestPath);
         bucketName = null;
         if (m.find()) {
-            bucketName = m.group(1);
+            bucketName = m.group(2);
         }
 
         if (!exchange.getRequestHeaders().containsKey("Authorization")) {

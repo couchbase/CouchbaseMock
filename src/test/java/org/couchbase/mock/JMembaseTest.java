@@ -309,26 +309,26 @@ public class JMembaseTest extends TestCase {
         }
         assertEquals(rport.toString(), Integer.toString(port));
 
-        Bucket defaultBucket = instance.getBuckets().get("default");
-        URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/bucketsStreaming/default");
+        Bucket bucket = instance.getBuckets().get("protected");
+        URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/bucketsStreaming/protected");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.addRequestProperty("Authorization", "Basic " + Base64.encode("Administrator:password"));
+        conn.addRequestProperty("Authorization", "Basic " + Base64.encode("protected:secret"));
         InputStream stream = conn.getInputStream();
         String currCfg, nextCfg;
 
         currCfg = readConfig(stream);
-        assertEquals(100, defaultBucket.activeServers().size());
+        assertEquals(100, bucket.activeServers().size());
 
-        cout.write("failover,1,default\n".getBytes());
+        cout.write("failover,1,protected\n".getBytes());
         nextCfg = readConfig(stream);
         assertNotSame(currCfg, nextCfg);
-        assertEquals(99, defaultBucket.activeServers().size());
+        assertEquals(99, bucket.activeServers().size());
         currCfg = nextCfg;
 
-        cout.write("respawn,1,default\n".getBytes());
+        cout.write("respawn,1,protected\n".getBytes());
         nextCfg = readConfig(stream);
         assertNotSame(currCfg, nextCfg);
-        assertEquals(100, defaultBucket.activeServers().size());
+        assertEquals(100, bucket.activeServers().size());
 
         server.close();
         instance.getMonitor().stop();
