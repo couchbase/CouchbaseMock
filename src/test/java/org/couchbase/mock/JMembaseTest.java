@@ -100,6 +100,21 @@ public class JMembaseTest extends TestCase {
         }
     }
 
+    public void testHandleHttpRequestWithTrailingSlash() throws IOException {
+        System.out.println("testHandleHttpRequestWithTrailingSlash");
+        URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/protected/");
+        HttpURLConnection conn = null;
+
+        try {
+            conn = (HttpURLConnection) url.openConnection();
+            assertNotNull(conn);
+            conn.addRequestProperty("Authorization", "Basic " + Base64.encode("protected:secret"));
+            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+        } catch (Exception ex) {
+            fail(ex.getMessage());
+        }
+    }
+
     public void testAdministratorCouldAccessProtectedBuckets() throws IOException {
         System.out.println("testAdministratorCouldAccessProtectedBuckets");
         URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/protected");

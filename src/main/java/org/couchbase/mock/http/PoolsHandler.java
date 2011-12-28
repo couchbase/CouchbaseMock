@@ -85,14 +85,14 @@ public class PoolsHandler implements HttpHandler {
             payload = getPoolsJSON().getBytes();
             exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, payload.length);
             body.write(payload);
-        } else if (path.matches("^/pools/" + mock.getPoolName() + "$")) {
+        } else if (path.matches("^/pools/" + mock.getPoolName() + "$/?")) {
             // GET /pools/:poolName
             StringWriter sw = new StringWriter();
             sw.append("{\"buckets\":{\"uri\":\"/pools/" + mock.getPoolName() + "/buckets/default\"}}");
             payload = sw.toString().getBytes();
             exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, payload.length);
             body.write(payload);
-        } else if (path.matches("^/pools/" + mock.getPoolName() + "/buckets$")) {
+        } else if (path.matches("^/pools/" + mock.getPoolName() + "/buckets/?$")) {
             // GET /pools/:poolName/buckets
             JSONArray buckets = new JSONArray();
             for (Bucket bucket : mock.getBuckets().values()) {
@@ -105,14 +105,14 @@ public class PoolsHandler implements HttpHandler {
             payload = buckets.toString().getBytes();
             exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, payload.length);
             body.write(payload);
-        } else if (path.matches("^/pools/" + mock.getPoolName() + "/buckets/[^/]+$")) {
+        } else if (path.matches("^/pools/" + mock.getPoolName() + "/buckets/[^/]+/?$")) {
             // GET /pools/:poolName/buckets/:bucketName
             String[] tokens = path.split("/");
             Bucket bucket = mock.getBuckets().get(tokens[tokens.length - 1]);
             payload = bucket.getJSON().getBytes();
             exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, payload.length);
             body.write(payload);
-        } else if (path.matches("^/pools/" + mock.getPoolName() + "/bucketsStreaming/[^/]+$")) {
+        } else if (path.matches("^/pools/" + mock.getPoolName() + "/bucketsStreaming/[^/]+/?$")) {
             // GET /pools/:poolName/bucketsStreaming/:bucketName
             String[] tokens = path.split("/");
             Bucket bucket = mock.getBuckets().get(tokens[tokens.length - 1]);
