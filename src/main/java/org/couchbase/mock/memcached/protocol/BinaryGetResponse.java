@@ -34,7 +34,7 @@ public class BinaryGetResponse extends BinaryResponse {
 
     private static ByteBuffer create(BinaryCommand command, Item item) {
         final ByteBuffer message = BinaryResponse.create(command, ErrorCode.SUCCESS,
-                4 /* flags */, 0, item.getValue().length, 0);
+                4 /* flags */, 0, item.getValue().length, item.getCas());
         message.putInt(item.getFlags());
         message.put(item.getValue());
         message.rewind();
