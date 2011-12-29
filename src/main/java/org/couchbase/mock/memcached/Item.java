@@ -60,16 +60,22 @@ public class Item {
     }
 
     public void append(Item i) {
-        byte[] b = new byte[value.length + i.getValue().length];
-        System.arraycopy(b, 0, value, 0, value.length);
-        System.arraycopy(b, value.length, i.getValue(), 0, i.getValue().length);
-        value = b;
+        byte[] s1 = value;
+        byte[] s2 = i.getValue();
+        byte[] dst = new byte[s1.length + s2.length];
+
+        System.arraycopy(s1, 0, dst, 0, s1.length);
+        System.arraycopy(s2, 0, dst, s1.length, s2.length);
+        value = dst;
     }
 
     public void prepend(Item i) {
-        byte[] b = new byte[value.length + i.getValue().length];
-        System.arraycopy(b, 0, i.getValue(), 0, i.getValue().length);
-        System.arraycopy(b, i.getValue().length, value, 0, value.length);
-        value = b;
+        byte[] s1 = value;
+        byte[] s2 = i.getValue();
+        byte[] dst = new byte[s1.length + s2.length];
+
+        System.arraycopy(s2, 0, dst, 0, s2.length);
+        System.arraycopy(s1, 0, dst, s2.length, s1.length);
+        value = dst;
     }
 }

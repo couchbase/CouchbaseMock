@@ -28,6 +28,7 @@ import org.couchbase.mock.memcached.protocol.ErrorCode;
  * @author Trond Norbye <trond.norbye@gmail.com>
  */
 class AppendCommandExecutor implements CommandExecutor {
+
     @Override
     public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
         BinaryStoreCommand command = (BinaryStoreCommand) cmd;
@@ -36,17 +37,15 @@ class AppendCommandExecutor implements CommandExecutor {
         Item item = command.getItem();
 
         Item existing = server.getDatastore().get(server, cmd.getVBucketId(), cmd.getKey());
-        if (item == null) {
-             client.sendResponse(new BinaryResponse(cmd, ErrorCode.KEY_ENOENT));
-             return;
+        if (existing == null) {
+            client.sendResponse(new BinaryResponse(cmd, ErrorCode.NOT_STORED));
+            return;
         }
-        // We're supposed to append this to the existing object, that
-        // means we need to prepend the existing object to this..
-        item.prepend(existing);
-        err = server.getDatastore().replace(server, cmd.getVBucketId(), item);
+        existing.append(item);
+        err = server.getDatastore().replace(server, cmd.getVBucketId(), existing);
         if (err == ErrorCode.SUCCESS && cmd.getComCode() == ComCode.APPENDQ) {
             return;
         }
-        client.sendResponse(new BinaryStoreResponse(command, err, item.getCas()));
+        client.sendResponse(new BinaryStoreResponse(command, err, existing.getCas()));
     }
 }
