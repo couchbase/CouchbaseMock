@@ -17,6 +17,7 @@ package org.couchbase.mock.memcached;
 
 import org.couchbase.mock.memcached.protocol.ErrorCode;
 import java.security.AccessControlException;
+import java.util.Date;
 import java.util.Map;
 import org.couchbase.mock.Bucket.BucketType;
 
@@ -62,7 +63,8 @@ public class DataStore {
     public ErrorCode add(MemcachedServer server, short vBucketId, Item item) {
         // I don't give a shit about atomicy right now..
         Map<String, Item> map = getMap(server, vBucketId);
-        if (map.get(item.getKey()) != null || item.getCas() != 0) {
+        Item old = lookup(map, item.getKey());
+        if (old != null || item.getCas() != 0) {
             return ErrorCode.KEY_EEXISTS;
         }
 
@@ -74,7 +76,7 @@ public class DataStore {
     public ErrorCode replace(MemcachedServer server, short vBucketId, Item item) {
         // I don't give a shit about atomicy right now..
         Map<String, Item> map = getMap(server, vBucketId);
-        Item old = map.get(item.getKey());
+        Item old = lookup(map, item.getKey());
         if (old == null) {
             return ErrorCode.KEY_ENOENT;
         }
@@ -103,7 +105,7 @@ public class DataStore {
     ErrorCode delete(MemcachedServer server, short vBucketId, String key, long cas) {
         // I don't give a shit about atomicy right now..
         Map<String, Item> map = getMap(server, vBucketId);
-        Item i = map.get(key);
+        Item i = lookup(map, key);
         if (i == null) {
             return ErrorCode.KEY_ENOENT;
         }
@@ -116,12 +118,25 @@ public class DataStore {
 
     Item get(MemcachedServer server, short vBucketId, String key) {
         Map<String, Item> map = getMap(server, vBucketId);
-        return map.get(key);
+        return lookup(map, key);
     }
 
     void flush(MemcachedServer server) {
         for (VBucket b : vBucketMap) {
             b.flush(server);
         }
+    }
+
+    private Item lookup(Map<String, Item> map, String key) {
+        Item ii = map.get(key);
+        if (ii != null) {
+            long now = new Date().getTime();
+            if (ii.getExptime() == 0 || (now - ii.getMtime() < ii.getExptimeInMillis())) {
+                return ii;
+            } else {
+                map.remove(key);
+            }
+        }
+        return null;
     }
 }

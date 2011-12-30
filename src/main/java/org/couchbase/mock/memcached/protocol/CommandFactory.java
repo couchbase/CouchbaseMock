@@ -53,6 +53,15 @@ public class CommandFactory {
             case DECREMENTQ:
                 return new BinaryArithmeticCommand(header);
 
+            case GET:
+            case GETQ:
+            case GETK:
+            case GETKQ:
+            case GAT:
+            case GATQ:
+            case TOUCH:
+                return new BinaryGetCommand(header);
+
             default:
                 return new BinaryCommand(header);
         }

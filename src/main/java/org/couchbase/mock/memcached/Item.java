@@ -16,6 +16,8 @@
 
 package org.couchbase.mock.memcached;
 
+import java.util.Date;
+
 /**
  *
  * @author Trond Norbye
@@ -26,6 +28,7 @@ public class Item {
     private int exptime;
     private byte[] value;
     private long cas;
+    private long mtime;
 
     public Item(String key, int flags, int exptime, byte[] value, long cas) {
         this.key = key;
@@ -37,6 +40,18 @@ public class Item {
 
     public int getExptime() {
         return exptime;
+    }
+
+    public int getExptimeInMillis() {
+        return exptime * 1000;
+    }
+
+    public void setExptime(int e) {
+        exptime = e;
+    }
+
+    public long getMtime() {
+        return mtime;
     }
 
     public int getFlags() {
@@ -56,6 +71,7 @@ public class Item {
     }
 
     void setCas(long l) {
+        mtime = new Date().getTime();
         cas = l;
     }
 
