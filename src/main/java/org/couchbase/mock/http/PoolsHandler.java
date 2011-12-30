@@ -16,8 +16,6 @@
 package org.couchbase.mock.http;
 
 import java.util.Observable;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.couchbase.mock.CouchbaseMock;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -32,6 +30,7 @@ import java.util.concurrent.CountDownLatch;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.couchbase.mock.Bucket;
+import org.couchbase.mock.CouchbaseMock.HarakiriMonitor;
 
 /**
  *
@@ -124,8 +123,11 @@ public class PoolsHandler implements HttpHandler {
                 body.write("\n\n\n\n".getBytes());
                 body.flush();
                 CountDownLatch completed = new CountDownLatch(1);
-                ConfigObserver observer = new ConfigObserver(bucket, body, completed);
-                mock.getMonitor().addObserver(observer);
+                HarakiriMonitor monitor = mock.getMonitor();
+                if (monitor != null) {
+                    ConfigObserver observer = new ConfigObserver(bucket, body, completed);
+                    monitor.addObserver(observer);
+                } // else wait forever
                 try {
                     completed.await();
                 } catch (InterruptedException ex) {
