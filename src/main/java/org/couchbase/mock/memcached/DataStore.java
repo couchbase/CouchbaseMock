@@ -103,17 +103,15 @@ public class DataStore {
     ErrorCode delete(MemcachedServer server, short vBucketId, String key, long cas) {
         // I don't give a shit about atomicy right now..
         Map<String, Item> map = getMap(server, vBucketId);
-        if (cas == 0) {
-            map.remove(key);
-            return ErrorCode.SUCCESS;
-        } else {
-            Item i = map.get(key);
-            if (i.getCas() != cas) {
-                return ErrorCode.KEY_EEXISTS;
-            }
+        Item i = map.get(key);
+        if (i == null) {
+            return ErrorCode.KEY_ENOENT;
+        }
+        if (cas == 0 || cas == i.getCas()) {
             map.remove(key);
             return ErrorCode.SUCCESS;
         }
+        return ErrorCode.KEY_EEXISTS;
     }
 
     Item get(MemcachedServer server, short vBucketId, String key) {
