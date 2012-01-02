@@ -37,8 +37,8 @@ public class SaslCommandExecutor implements CommandExecutor {
                 break;
             case SASL_AUTH:
                 String[] clientin = new String(cmd.getValue()).split("\0");
-                Bucket bucket = server.getBuckets().get(clientin[1]);
-                if (bucket != null && bucket.getPassword().equals(clientin[2])) {
+                Bucket bucket = server.getBucket();
+                if (bucket.getName().equals(clientin[1]) && bucket.getPassword().equals(clientin[2])) {
                     client.sendResponse(new BinarySaslResponse(cmd, "Authenticated"));
                 } else {
                     client.sendResponse(new BinarySaslResponse(cmd, ErrorCode.AUTH_ERROR));

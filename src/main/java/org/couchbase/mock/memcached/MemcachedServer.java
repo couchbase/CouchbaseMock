@@ -43,7 +43,6 @@ import java.util.Map;
 import net.sf.json.JSONObject;
 import org.couchbase.mock.Bucket;
 import org.couchbase.mock.Bucket.BucketType;
-import org.couchbase.mock.CouchbaseMock;
 
 /**
  * This is a small implementation of a Memcached server. It listens
@@ -60,24 +59,21 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
     private Selector selector;
     private final int port;
     private CommandExecutor[] executors = new CommandExecutor[0xff];
-    private final CouchbaseMock cluster;
-    private final BucketType type;
+    private final Bucket bucket;
     private boolean active = true;
 
     /**
      * Create a new new memcached server.
      *
-     * @param type
      * @param hostname The hostname to bind to (null == any)
      * @param port The port this server should listen to (0 to choose an
      *             ephemeral port)
      * @param datastore
-     * @param cluster
+     * @param bucket
      * @throws IOException If we fail to create the server socket
      */
-    public MemcachedServer(BucketType type, String hostname, int port, DataStore datastore, CouchbaseMock cluster) throws IOException {
-        this.type = type;
-        this.cluster = cluster;
+    public MemcachedServer(Bucket bucket, String hostname, int port, DataStore datastore) throws IOException {
+        this.bucket = bucket;
         this.datastore = datastore;
 
         UnknownCommandExecutor unknownHandler = new UnknownCommandExecutor();
@@ -253,9 +249,9 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         }
     }
 
-    public Map<String, Bucket> getBuckets()
+    public Bucket getBucket()
     {
-        return cluster.getBuckets();
+        return bucket;
     }
 
     /*
@@ -297,7 +293,7 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
     public static void main(String[] args) {
         try {
             DataStore ds = new DataStore(1024);
-            MemcachedServer server = new MemcachedServer(BucketType.COUCHBASE, null, 11211, ds, null);
+            MemcachedServer server = new MemcachedServer(null, null, 11211, ds);
             for (int ii = 0; ii < 1024; ++ii) {
                 ds.setOwnership(ii, server);
             }
@@ -318,6 +314,6 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
      * @return the type
      */
     public BucketType getType() {
-        return type;
+        return bucket.getType();
     }
 }

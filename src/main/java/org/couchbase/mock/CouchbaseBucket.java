@@ -85,4 +85,9 @@ public class CouchbaseBucket extends Bucket {
         return JSONObject.fromObject(map).toString();
 
     }
+
+    @Override
+    public BucketType getType() {
+        return BucketType.COUCHBASE;
+    }
 }

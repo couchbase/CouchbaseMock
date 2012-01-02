@@ -66,7 +66,7 @@ public abstract class Bucket {
             throw new FileNotFoundException("I don't know about this type...");
         }
         for (int ii = 0; ii < servers.length; ii++) {
-            servers[ii] = new MemcachedServer(type, hostname, (bucketStartPort == 0 ? 0 : bucketStartPort + ii), datastore, cluster);
+            servers[ii] = new MemcachedServer(this, hostname, (bucketStartPort == 0 ? 0 : bucketStartPort + ii), datastore);
         }
         rebalance();
     }
@@ -80,8 +80,9 @@ public abstract class Bucket {
                 default:
                     throw new FileNotFoundException("I don't know about this type...");
             }
-
     }
+
+    public abstract BucketType getType();
 
     public abstract String getJSON();
 

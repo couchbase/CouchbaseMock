@@ -62,4 +62,9 @@ public class MemcacheBucket extends Bucket {
 
         return JSONObject.fromObject(map).toString();
     }
+
+    @Override
+    public BucketType getType() {
+        return BucketType.MEMCACHE;
+    }
 }
