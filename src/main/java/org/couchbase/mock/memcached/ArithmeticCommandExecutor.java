@@ -35,49 +35,53 @@ public class ArithmeticCommandExecutor implements CommandExecutor {
         Item item = server.getDatastore().get(server, cmd.getVBucketId(), cmd.getKey());
         ComCode cc = cmd.getComCode();
 
-        if (item == null && cmd.create()) {
-            item = new Item(cmd.getKey(), 0, cmd.getExpiration(), Long.toString(cmd.getInitial()).getBytes(), 0);
-            ErrorCode err = server.getDatastore().add(server, cmd.getVBucketId(), item);
+        if (item == null) {
+            if (cmd.create()) {
+                item = new Item(cmd.getKey(), 0, cmd.getExpiration(), Long.toString(cmd.getInitial()).getBytes(), 0);
+                ErrorCode err = server.getDatastore().add(server, cmd.getVBucketId(), item);
 
-            switch (err) {
-                case KEY_EEXISTS:
-                    execute(command, server, client);
-                    break;
-                case SUCCESS:
-                    if (cc == ComCode.INCREMENT || cc == ComCode.DECREMENT) {
-                        // return value
-                    }
-                    break;
-                default:
-                    client.sendResponse(new BinaryResponse(command, err));
+                switch (err) {
+                    case KEY_EEXISTS:
+                        execute(command, server, client);
+                        break;
+                    case SUCCESS:
+                        if (cc == ComCode.INCREMENT || cc == ComCode.DECREMENT) {
+                            client.sendResponse(new BinaryArithmeticResponse(cmd, cmd.getInitial(), item.getCas()));
+                        }
+                        break;
+                    default:
+                        client.sendResponse(new BinaryResponse(command, err));
+                }
+            } else {
+                client.sendResponse(new BinaryResponse(command, ErrorCode.KEY_ENOENT));
+            }
+            return;
+        } else {
+            long value;
+            try {
+                value = Long.parseLong(new String(item.getValue()));
+            } catch (NumberFormatException ex) {
+                client.sendResponse(new BinaryResponse(command, ErrorCode.DELTA_BADVAL));
+                return;
             }
 
-            return;
-        }
-
-        long value;
-        try {
-            value = Long.parseLong(new String(item.getValue()));
-        } catch (NumberFormatException ex) {
-            client.sendResponse(new BinaryResponse(command, ErrorCode.DELTA_BADVAL));
-            return;
-        }
-
-        if (cc == ComCode.INCREMENT || cc == ComCode.INCREMENTQ) {
-            value += cmd.getDelta();
-        } else {
-            value -= cmd.getDelta();
-        }
-
-        Item nval = new Item(cmd.getKey(), 0, cmd.getExpiration(), Long.toString(value).getBytes(), item.getCas());
-        ErrorCode err = server.getDatastore().set(server, cmd.getVBucketId(), nval);
-        if (err == ErrorCode.SUCCESS) {
-            if (cc == ComCode.INCREMENT || cc == ComCode.DECREMENT) {
-                // return value
-                client.sendResponse(new BinaryArithmeticResponse(cmd, value, nval.getCas()));
+            if (cc == ComCode.INCREMENT || cc == ComCode.INCREMENTQ) {
+                value += cmd.getDelta();
+            } else {
+                value -= cmd.getDelta();
             }
-        } else {
-            client.sendResponse(new BinaryResponse(command, err));
+
+            int exp = cmd.getExpiration() > 0 ? cmd.getExpiration() : item.getExptime();
+            Item nval = new Item(cmd.getKey(), 0, exp, Long.toString(value).getBytes(), item.getCas());
+            ErrorCode err = server.getDatastore().set(server, cmd.getVBucketId(), nval);
+            if (err == ErrorCode.SUCCESS) {
+                if (cc == ComCode.INCREMENT || cc == ComCode.DECREMENT) {
+                    // return value
+                    client.sendResponse(new BinaryArithmeticResponse(cmd, value, nval.getCas()));
+                }
+            } else {
+                client.sendResponse(new BinaryResponse(command, err));
+            }
         }
     }
 }
