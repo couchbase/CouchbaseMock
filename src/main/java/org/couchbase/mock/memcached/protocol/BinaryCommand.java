@@ -77,7 +77,11 @@ public class BinaryCommand {
     }
 
     public String getKey() {
-        return new String(bodyBuffer.array(), extlen, keylen);
+        if (keylen == 0) {
+            return null;
+        } else {
+            return new String(bodyBuffer.array(), extlen, keylen);
+        }
     }
 
     public byte[] getValue() {

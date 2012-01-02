@@ -36,6 +36,7 @@ import java.nio.channels.SocketChannel;
 
 import java.security.AccessControlException;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -169,6 +170,25 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         ports.put("proxy", 0); //todo this should be fixed (Vitaly.R)
         map.put("ports", ports);
         return JSONObject.fromObject(map).toString();
+    }
+
+    public Map<String, String> getStats() {
+        HashMap<String, String> stats = new HashMap<String, String>();
+        stats.put("pid", Long.toString(Thread.currentThread().getId()));
+        stats.put("time", Long.toString(new Date().getTime()));
+        stats.put("version", "9.9.9");
+        stats.put("uptime", "15554");
+        stats.put("accepting_conns", "1");
+        stats.put("auth_cmds", "0");
+        stats.put("auth_errors", "0");
+        stats.put("bucket_active_conns", "1");
+        stats.put("bucket_conns", "3");
+        stats.put("bytes_read", "1108621");
+        stats.put("bytes_written", "205374436");
+        stats.put("cas_badval", "0");
+        stats.put("cas_hits", "0");
+        stats.put("cas_misses", "0");
+        return stats;
     }
 
     public String getSocketName() {
