@@ -72,7 +72,7 @@ public class ArithmeticCommandExecutor implements CommandExecutor {
             }
 
             int exp = cmd.getExpiration() > 0 ? cmd.getExpiration() : item.getExptime();
-            Item nval = new Item(cmd.getKey(), 0, exp, Long.toString(value).getBytes(), item.getCas());
+            Item nval = new Item(cmd.getKey(), item.getFlags(), exp, Long.toString(value).getBytes(), item.getCas());
             ErrorCode err = server.getDatastore().set(server, cmd.getVBucketId(), nval);
             if (err == ErrorCode.SUCCESS) {
                 if (cc == ComCode.INCREMENT || cc == ComCode.DECREMENT) {
