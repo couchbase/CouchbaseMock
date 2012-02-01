@@ -156,7 +156,7 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         map.put("replication", 1);
         map.put("clusterMembership", "active");
         map.put("status", "healthy");
-        map.put("hostname", hostname);
+        map.put("hostname", getSocketName());
         map.put("clusterCompatibility", 1);
         map.put("version", "9.9.9");
         StringBuilder sb = new StringBuilder(System.getProperty("os.arch"));
