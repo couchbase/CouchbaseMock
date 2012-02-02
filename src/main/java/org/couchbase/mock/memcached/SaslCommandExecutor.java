@@ -40,6 +40,7 @@ public class SaslCommandExecutor implements CommandExecutor {
                 Bucket bucket = server.getBucket();
                 if (bucket.getName().equals(clientin[1]) && bucket.getPassword().equals(clientin[2])) {
                     client.sendResponse(new BinarySaslResponse(cmd, "Authenticated"));
+                    client.setAuthenticated(true);
                 } else {
                     client.sendResponse(new BinarySaslResponse(cmd, ErrorCode.AUTH_ERROR));
                 }

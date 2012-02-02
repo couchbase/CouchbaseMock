@@ -286,7 +286,14 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
     public void execute(BinaryCommand cmd, MemcachedConnection client)
             throws IOException {
         try {
-            executors[cmd.getComCode().cc()].execute(cmd, this, client);
+            if (client.isAuthenticated()
+                    || cmd.getComCode() == ComCode.SASL_AUTH
+                    || cmd.getComCode() == ComCode.SASL_LIST_MECHS
+                    || cmd.getComCode() == ComCode.SASL_STEP) {
+                executors[cmd.getComCode().cc()].execute(cmd, this, client);
+            } else {
+                client.sendResponse(new BinaryResponse(cmd, ErrorCode.AUTH_ERROR));
+            }
         } catch (AccessControlException ex) {
             client.sendResponse(new BinaryResponse(cmd, ErrorCode.NOT_MY_VBUCKET));
         }

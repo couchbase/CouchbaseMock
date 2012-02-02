@@ -33,8 +33,16 @@ public class MemcachedConnection {
     private BinaryCommand command;
     private final ByteBuffer input;
     private final Queue<ByteBuffer> output;
+    private boolean authenticated;
+    private final MemcachedServer server;
 
     public MemcachedConnection(MemcachedServer server) throws IOException {
+        this.server = server;
+        if (server.getBucket().getPassword().length() > 0) {
+            authenticated = false;
+        } else {
+            authenticated = true;
+        }
         header = new byte[24];
         input = ByteBuffer.wrap(header);
         protocolHandler = server.getProtocolHandler();
@@ -82,5 +90,13 @@ public class MemcachedConnection {
 
     void shutdown() {
         throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    void setAuthenticated(boolean state) {
+        authenticated = state;
+    }
+
+    public boolean isAuthenticated() {
+        return authenticated;
     }
 }
