@@ -87,7 +87,7 @@ public class PoolsHandler implements HttpHandler {
         } else if (path.matches("^/pools/" + mock.getPoolName() + "$/?")) {
             // GET /pools/:poolName
             StringWriter sw = new StringWriter();
-            sw.append("{\"buckets\":{\"uri\":\"/pools/" + mock.getPoolName() + "/buckets/default\"}}");
+            sw.append("{\"buckets\":{\"uri\":\"/pools/" + mock.getPoolName() + "/buckets\"}}");
             payload = sw.toString().getBytes();
             exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, payload.length);
             body.write(payload);
