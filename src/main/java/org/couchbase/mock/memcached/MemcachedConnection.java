@@ -19,6 +19,7 @@ import org.couchbase.mock.memcached.protocol.BinaryResponse;
 import org.couchbase.mock.memcached.protocol.BinaryCommand;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
 import java.util.LinkedList;
 import java.util.Queue;
 import org.couchbase.mock.memcached.protocol.CommandFactory;
@@ -34,10 +35,10 @@ public class MemcachedConnection {
     private final ByteBuffer input;
     private final Queue<ByteBuffer> output;
     private boolean authenticated;
-    private final MemcachedServer server;
+    private boolean closed;
 
     public MemcachedConnection(MemcachedServer server) throws IOException {
-        this.server = server;
+        closed = false;
         if (server.getBucket().getPassword().length() > 0) {
             authenticated = false;
         } else {
@@ -50,6 +51,9 @@ public class MemcachedConnection {
     }
 
     public void step() throws IOException {
+        if (closed) {
+            throw new ClosedChannelException();
+        }
         if (input.position() == header.length) {
             if (command == null) {
                 command = CommandFactory.create(input);
@@ -89,7 +93,11 @@ public class MemcachedConnection {
     }
 
     void shutdown() {
-        throw new UnsupportedOperationException("Not yet implemented");
+        closed = true;
+    }
+
+    boolean isClosed() {
+        return closed;
     }
 
     void setAuthenticated(boolean state) {
