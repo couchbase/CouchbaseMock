@@ -224,29 +224,37 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
 
                         if (client != null) {
                             try {
-                                if (key.isReadable()) {
-                                    SocketChannel channel = (SocketChannel) key.channel();
 
+                                int ioevents = SelectionKey.OP_READ;
+                                SocketChannel channel = (SocketChannel) key.channel();
+
+                                if (key.isReadable()) {
                                     if (channel.read(client.getInputBuffer()) == -1) {
                                         channel.close();
+                                        throw new ClosedChannelException();
                                     } else {
                                         client.step();
-                                        if (client.hasOutput()) {
-                                            channel.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE, client);
-                                        } else {
-                                            channel.register(selector, SelectionKey.OP_READ, client);
-                                        }
-                                    }
-                                } else if (key.isWritable()) {
-                                    SocketChannel channel = (SocketChannel) key.channel();
-                                    ByteBuffer buf;
-                                    while ((buf = client.getOutputBuffer()) != null) {
-                                        channel.write(buf);
                                     }
                                 }
+                                if (key.isWritable()) {
+                                    ByteBuffer buf;
+                                    while ((buf = client.getOutputBuffer()) != null) {
+                                        if (channel.write(buf) == -1) {
+                                            channel.close();
+                                            throw new ClosedChannelException();
+                                        }
+                                    }
+                                }
+
+                                if (client.hasOutput()) {
+                                    ioevents |= SelectionKey.OP_WRITE;
+                                }
+
+                                channel.register(selector, ioevents, client);
                             } catch (ClosedChannelException exp) {
                                 // just ditch this client..
                             }
+
                         } else {
                             if (key.isAcceptable()) {
                                 SocketChannel cc = server.accept();
