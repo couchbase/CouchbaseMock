@@ -42,8 +42,8 @@ public class Item {
         return exptime;
     }
 
-    public int getExptimeInMillis() {
-        return exptime * 1000;
+    public long getExptimeInMillis() {
+        return (long)exptime * 1000L;
     }
 
     public void setExptime(int e) {

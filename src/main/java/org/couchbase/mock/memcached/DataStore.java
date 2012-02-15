@@ -32,6 +32,7 @@ public class DataStore {
 
     private volatile long casCounter = 1;
     private VBucket vBucketMap[];
+    private static final long THIRTY_DAYS = 30 * 24 * 60 * 60;
 
     public DataStore(int size) {
         vBucketMap = new VBucket[size];
@@ -131,7 +132,9 @@ public class DataStore {
         Item ii = map.get(key);
         if (ii != null) {
             long now = new Date().getTime();
-            if (ii.getExptime() == 0 || (now - ii.getMtime() < ii.getExptimeInMillis())) {
+            if (ii.getExptime() == 0
+                    || ( ii.getExptime() > THIRTY_DAYS && now < ii.getExptimeInMillis() )
+                    || ( ii.getExptime() <= THIRTY_DAYS && now - ii.getMtime() < ii.getExptimeInMillis() )) {
                 return ii;
             } else {
                 map.remove(key);
