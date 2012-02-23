@@ -239,7 +239,11 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
                                 if (key.isWritable()) {
                                     ByteBuffer buf;
                                     while ((buf = client.getOutputBuffer()) != null) {
-                                        if (channel.write(buf) == -1) {
+                                        int wv;
+                                        do {
+                                            wv = channel.write(buf);
+                                        } while (wv > 0);
+                                        if (wv == -1) {
                                             channel.close();
                                             throw new ClosedChannelException();
                                         }
