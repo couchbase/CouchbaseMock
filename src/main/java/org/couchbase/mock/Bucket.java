@@ -50,6 +50,10 @@ public abstract class Bucket {
         this(name, hostname, port, numNodes, bucketStartPort, numVBuckets, cluster, "");
     }
 
+    public MemcachedServer[] getServers() {
+        return servers;
+    }
+
     public Bucket(String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, CouchbaseMock cluster, String password) throws IOException {
         this.cluster = cluster;
         this.name = name;

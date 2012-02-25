@@ -330,6 +330,7 @@ public class JMembaseTest extends TestCase {
         assertNotSame(currCfg, nextCfg);
         assertEquals(100, bucket.activeServers().size());
 
+        cout.write("hiccup,10000,20\n".getBytes());
         server.close();
         instance.getMonitor().stop();
     }

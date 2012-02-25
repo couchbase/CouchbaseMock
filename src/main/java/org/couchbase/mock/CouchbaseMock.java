@@ -27,17 +27,24 @@ import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Observable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+
 import org.couchbase.mock.Bucket.BucketType;
 import org.couchbase.mock.http.Authenticator;
 import org.couchbase.mock.http.PoolsHandler;
 import org.couchbase.mock.util.Getopt;
 import org.couchbase.mock.util.Getopt.CommandLineOption;
 import org.couchbase.mock.util.Getopt.Entry;
+import org.couchbase.mock.control.MockControlCommandHandler;
+import org.couchbase.mock.control.FailoverCommandHandler;
+import org.couchbase.mock.control.RespawnCommandHandler;
+import org.couchbase.mock.control.HiccupCommandHandler;
+import org.couchbase.mock.control.TruncateCommandHandler;
 
 /**
  * This is a super-scaled down version of something that might look like
@@ -80,20 +87,6 @@ public class CouchbaseMock {
         return buckets;
     }
 
-    private void failover(String bucketName, int idx) {
-        Bucket bucket = buckets.get(bucketName);
-        if (bucket != null) {
-            bucket.failover(idx);
-        }
-    }
-
-    private void respawn(String bucketName, int idx) {
-        Bucket bucket = buckets.get(bucketName);
-        if (bucket != null) {
-            bucket.respawn(idx);
-        }
-    }
-
     public HarakiriMonitor getMonitor() {
         return monitor;
     }
@@ -106,6 +99,8 @@ public class CouchbaseMock {
         private OutputStream output;
         private Socket sock;
         private Thread thread;
+        private final Map<String,MockControlCommandHandler> commandHandlers;
+
 
         public HarakiriMonitor(String host, int port, boolean terminate, CouchbaseMock mock) throws IOException {
             this.mock = mock;
@@ -113,6 +108,13 @@ public class CouchbaseMock {
             sock = new Socket(host, port);
             input = new BufferedReader(new InputStreamReader(sock.getInputStream()));
             output = sock.getOutputStream();
+
+            commandHandlers = new HashMap<String, MockControlCommandHandler>();
+            commandHandlers.put("failover", new FailoverCommandHandler());
+            commandHandlers.put("respawn", new RespawnCommandHandler());
+            commandHandlers.put("hiccup", new HiccupCommandHandler());
+            commandHandlers.put("truncate", new TruncateCommandHandler());
+
         }
 
         public void start()
@@ -126,12 +128,33 @@ public class CouchbaseMock {
             thread.interrupt();
         }
 
+        private void dispatchMockCommand(String packet) {
+            List<String> tokens = new ArrayList<String>();
+            tokens.addAll(Arrays.asList(packet.split(",")));
+            String command = tokens.remove(0);
+
+            MockControlCommandHandler handler = commandHandlers.get(command);
+
+            if (handler == null) {
+                System.err.printf("Unknown command '%s'\n", command);
+                return;
+            }
+
+            try {
+                handler.execute(mock, tokens);
+            }
+            catch (NumberFormatException ex) {
+                System.err.printf("Got exception: %s\n", ex.toString());
+                return;
+            }
+            setChanged();
+            notifyObservers();
+        }
+
         @Override
         public void run() {
             boolean closed = false;
-            String[] tokens;
-            String command, bucket, packet;
-            int idx;
+            String packet;
             String http = "" + mock.getHttpPort() + '\0';
             try {
                 mock.waitForStartup();
@@ -148,33 +171,7 @@ public class CouchbaseMock {
                     if (packet == null) {
                         closed = true;
                     } else if (mock != null) {
-                        /* format (bucket name is optional):
-                         *
-                         *     failover,123,default
-                         *     respawn,123,default
-                         */
-                        tokens = packet.split(",");
-                        if (tokens.length >= 2) {
-                            try {
-                                command = tokens[0];
-                                idx = Integer.parseInt(tokens[1].trim());
-                                if (tokens.length == 3) {
-                                    bucket = tokens[2];
-                                } else {
-                                    bucket = "default";
-                                }
-                                if ("failover".equals(command)) {
-                                    mock.failover(bucket, idx);
-                                    setChanged();
-                                    notifyObservers();
-                                } else if ("respawn".equals(command)) {
-                                    mock.respawn(bucket, idx);
-                                    setChanged();
-                                    notifyObservers();
-                                }
-                            } catch (NumberFormatException ex) {
-                            }
-                        }
+                        dispatchMockCommand(packet);
                     }
                 } catch (IOException e) {
                     // not exactly true, but who cares..

@@ -62,6 +62,9 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
     private CommandExecutor[] executors = new CommandExecutor[0xff];
     private final Bucket bucket;
     private boolean active = true;
+    private int hiccupTime = 0;
+    private int hiccupOffset = 0;
+    private int truncateLimit = 0;
 
     /**
      * Create a new new memcached server.
@@ -195,6 +198,23 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         return hostname + ":" + port;
     }
 
+    private int writeResponse(SocketChannel channel, ByteBuffer buf)
+            throws IOException, ClosedChannelException
+    {
+        int wv;
+        int nw = 0;
+
+        do {
+            wv = channel.write(buf);
+            nw += wv;
+        } while (wv > 0);
+        if (wv == -1) {
+            channel.close();
+            throw new ClosedChannelException();
+        }
+        return nw;
+    }
+
     @Override
     public void run() {
         try {
@@ -236,17 +256,28 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
                                         client.step();
                                     }
                                 }
+
                                 if (key.isWritable()) {
                                     ByteBuffer buf;
                                     while ((buf = client.getOutputBuffer()) != null) {
-                                        int wv;
-                                        do {
-                                            wv = channel.write(buf);
-                                        } while (wv > 0);
-                                        if (wv == -1) {
-                                            channel.close();
-                                            throw new ClosedChannelException();
+                                        if (truncateLimit > 0 && buf.limit() > truncateLimit) {
+                                            buf.limit(truncateLimit);
                                         }
+
+                                        if (hiccupOffset > 0 && buf.limit() > hiccupOffset) {
+                                            ByteBuffer immediateBuf = buf.slice();
+                                            buf.position(hiccupOffset);
+                                            immediateBuf.limit(hiccupOffset);
+                                            writeResponse(channel, immediateBuf);
+
+                                            // Wait hiccupTime to write the rest of the buffer
+                                            try {
+                                                Thread.sleep(hiccupTime);
+                                            }
+                                            catch (InterruptedException exintr) {
+                                            }
+                                        }
+                                        writeResponse(channel, buf);
                                     }
                                 }
 
@@ -257,6 +288,8 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
                                 channel.register(selector, ioevents, client);
                             } catch (ClosedChannelException exp) {
                                 // just ditch this client..
+                            } catch (IOException ioexp) {
+
                             }
 
                         } else {
@@ -321,6 +354,23 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
 
     public void startup() {
         active = true;
+    }
+
+    /**
+     * @param msecs how long to stall for
+     * @param boundary how far along the output buffer should we hiccup
+     */
+    public void setHiccup(int msecs, int offset) {
+        if (msecs < 0 || offset < 0) {
+            throw new IllegalArgumentException("Time and offset must be >= 0");
+        }
+
+        hiccupTime = msecs;
+        hiccupOffset = offset;
+    }
+
+    public void setTruncateLimit(int limit) {
+        truncateLimit = limit;
     }
 
     /**
