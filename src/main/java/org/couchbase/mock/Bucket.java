@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.couchbase.mock.memcached.DataStore;
 import org.couchbase.mock.memcached.MemcachedServer;
 
@@ -41,6 +42,7 @@ public abstract class Bucket {
     protected final String name;
     protected final CouchbaseMock cluster;
     protected final String password;
+    protected final ReentrantReadWriteLock configurationRwLock;
 
     public String getBucketUri() {
         return "/pools/" + poolName + "/bucketsStreaming/" + name;
@@ -61,6 +63,8 @@ public abstract class Bucket {
         this.password = password;
         datastore = new DataStore(numVBuckets);
         servers = new MemcachedServer[numNodes];
+        this.configurationRwLock = new ReentrantReadWriteLock();
+
         BucketType type;
         if (this.getClass() == MemcacheBucket.class) {
             type = BucketType.MEMCACHE;
@@ -72,6 +76,7 @@ public abstract class Bucket {
         for (int ii = 0; ii < servers.length; ii++) {
             servers[ii] = new MemcachedServer(this, hostname, (bucketStartPort == 0 ? 0 : bucketStartPort + ii), datastore);
         }
+
         rebalance();
     }
 
@@ -90,34 +95,62 @@ public abstract class Bucket {
 
     public abstract String getJSON();
 
+    public void configReadLock() {
+        configurationRwLock.readLock().lock();
+    }
+
+    public void configReadUnlock() {
+        configurationRwLock.readLock().unlock();
+    }
+
     void failSome(float percentage) {
-        for (int ii = 0; ii < servers.length; ii++) {
-            if (ii % percentage == 0) {
-                servers[ii].shutdown();
+        configurationRwLock.writeLock().lock();
+        try {
+            for (int ii = 0; ii < servers.length; ii++) {
+                if (ii % percentage == 0) {
+                    servers[ii].shutdown();
+                }
             }
+        } finally {
+            configurationRwLock.writeLock().unlock();
         }
     }
 
     void fixSome(float percentage) {
-        for (int ii = 0; ii < servers.length; ii++) {
-            if (ii % percentage == 0) {
-                servers[ii].startup();
+        configurationRwLock.writeLock().lock();
+        try {
+            for (int ii = 0; ii < servers.length; ii++) {
+                if (ii % percentage == 0) {
+                    servers[ii].startup();
+                }
             }
+        } finally {
+            configurationRwLock.writeLock().unlock();
         }
     }
 
     public void failover(int index) {
-        if (index >= 0 && index < servers.length) {
-            servers[index].shutdown();
+        configurationRwLock.writeLock().lock();
+        try {
+            if (index >= 0 && index < servers.length) {
+                servers[index].shutdown();
+            }
+            rebalance();
+        } finally {
+            configurationRwLock.writeLock().unlock();
         }
-        rebalance();
     }
 
     public void respawn(int index) {
-        if (index >= 0 && index < servers.length) {
-            servers[index].startup();
+        configurationRwLock.writeLock().lock();
+        try {
+            if (index >= 0 && index < servers.length) {
+                servers[index].startup();
+            }
+            rebalance();
+        } finally {
+            configurationRwLock.writeLock().unlock();
         }
-        rebalance();
     }
 
     void start(List<Thread> threads) {
@@ -141,11 +174,16 @@ public abstract class Bucket {
 
     public final void rebalance() {
         // Let's start distribute the vbuckets across the servers
-        Random random = new Random();
-        List<MemcachedServer> nodes = activeServers();
-        for (int ii = 0; ii < numVBuckets; ++ii) {
-            int idx = random.nextInt(nodes.size());
-            datastore.setOwnership(ii, nodes.get(idx));
+        configurationRwLock.writeLock().lock();
+        try {
+            Random random = new Random();
+            List<MemcachedServer> nodes = activeServers();
+            for (int ii = 0; ii < numVBuckets; ++ii) {
+                int idx = random.nextInt(nodes.size());
+                datastore.setOwnership(ii, nodes.get(idx));
+            }
+        } finally {
+            configurationRwLock.writeLock().unlock();
         }
     }
 
