@@ -31,6 +31,10 @@ import org.couchbase.mock.memcached.MemcachedServer;
  */
 public abstract class Bucket {
 
+    public DataStore getDatastore() {
+        return datastore;
+    }
+
     public enum BucketType {
         MEMCACHE, COUCHBASE
     }

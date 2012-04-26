@@ -49,6 +49,14 @@ public class DataStore {
         return vBucketMap[vbucket];
     }
 
+    public Map<String, Item>[] getData() {
+        Map<String, Item>[] res = new Map[vBucketMap.length];
+        for (int i = 0; i < vBucketMap.length; i++) {
+            res[i] = vBucketMap[i].getMap(vBucketMap[i].getOwner());
+        }
+        return res;
+    }
+
     private Map<String, Item> getMap(MemcachedServer server, short vbucket) throws AccessControlException {
         if (vbucket >= vBucketMap.length && server.getType() == BucketType.COUCHBASE) {
             // Illegal vbucket.. just report as no access..
