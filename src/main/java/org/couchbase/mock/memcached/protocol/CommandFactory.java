@@ -32,7 +32,7 @@ public class CommandFactory {
             throw new ProtocolException("Illegal magic");
         }
 
-        ComCode cc = ComCode.valueOf(header.get());
+        CommandCode cc = CommandCode.valueOf(header.get());
         header.rewind();
         switch (cc) {
             case ADD:

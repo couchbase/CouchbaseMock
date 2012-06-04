@@ -19,7 +19,7 @@ import org.couchbase.mock.memcached.protocol.BinaryCommand;
 import org.couchbase.mock.memcached.protocol.BinaryResponse;
 import org.couchbase.mock.memcached.protocol.BinaryStoreCommand;
 import org.couchbase.mock.memcached.protocol.BinaryStoreResponse;
-import org.couchbase.mock.memcached.protocol.ComCode;
+import org.couchbase.mock.memcached.protocol.CommandCode;
 import org.couchbase.mock.memcached.protocol.ErrorCode;
 
 /**
@@ -43,7 +43,7 @@ class PrependCommandExecutor implements CommandExecutor {
         }
         existing.prepend(item);
         err = server.getDatastore().replace(server, cmd.getVBucketId(), existing);
-        if (err == ErrorCode.SUCCESS && cmd.getComCode() == ComCode.PREPENDQ) {
+        if (err == ErrorCode.SUCCESS && cmd.getComCode() == CommandCode.PREPENDQ) {
             return;
         }
         client.sendResponse(new BinaryStoreResponse(command, err, existing.getCas()));

@@ -16,7 +16,7 @@
  */
 package org.couchbase.mock.memcached;
 
-import org.couchbase.mock.memcached.protocol.ComCode;
+import org.couchbase.mock.memcached.protocol.CommandCode;
 import org.couchbase.mock.memcached.protocol.ErrorCode;
 import org.couchbase.mock.memcached.protocol.BinaryCommand;
 import org.couchbase.mock.memcached.protocol.BinaryGetCommand;
@@ -33,17 +33,17 @@ public class GetCommandExecutor implements CommandExecutor {
         BinaryGetCommand cmd = (BinaryGetCommand) command;
         DataStore datastore = server.getDatastore();
         Item item = datastore.get(server, cmd.getVBucketId(), cmd.getKey());
-        ComCode cc = cmd.getComCode();
+        CommandCode cc = cmd.getComCode();
 
         if (item == null) {
-            if (cc != ComCode.GETKQ && cc != ComCode.GETQ && cc != ComCode.GATQ) {
+            if (cc != CommandCode.GETKQ && cc != CommandCode.GETQ && cc != CommandCode.GATQ) {
                 client.sendResponse(new BinaryGetResponse(cmd, ErrorCode.KEY_ENOENT));
             }
         } else {
-            if (cc == ComCode.TOUCH || cc == ComCode.GAT || cc == ComCode.GATQ) {
+            if (cc == CommandCode.TOUCH || cc == CommandCode.GAT || cc == CommandCode.GATQ) {
                 item.setExptime(cmd.getExpiration());
             }
-            if (cc == ComCode.TOUCH) {
+            if (cc == CommandCode.TOUCH) {
                 client.sendResponse(new BinaryGetResponse(cmd, ErrorCode.SUCCESS));
             } else {
                 client.sendResponse(new BinaryGetResponse(cmd, item));

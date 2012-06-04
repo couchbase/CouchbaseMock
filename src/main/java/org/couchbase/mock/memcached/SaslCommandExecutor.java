@@ -18,7 +18,7 @@ package org.couchbase.mock.memcached;
 import org.couchbase.mock.Bucket;
 import org.couchbase.mock.memcached.protocol.BinaryCommand;
 import org.couchbase.mock.memcached.protocol.BinarySaslResponse;
-import org.couchbase.mock.memcached.protocol.ComCode;
+import org.couchbase.mock.memcached.protocol.CommandCode;
 import org.couchbase.mock.memcached.protocol.ErrorCode;
 
 /**
@@ -29,7 +29,7 @@ public class SaslCommandExecutor implements CommandExecutor {
 
     @Override
     public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
-        ComCode cc = cmd.getComCode();
+        CommandCode cc = cmd.getComCode();
 
         switch (cc) {
             case SASL_LIST_MECHS:

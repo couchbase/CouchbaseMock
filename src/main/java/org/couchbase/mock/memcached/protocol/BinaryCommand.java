@@ -24,7 +24,7 @@ import java.nio.ByteBuffer;
  */
 public class BinaryCommand {
 
-    protected final ComCode cc;
+    protected final CommandCode cc;
     protected final short keylen;
     protected final byte extlen;
     protected final short vbucket;
@@ -36,7 +36,7 @@ public class BinaryCommand {
     protected BinaryCommand(ByteBuffer header) throws ProtocolException {
         header.rewind();
         header.get(); // magic already validated
-        cc = ComCode.valueOf(header.get());
+        cc = CommandCode.valueOf(header.get());
         keylen = header.getShort();
         extlen = header.get();
         if (header.get() != 0) {
@@ -57,7 +57,7 @@ public class BinaryCommand {
         return bodyBuffer;
     }
 
-    public ComCode getComCode() {
+    public CommandCode getComCode() {
         return cc;
     }
 

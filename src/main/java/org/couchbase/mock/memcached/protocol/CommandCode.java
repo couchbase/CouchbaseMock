@@ -19,7 +19,7 @@ package org.couchbase.mock.memcached.protocol;
 /**
  * @author Trond Norbye
  */
-public enum ComCode {
+public enum CommandCode {
     GET(0x00), SET(0x01), ADD(0x02), REPLACE(0x03),
     DELETE(0x04), INCREMENT(0x05), DECREMENT(0x06), QUIT(0x07),
     FLUSH(0x08), GETQ(0x09), NOOP(0x0a), VERSION(0x0b),
@@ -40,7 +40,7 @@ public enum ComCode {
 
     private final byte value;
 
-    ComCode(int value) {
+    CommandCode(int value) {
         this.value = (byte) value;
     }
 
@@ -48,7 +48,7 @@ public enum ComCode {
         return value;
     }
 
-    static ComCode valueOf(byte cc) {
+    static CommandCode valueOf(byte cc) {
         switch (cc) {
         case 0x00:
             return GET;
@@ -121,7 +121,7 @@ public enum ComCode {
         }
     }
 
-    static String toString(ComCode cc) {
+    static String toString(CommandCode cc) {
         switch (cc) {
         case SET:
             return "set";

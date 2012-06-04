@@ -17,7 +17,7 @@ package org.couchbase.mock.memcached;
 
 import org.couchbase.mock.memcached.protocol.BinaryCommand;
 import org.couchbase.mock.memcached.protocol.BinaryResponse;
-import org.couchbase.mock.memcached.protocol.ComCode;
+import org.couchbase.mock.memcached.protocol.CommandCode;
 import org.couchbase.mock.memcached.protocol.ErrorCode;
 
 /**
@@ -30,7 +30,7 @@ public class FlushCommandExecutor implements CommandExecutor {
     @Override
     public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
         server.getDatastore().flush(server);
-        if (cmd.getComCode() == ComCode.FLUSH) {
+        if (cmd.getComCode() == CommandCode.FLUSH) {
             client.sendResponse(new BinaryResponse(cmd, ErrorCode.SUCCESS));
         }
     }

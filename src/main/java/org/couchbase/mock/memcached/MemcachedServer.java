@@ -17,7 +17,7 @@ package org.couchbase.mock.memcached;
 
 import java.nio.ByteBuffer;
 import org.couchbase.mock.memcached.protocol.BinaryResponse;
-import org.couchbase.mock.memcached.protocol.ComCode;
+import org.couchbase.mock.memcached.protocol.CommandCode;
 import org.couchbase.mock.memcached.protocol.ErrorCode;
 import org.couchbase.mock.memcached.protocol.BinaryCommand;
 import java.util.logging.Level;
@@ -85,40 +85,40 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
             executors[ii] = unknownHandler;
         }
 
-        executors[ComCode.QUIT.cc()] = new QuitCommandExecutor();
-        executors[ComCode.QUITQ.cc()] = new QuitCommandExecutor();
-        executors[ComCode.FLUSH.cc()] = new FlushCommandExecutor();
-        executors[ComCode.FLUSHQ.cc()] = new FlushCommandExecutor();
-        executors[ComCode.NOOP.cc()] = new NoopCommandExecutor();
-        executors[ComCode.VERSION.cc()] = new VersionCommandExecutor();
-        executors[ComCode.STAT.cc()] = new StatCommandExecutor();
-        executors[ComCode.VERBOSITY.cc()] = new VerbosityCommandExecutor();
-        executors[ComCode.ADD.cc()] = new StoreCommandExecutor();
-        executors[ComCode.ADDQ.cc()] = executors[ComCode.ADD.cc()];
-        executors[ComCode.APPEND.cc()] = new AppendCommandExecutor();
-        executors[ComCode.APPENDQ.cc()] = new AppendCommandExecutor();
-        executors[ComCode.PREPEND.cc()] = new PrependCommandExecutor();
-        executors[ComCode.PREPENDQ.cc()] = new PrependCommandExecutor();
-        executors[ComCode.SET.cc()] = executors[ComCode.ADD.cc()];
-        executors[ComCode.SETQ.cc()] = executors[ComCode.ADD.cc()];
-        executors[ComCode.REPLACE.cc()] = executors[ComCode.ADD.cc()];
-        executors[ComCode.REPLACEQ.cc()] = executors[ComCode.ADD.cc()];
-        executors[ComCode.DELETE.cc()] = new DeleteCommandExecutor();
-        executors[ComCode.DELETEQ.cc()] = executors[ComCode.DELETE.cc()];
-        executors[ComCode.GET.cc()] = new GetCommandExecutor();
-        executors[ComCode.GETQ.cc()] = executors[ComCode.GET.cc()];
-        executors[ComCode.GETK.cc()] = executors[ComCode.GET.cc()];
-        executors[ComCode.GETKQ.cc()] = executors[ComCode.GET.cc()];
-        executors[ComCode.TOUCH.cc()] = executors[ComCode.GET.cc()];
-        executors[ComCode.GAT.cc()] = executors[ComCode.GET.cc()];
-        executors[ComCode.GATQ.cc()] = executors[ComCode.GET.cc()];
-        executors[ComCode.INCREMENT.cc()] = new ArithmeticCommandExecutor();
-        executors[ComCode.INCREMENTQ.cc()] = executors[ComCode.INCREMENT.cc()];
-        executors[ComCode.DECREMENT.cc()] = executors[ComCode.INCREMENT.cc()];
-        executors[ComCode.DECREMENTQ.cc()] = executors[ComCode.INCREMENT.cc()];
-        executors[ComCode.SASL_LIST_MECHS.cc()] = new SaslCommandExecutor();
-        executors[ComCode.SASL_AUTH.cc()] = executors[ComCode.SASL_LIST_MECHS.cc()];
-        executors[ComCode.SASL_STEP.cc()] = executors[ComCode.SASL_LIST_MECHS.cc()];
+        executors[CommandCode.QUIT.cc()] = new QuitCommandExecutor();
+        executors[CommandCode.QUITQ.cc()] = new QuitCommandExecutor();
+        executors[CommandCode.FLUSH.cc()] = new FlushCommandExecutor();
+        executors[CommandCode.FLUSHQ.cc()] = new FlushCommandExecutor();
+        executors[CommandCode.NOOP.cc()] = new NoopCommandExecutor();
+        executors[CommandCode.VERSION.cc()] = new VersionCommandExecutor();
+        executors[CommandCode.STAT.cc()] = new StatCommandExecutor();
+        executors[CommandCode.VERBOSITY.cc()] = new VerbosityCommandExecutor();
+        executors[CommandCode.ADD.cc()] = new StoreCommandExecutor();
+        executors[CommandCode.ADDQ.cc()] = executors[CommandCode.ADD.cc()];
+        executors[CommandCode.APPEND.cc()] = new AppendCommandExecutor();
+        executors[CommandCode.APPENDQ.cc()] = new AppendCommandExecutor();
+        executors[CommandCode.PREPEND.cc()] = new PrependCommandExecutor();
+        executors[CommandCode.PREPENDQ.cc()] = new PrependCommandExecutor();
+        executors[CommandCode.SET.cc()] = executors[CommandCode.ADD.cc()];
+        executors[CommandCode.SETQ.cc()] = executors[CommandCode.ADD.cc()];
+        executors[CommandCode.REPLACE.cc()] = executors[CommandCode.ADD.cc()];
+        executors[CommandCode.REPLACEQ.cc()] = executors[CommandCode.ADD.cc()];
+        executors[CommandCode.DELETE.cc()] = new DeleteCommandExecutor();
+        executors[CommandCode.DELETEQ.cc()] = executors[CommandCode.DELETE.cc()];
+        executors[CommandCode.GET.cc()] = new GetCommandExecutor();
+        executors[CommandCode.GETQ.cc()] = executors[CommandCode.GET.cc()];
+        executors[CommandCode.GETK.cc()] = executors[CommandCode.GET.cc()];
+        executors[CommandCode.GETKQ.cc()] = executors[CommandCode.GET.cc()];
+        executors[CommandCode.TOUCH.cc()] = executors[CommandCode.GET.cc()];
+        executors[CommandCode.GAT.cc()] = executors[CommandCode.GET.cc()];
+        executors[CommandCode.GATQ.cc()] = executors[CommandCode.GET.cc()];
+        executors[CommandCode.INCREMENT.cc()] = new ArithmeticCommandExecutor();
+        executors[CommandCode.INCREMENTQ.cc()] = executors[CommandCode.INCREMENT.cc()];
+        executors[CommandCode.DECREMENT.cc()] = executors[CommandCode.INCREMENT.cc()];
+        executors[CommandCode.DECREMENTQ.cc()] = executors[CommandCode.INCREMENT.cc()];
+        executors[CommandCode.SASL_LIST_MECHS.cc()] = new SaslCommandExecutor();
+        executors[CommandCode.SASL_AUTH.cc()] = executors[CommandCode.SASL_LIST_MECHS.cc()];
+        executors[CommandCode.SASL_STEP.cc()] = executors[CommandCode.SASL_LIST_MECHS.cc()];
 
         bootTime = System.currentTimeMillis() / 1000;
         selector = Selector.open();
@@ -332,9 +332,9 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
             throws IOException {
         try {
             if (client.isAuthenticated()
-                    || cmd.getComCode() == ComCode.SASL_AUTH
-                    || cmd.getComCode() == ComCode.SASL_LIST_MECHS
-                    || cmd.getComCode() == ComCode.SASL_STEP) {
+                    || cmd.getComCode() == CommandCode.SASL_AUTH
+                    || cmd.getComCode() == CommandCode.SASL_LIST_MECHS
+                    || cmd.getComCode() == CommandCode.SASL_STEP) {
                 executors[cmd.getComCode().cc()].execute(cmd, this, client);
             } else {
                 client.sendResponse(new BinaryResponse(cmd, ErrorCode.AUTH_ERROR));

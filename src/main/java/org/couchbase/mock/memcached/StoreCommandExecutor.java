@@ -21,7 +21,7 @@ import org.couchbase.mock.memcached.protocol.ErrorCode;
 import org.couchbase.mock.memcached.protocol.BinaryCommand;
 import org.couchbase.mock.memcached.protocol.BinaryStoreCommand;
 import org.couchbase.mock.memcached.protocol.BinaryStoreResponse;
-import org.couchbase.mock.memcached.protocol.ComCode;
+import org.couchbase.mock.memcached.protocol.CommandCode;
 
 /**
  *
@@ -35,7 +35,7 @@ public class StoreCommandExecutor implements CommandExecutor {
 
         ErrorCode err = ErrorCode.SUCCESS;
         Item item = command.getItem();
-        ComCode cc = cmd.getComCode();
+        CommandCode cc = cmd.getComCode();
 
         switch (cc) {
             case ADD:
@@ -56,7 +56,7 @@ public class StoreCommandExecutor implements CommandExecutor {
         }
 
         // Quiet commands doesn't send a reply for success.
-        if (err == ErrorCode.SUCCESS && (cc == ComCode.ADDQ || cc == ComCode.SETQ || cc == ComCode.REPLACEQ)) {
+        if (err == ErrorCode.SUCCESS && (cc == CommandCode.ADDQ || cc == CommandCode.SETQ || cc == CommandCode.REPLACEQ)) {
             return;
         }
         client.sendResponse(new BinaryStoreResponse(command, err, item.getCas()));

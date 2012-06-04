@@ -20,7 +20,7 @@ import org.couchbase.mock.memcached.protocol.BinaryArithmeticCommand;
 import org.couchbase.mock.memcached.protocol.BinaryArithmeticResponse;
 import org.couchbase.mock.memcached.protocol.BinaryCommand;
 import org.couchbase.mock.memcached.protocol.BinaryResponse;
-import org.couchbase.mock.memcached.protocol.ComCode;
+import org.couchbase.mock.memcached.protocol.CommandCode;
 import org.couchbase.mock.memcached.protocol.ErrorCode;
 
 /**
@@ -33,7 +33,7 @@ public class ArithmeticCommandExecutor implements CommandExecutor {
     public void execute(BinaryCommand command, MemcachedServer server, MemcachedConnection client) {
         BinaryArithmeticCommand cmd = (BinaryArithmeticCommand) command;
         Item item = server.getDatastore().get(server, cmd.getVBucketId(), cmd.getKey());
-        ComCode cc = cmd.getComCode();
+        CommandCode cc = cmd.getComCode();
 
         if (item == null) {
             if (cmd.create()) {
@@ -45,7 +45,7 @@ public class ArithmeticCommandExecutor implements CommandExecutor {
                         execute(command, server, client);
                         break;
                     case SUCCESS:
-                        if (cc == ComCode.INCREMENT || cc == ComCode.DECREMENT) {
+                        if (cc == CommandCode.INCREMENT || cc == CommandCode.DECREMENT) {
                             client.sendResponse(new BinaryArithmeticResponse(cmd, cmd.getInitial(), item.getCas()));
                         }
                         break;
@@ -65,7 +65,7 @@ public class ArithmeticCommandExecutor implements CommandExecutor {
                 return;
             }
 
-            if (cc == ComCode.INCREMENT || cc == ComCode.INCREMENTQ) {
+            if (cc == CommandCode.INCREMENT || cc == CommandCode.INCREMENTQ) {
                 value += cmd.getDelta();
             } else {
                 value -= cmd.getDelta();
@@ -75,7 +75,7 @@ public class ArithmeticCommandExecutor implements CommandExecutor {
             Item nval = new Item(cmd.getKey(), item.getFlags(), exp, Long.toString(value).getBytes(), item.getCas());
             ErrorCode err = server.getDatastore().set(server, cmd.getVBucketId(), nval);
             if (err == ErrorCode.SUCCESS) {
-                if (cc == ComCode.INCREMENT || cc == ComCode.DECREMENT) {
+                if (cc == CommandCode.INCREMENT || cc == CommandCode.DECREMENT) {
                     // return value
                     client.sendResponse(new BinaryArithmeticResponse(cmd, value, nval.getCas()));
                 }

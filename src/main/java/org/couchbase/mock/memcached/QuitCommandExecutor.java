@@ -17,7 +17,7 @@ package org.couchbase.mock.memcached;
 
 import org.couchbase.mock.memcached.protocol.BinaryCommand;
 import org.couchbase.mock.memcached.protocol.BinaryResponse;
-import org.couchbase.mock.memcached.protocol.ComCode;
+import org.couchbase.mock.memcached.protocol.CommandCode;
 import org.couchbase.mock.memcached.protocol.ErrorCode;
 
 /**
@@ -32,7 +32,7 @@ class QuitCommandExecutor implements CommandExecutor {
 
     @Override
     public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
-        if (cmd.getComCode() == ComCode.QUIT) {
+        if (cmd.getComCode() == CommandCode.QUIT) {
             client.sendResponse(new BinaryResponse(cmd, ErrorCode.SUCCESS));
         }
         client.shutdown();
