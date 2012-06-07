@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.logging.Logger;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -307,11 +308,6 @@ public class CouchbaseMock {
         }
 
         try {
-            if (port == 0) {
-                ServerSocket server = new ServerSocket(0);
-                port = server.getLocalPort();
-                server.close();
-            }
             CouchbaseMock mock = new CouchbaseMock(hostname, port, nodes, vbuckets, bucketsSpec);
             if (harakirimonitor != null) {
                 mock.setupHarakiriMonitor(harakirimonitor, true);
@@ -368,13 +364,27 @@ public class CouchbaseMock {
         }
 
         try {
-            httpServer = HttpServer.create(new InetSocketAddress(port), 10);
+            boolean busy = true;
+            do {
+                if (port == 0) {
+                    ServerSocket server = new ServerSocket(0);
+                    port = server.getLocalPort();
+                    server.close();
+                }
+                try {
+                    httpServer = HttpServer.create(new InetSocketAddress(port), 10);
+                } catch (BindException ex) {
+                    System.err.println("Looks like port " + port + " busy, lets try another one");
+                }
+                busy = false;
+            } while (busy);
             httpServer.createContext("/pools", new PoolsHandler(this)).setAuthenticator(authenticator);
             httpServer.setExecutor(Executors.newCachedThreadPool());
             httpServer.start();
             startupLatch.countDown();
         } catch (IOException ex) {
             Logger.getLogger(CouchbaseMock.class.getName()).log(Level.SEVERE, null, ex);
+            System.exit(-1);
         }
 
     }
