@@ -30,7 +30,7 @@ class VerbosityCommandExecutor implements CommandExecutor {
 
     @Override
     public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
-        int req = cmd.getInputBuffer().getInt(24);
+        int req = cmd.getInputBuffer().getInt(0);
         Level level;
 
         switch (req) {

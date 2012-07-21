@@ -104,6 +104,8 @@ public enum CommandCode {
             return APPENDQ;
         case 0x1a:
             return PREPENDQ;
+        case 0x1b:
+            return VERBOSITY;
         case 0x1c:
             return TOUCH;
         case 0x1d:
@@ -179,6 +181,8 @@ public enum CommandCode {
             return "appendq";
         case PREPENDQ:
             return "prependq";
+        case VERBOSITY:
+            return "verbosity";
         case SASL_LIST_MECHS:
             return "sasl_list_mechs";
         case SASL_AUTH:
