@@ -156,9 +156,9 @@ public class CouchbaseMock {
         public void run() {
             boolean closed = false;
             String packet;
-            String http = "" + mock.getHttpPort() + '\0';
             try {
                 mock.waitForStartup();
+                String http = "" + mock.getHttpPort() + '\0';
                 output.write(http.getBytes());
                 output.flush();
             } catch (InterruptedException ex) {
