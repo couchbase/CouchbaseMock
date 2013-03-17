@@ -15,6 +15,7 @@
  */
 package org.couchbase.mock.http;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +42,7 @@ public class StateGrabber {
         pools.put("streamingUri", "/poolsStreaming/" + mock.getPoolName());
 
         Map<String, Object> map = new HashMap<String, Object>();
-        map.put("pools", pools);
+        map.put("pools", Arrays.asList(pools));
         map.put("isAdminCreds", Boolean.TRUE);
         return JSONObject.fromObject(map).toString();
     }
