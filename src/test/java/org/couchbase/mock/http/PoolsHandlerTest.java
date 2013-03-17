@@ -39,7 +39,7 @@ public class PoolsHandlerTest extends TestCase {
     public void testGetPoolsJSON() {
         System.out.println("getPoolsJSON");
         PoolsHandler instance = new PoolsHandler(mock);
-        String expResult = "{\"isAdminCreds\":true,\"pools\":{\"name\":\"default\",\"streamingUri\":\"/poolsStreaming/default\",\"uri\":\"/pools/default\"}}";
+        String expResult = "{\"isAdminCreds\":true,\"pools\":[{\"name\":\"default\",\"streamingUri\":\"/poolsStreaming/default\",\"uri\":\"/pools/default\"}]}";
         String result = StateGrabber.getAllPoolsJSON(mock);
         assertEquals(expResult, result);
     }
