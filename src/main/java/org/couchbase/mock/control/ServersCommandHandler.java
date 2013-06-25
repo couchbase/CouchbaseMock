@@ -21,19 +21,16 @@ import java.util.Set;
 
 import org.couchbase.mock.Bucket;
 import org.couchbase.mock.CouchbaseMock;
+import org.couchbase.mock.harakiri.HarakiriCommand;
 import org.couchbase.mock.memcached.MemcachedServer;
 
-public abstract class ServersCommandHandler implements MockControlCommandHandler {
+public abstract class ServersCommandHandler extends HarakiriCommand {
 
     abstract void doServerCommand(MemcachedServer server);
 
-    abstract void extractParams(List<String> tokens);
-
     @Override
-    public void execute(CouchbaseMock mock, List<String> tokens) {
-        extractParams(tokens);
+    public void execute() {
         Set<MemcachedServer> servers = new HashSet<MemcachedServer>();
-
         for (Bucket bucket : mock.getBuckets().values()) {
             for (MemcachedServer server : bucket.getServers()) {
                 if (!servers.contains(server)) {
@@ -42,6 +39,9 @@ public abstract class ServersCommandHandler implements MockControlCommandHandler
                 }
             }
         }
+    }
 
+    public ServersCommandHandler(CouchbaseMock mock) {
+        super(mock);
     }
 }

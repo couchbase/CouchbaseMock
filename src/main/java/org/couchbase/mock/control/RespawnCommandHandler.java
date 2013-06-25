@@ -15,10 +15,16 @@
  */
 package org.couchbase.mock.control;
 
+import org.couchbase.mock.CouchbaseMock;
+
 public class RespawnCommandHandler extends BucketCommandHandler {
 
     @Override
-    void doBucketCommand() {
+    public void execute() {
         bucket.respawn(idx);
+    }
+
+    public RespawnCommandHandler(CouchbaseMock mock) {
+        super(mock);
     }
 }

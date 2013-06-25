@@ -15,7 +15,9 @@
  */
 package org.couchbase.mock.control;
 
+import com.google.gson.JsonObject;
 import java.util.List;
+import org.couchbase.mock.CouchbaseMock;
 
 import org.couchbase.mock.memcached.MemcachedServer;
 
@@ -30,7 +32,13 @@ public class HiccupCommandHandler extends ServersCommandHandler {
     private int offset;
 
     @Override
-    void extractParams(List<String> tokens) {
+    protected void handleJson(JsonObject payload) {
+        milliSeconds = payload.get("msecs").getAsInt();
+        offset = payload.get("offset").getAsInt();
+    }
+
+    @Override
+    protected void handlePlain(List<String> tokens) {
         milliSeconds = Integer.parseInt(tokens.get(0));
         offset = Integer.parseInt(tokens.get(1));
     }
@@ -38,5 +46,9 @@ public class HiccupCommandHandler extends ServersCommandHandler {
     @Override
     void doServerCommand(MemcachedServer server) {
         server.setHiccup(milliSeconds, offset);
+    }
+
+    public HiccupCommandHandler(CouchbaseMock m) {
+        super(m);
     }
 }

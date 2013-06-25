@@ -15,10 +15,12 @@
  */
 package org.couchbase.mock.control;
 
+import com.google.gson.JsonObject;
 import java.util.List;
 
 import org.couchbase.mock.Bucket;
 import org.couchbase.mock.CouchbaseMock;
+import org.couchbase.mock.harakiri.HarakiriCommand;
 
 /**
  * This is an abstract class which operates on a specific
@@ -26,21 +28,34 @@ import org.couchbase.mock.CouchbaseMock;
  *
  * @author M. Nunberg
  */
-abstract public class BucketCommandHandler implements MockControlCommandHandler {
+abstract public class BucketCommandHandler extends HarakiriCommand {
+    public Bucket bucket;
+    public int idx;
 
-    Bucket bucket;
-    int idx;
-
-    abstract void doBucketCommand();
+    public BucketCommandHandler(CouchbaseMock mock) {
+        super(mock);
+    }
 
     @Override
-    public void execute(CouchbaseMock mock, List<String> tokens) {
+    protected void handlePlain(List<String> tokens)
+    {
         idx = Integer.parseInt(tokens.get(0));
+
         if (tokens.size() == 2) {
             bucket = mock.getBuckets().get(tokens.get(1));
         } else {
             bucket = mock.getBuckets().get("default");
         }
-        doBucketCommand();
+    }
+
+    @Override
+    protected void handleJson(JsonObject payload)
+    {
+        idx = payload.get("idx").getAsInt();
+        String bucketStr = "default";
+        if (payload.has("bucket")) {
+            bucketStr = payload.get("bucket").getAsString();
+        }
+        bucket = mock.getBuckets().get(bucketStr);
     }
 }

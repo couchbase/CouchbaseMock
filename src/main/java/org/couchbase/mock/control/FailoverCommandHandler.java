@@ -15,10 +15,17 @@
  */
 package org.couchbase.mock.control;
 
+import org.couchbase.mock.CouchbaseMock;
+
 public class FailoverCommandHandler extends BucketCommandHandler {
 
     @Override
-    void doBucketCommand() {
+    public void execute() {
         bucket.failover(idx);
     }
+
+    public FailoverCommandHandler(CouchbaseMock m) {
+        super(m);
+    }
+
 }

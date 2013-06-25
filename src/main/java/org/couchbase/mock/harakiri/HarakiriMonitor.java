@@ -32,7 +32,20 @@ public class HarakiriMonitor extends Observable implements Runnable {
     private OutputStream output;
     private Socket sock;
     private Thread thread;
-    private final Map<String, MockControlCommandHandler> commandHandlers;
+
+    static {
+        HarakiriCommand.registerClass(HarakiriCommand.Command.HICCUP,
+                HiccupCommandHandler.class);
+
+        HarakiriCommand.registerClass(HarakiriCommand.Command.FAILOVER,
+                FailoverCommandHandler.class);
+
+        HarakiriCommand.registerClass(HarakiriCommand.Command.TRUNCATE,
+                TruncateCommandHandler.class);
+
+        HarakiriCommand.registerClass(HarakiriCommand.Command.RESPAWN,
+                RespawnCommandHandler.class);
+    }
 
     public HarakiriMonitor(String host, int port, boolean terminate, CouchbaseMock mock) throws IOException {
         this.mock = mock;
@@ -40,13 +53,6 @@ public class HarakiriMonitor extends Observable implements Runnable {
         sock = new Socket(host, port);
         input = new BufferedReader(new InputStreamReader(sock.getInputStream()));
         output = sock.getOutputStream();
-
-        commandHandlers = new HashMap<String, MockControlCommandHandler>();
-        commandHandlers.put("failover", new FailoverCommandHandler());
-        commandHandlers.put("respawn", new RespawnCommandHandler());
-        commandHandlers.put("hiccup", new HiccupCommandHandler());
-        commandHandlers.put("truncate", new TruncateCommandHandler());
-
     }
 
     public void start() {
@@ -58,26 +64,12 @@ public class HarakiriMonitor extends Observable implements Runnable {
         thread.interrupt();
     }
 
-    private void dispatchMockCommand(String packet) {
-        List<String> tokens = new ArrayList<String>();
-        tokens.addAll(Arrays.asList(packet.split(",")));
-        String command = tokens.remove(0);
-
-        MockControlCommandHandler handler = commandHandlers.get(command);
-
-        if (handler == null) {
-            System.err.printf("Unknown command '%s'\n", command);
-            return;
-        }
-
-        try {
-            handler.execute(mock, tokens);
-        } catch (NumberFormatException ex) {
-            System.err.printf("Got exception: %s\n", ex.toString());
-            return;
-        }
+    private HarakiriCommand dispatchMockCommand(String packet) {
+        HarakiriCommand cmd = HarakiriCommand.getCommand(mock, packet);
+        cmd.execute();
         setChanged();
         notifyObservers();
+        return cmd;
     }
 
     @Override
@@ -100,7 +92,11 @@ public class HarakiriMonitor extends Observable implements Runnable {
                 if (packet == null) {
                     closed = true;
                 } else if (mock != null) {
-                    dispatchMockCommand(packet);
+                    HarakiriCommand cmd = dispatchMockCommand(packet);
+                    if (cmd.canRespond()) {
+                        output.write((cmd.getResponse() + "\n").getBytes());
+                        output.flush();
+                    }
                 }
             } catch (IOException e) {
                 // not exactly true, but who cares..

@@ -30,6 +30,10 @@ import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import junit.framework.TestCase;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import java.util.HashMap;
+import java.util.Map;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -293,6 +297,21 @@ public class JMembaseTest extends TestCase {
         return cfg.toString();
     }
 
+    private static String readInput(InputStream cin) throws IOException {
+        byte[] inbuf = new byte[4096];
+        int nr;
+        StringBuilder sb = new StringBuilder();
+
+        while ((nr = cin.read(inbuf)) > 0) {
+            String s = new String(inbuf, 0, nr);
+            sb.append(s);
+            if (nr < inbuf.length) {
+                break;
+            }
+        }
+        return sb.toString();
+    }
+
     @SuppressWarnings("SpellCheckingInspection")
     public void testConfigStreaming() throws IOException {
         ServerSocket server = new ServerSocket(0);
@@ -300,12 +319,11 @@ public class JMembaseTest extends TestCase {
         Socket client = server.accept();
         InputStream cin = client.getInputStream();
         OutputStream cout = client.getOutputStream();
-        StringBuilder rport = new StringBuilder();
-        char cc;
-        while ((cc = (char) cin.read()) > 0) {
-            rport.append(cc);
-        }
-        assertEquals(rport.toString(), Integer.toString(port));
+        String rport = readInput(cin);
+
+        // Remove NUL. Maybe a better way to do this?
+        assertEquals(rport.replace('\0', ' ').trim(), Integer.toString(port));
+
 
         Bucket bucket = instance.getBuckets().get("protected");
         URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/bucketsStreaming/protected");
@@ -329,6 +347,32 @@ public class JMembaseTest extends TestCase {
         assertEquals(numNodes, bucket.activeServers().size());
 
         cout.write("hiccup,10000,20\n".getBytes());
+
+
+        Gson gs = new Gson();
+        JsonObject response;
+        Map<String,Object> command = new HashMap<String, Object>();
+        Map<String,Object> payload = new HashMap<String, Object>();
+
+        payload.put("idx", 1);
+        command.put("command", "failover");
+        command.put("payload", payload);
+        cout.write((gs.toJson(command) + "\n").getBytes());
+
+        response = gs.fromJson(readInput(cin), JsonObject.class);
+        assertEquals(response.get("status").getAsString().toLowerCase(), "ok");
+
+
+        command.clear();
+        payload.clear();
+
+        command.put("command", "respawn");
+        payload.put("idx", 1);
+        command.put("payload", payload);
+        cout.write((gs.toJson(command) + "\n").getBytes());
+        response = gs.fromJson(readInput(cin), JsonObject.class);
+        assertEquals(response.get("status").getAsString().toLowerCase(), "ok");
+
         server.close();
         instance.getMonitor().stop();
     }
