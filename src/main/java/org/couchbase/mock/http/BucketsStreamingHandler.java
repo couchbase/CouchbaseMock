@@ -25,7 +25,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.couchbase.mock.Bucket;
-import org.couchbase.mock.CouchbaseMock.HarakiriMonitor;
+import org.couchbase.mock.harakiri.HarakiriMonitor;
 
 /**
  * @author M. Nunberg
