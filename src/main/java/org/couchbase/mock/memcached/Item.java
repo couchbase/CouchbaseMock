@@ -29,6 +29,9 @@ public class Item {
     private long cas;
     private long modificationTime;
 
+    /** When the lock expires, if any */
+    private int lockExpiryTime;
+
     public Item(String key, int flags, int expiryTime, byte[] value, long cas) {
         this.key = key;
         this.flags = flags;
@@ -46,7 +49,7 @@ public class Item {
     }
 
     public void setExpiryTime(int e) {
-        expiryTime = e;
+        expiryTime = DataStore.convertExptime(e);
     }
 
     public long getModificationTime() {
@@ -72,6 +75,43 @@ public class Item {
     void setCas(long l) {
         modificationTime = new Date().getTime();
         cas = l;
+    }
+
+    void setLockExpiryTime(int e) {
+        lockExpiryTime = DataStore.convertExptime(e);
+    }
+
+    int getLockExpiryTime() {
+        return lockExpiryTime;
+    }
+
+    public boolean isLocked() {
+        if (lockExpiryTime == 0) {
+            return false;
+        }
+
+        long now = new Date().getTime() / 1000;
+        if (now > lockExpiryTime) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Given a cas, ensure that the item is unlocked.
+     * Will succeed if cas matches the existing cas, or if the item is not
+     * locked
+     * @param cas
+     * @return true if item is *not* locked.
+     */
+    public boolean ensureUnlocked(long cas)
+    {
+        if (cas == this.cas) {
+            lockExpiryTime = 0;
+            return true;
+        } else {
+            return isLocked() == false;
+        }
     }
 
     public void append(Item i) {

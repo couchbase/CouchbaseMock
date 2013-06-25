@@ -56,6 +56,12 @@ public class ArithmeticCommandExecutor implements CommandExecutor {
             }
         } else {
             long value;
+
+            if (!item.ensureUnlocked(command.getCas())) {
+                client.sendResponse(new BinaryResponse(command, ErrorCode.ETMPFAIL));
+                return;
+            }
+
             try {
                 value = Long.parseLong(new String(item.getValue()));
             } catch (NumberFormatException ex) {

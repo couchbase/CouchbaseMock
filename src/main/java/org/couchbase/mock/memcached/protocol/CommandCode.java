@@ -35,21 +35,23 @@ public enum CommandCode {
     RINCRQ(0x3a), RDECR(0x3b), RDECRQ(0x3c), SET_VBUCKET(0x3d),
     GET_VBUCKET(0x3e), DEL_VBUCKET(0x3f), TAP_CONNECT(0x40), TAP_MUTATION(0x41),
     TAP_DELETE(0x42), TAP_FLUSH(0x43), TAP_OPAQUE(0x44), TAP_VBUCKET_SET(0x45),
-    LAST_RESERVED(0xef), SCRUB(0xf0), ILLEGAL(0xff);
+    LAST_RESERVED(0xef), SCRUB(0xf0),
+    GETL(0x94), UNL(0x95), ILLEGAL(0xff);
 
 
-    private final byte value;
+
+    private final int value;
 
     CommandCode(int value) {
-        this.value = (byte) value;
+        this.value = value;
     }
 
-    public byte cc() {
+    public int cc() {
         return value;
     }
 
-    static CommandCode valueOf(byte cc) {
-        switch (cc) {
+    static CommandCode valueOf(int cc) {
+            switch (cc) {
             case 0x00:
                 return GET;
             case 0x01:
@@ -118,6 +120,10 @@ public enum CommandCode {
                 return SASL_AUTH;
             case 0x22:
                 return SASL_STEP;
+            case (byte)0x94:
+                return GETL;
+            case (byte)0x95:
+                return UNL;
             default:
                 return ILLEGAL;
         }
@@ -195,6 +201,10 @@ public enum CommandCode {
                 return "gat";
             case GATQ:
                 return "gatq";
+            case GETL:
+                return "getl";
+            case UNL:
+                return "unl";
 
             default:
                 return "unknown";

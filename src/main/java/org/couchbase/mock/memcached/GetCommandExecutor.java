@@ -26,6 +26,8 @@ import org.couchbase.mock.memcached.protocol.BinaryGetResponse;
  * @author Trond Norbye <trond.norbye@gmail.com>
  */
 public class GetCommandExecutor implements CommandExecutor {
+    static final int DEFAULT_EXPTIME = 15;
+    static final int MAXIMUM_EXPTIME = 29;
 
     @Override
     public void execute(BinaryCommand command, MemcachedServer server, MemcachedConnection client) {
@@ -38,15 +40,29 @@ public class GetCommandExecutor implements CommandExecutor {
             if (cc != CommandCode.GETKQ && cc != CommandCode.GETQ && cc != CommandCode.GATQ) {
                 client.sendResponse(new BinaryGetResponse(cmd, ErrorCode.KEY_ENOENT));
             }
-        } else {
-            if (cc == CommandCode.TOUCH || cc == CommandCode.GAT || cc == CommandCode.GATQ) {
-                item.setExpiryTime(cmd.getExpiration());
-            }
-            if (cc == CommandCode.TOUCH) {
-                client.sendResponse(new BinaryGetResponse(cmd, ErrorCode.SUCCESS));
+            return;
+        }
+
+        if (cc == CommandCode.GETL) {
+            if (item.isLocked()) {
+                client.sendResponse(new BinaryGetResponse(cmd, ErrorCode.ETMPFAIL));
+                return;
+
             } else {
-                client.sendResponse(new BinaryGetResponse(cmd, item));
+                int lockExptime = cmd.getExpiration();
+                if (lockExptime == 0 || lockExptime > MAXIMUM_EXPTIME) {
+                    lockExptime = DEFAULT_EXPTIME;
+                }
+                item.setLockExpiryTime(lockExptime);
             }
+        } else if (cc == CommandCode.TOUCH || cc == CommandCode.GAT || cc == CommandCode.GATQ) {
+            item.setExpiryTime(cmd.getExpiration());
+        }
+
+        if (cc == CommandCode.TOUCH) {
+            client.sendResponse(new BinaryGetResponse(cmd, ErrorCode.SUCCESS));
+        } else {
+            client.sendResponse(new BinaryGetResponse(cmd, item));
         }
     }
 }

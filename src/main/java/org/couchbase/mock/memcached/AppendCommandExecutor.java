@@ -40,6 +40,10 @@ class AppendCommandExecutor implements CommandExecutor {
             client.sendResponse(new BinaryResponse(cmd, ErrorCode.NOT_STORED));
             return;
         }
+        if (!existing.ensureUnlocked(cmd.getCas())) {
+            client.sendResponse(new BinaryResponse(cmd, ErrorCode.ETMPFAIL));
+            return;
+        }
         existing.append(item);
         ErrorCode err = server.getDataStore().replace(server, cmd.getVBucketId(), existing);
         if (err == ErrorCode.SUCCESS && cmd.getComCode() == CommandCode.APPENDQ) {

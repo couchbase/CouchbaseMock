@@ -46,15 +46,15 @@ public class BinaryResponse {
 
     static ByteBuffer create(BinaryCommand command, ErrorCode errorCode, int extraLength, int keyLength, int dataLength, long cas) {
         ByteBuffer message = ByteBuffer.allocate(24 + extraLength + keyLength + dataLength);
-        message.put(MAGIC);
-        message.put(command.getComCode().cc());
-        message.putShort((short) keyLength);
-        message.put((byte) extraLength);
-        message.put(DATA_TYPE);
-        message.putShort(errorCode.value());
-        message.putInt(dataLength + keyLength + extraLength);
-        message.putInt(command.getOpaque());
-        message.putLong(cas);
+           message.put(MAGIC);
+           message.put((byte)command.getComCode().cc());
+           message.putShort((short)keyLength);
+           message.put((byte)extraLength);
+           message.put(DATA_TYPE);
+           message.putShort(errorCode.value());
+           message.putInt(dataLength + keyLength + extraLength);
+           message.putInt(command.getOpaque());
+           message.putLong(cas);
         return message;
     }
 

@@ -111,9 +111,11 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         executors[CommandCode.GETQ.cc()] = executors[CommandCode.GET.cc()];
         executors[CommandCode.GETK.cc()] = executors[CommandCode.GET.cc()];
         executors[CommandCode.GETKQ.cc()] = executors[CommandCode.GET.cc()];
+        executors[CommandCode.GETL.cc()] = executors[CommandCode.GET.cc()];
         executors[CommandCode.TOUCH.cc()] = executors[CommandCode.GET.cc()];
         executors[CommandCode.GAT.cc()] = executors[CommandCode.GET.cc()];
         executors[CommandCode.GATQ.cc()] = executors[CommandCode.GET.cc()];
+        executors[CommandCode.UNL.cc()] = new UnlockCommnandExecutor();
         executors[CommandCode.INCREMENT.cc()] = new ArithmeticCommandExecutor();
         executors[CommandCode.INCREMENTQ.cc()] = executors[CommandCode.INCREMENT.cc()];
         executors[CommandCode.DECREMENT.cc()] = executors[CommandCode.INCREMENT.cc()];

@@ -90,6 +90,10 @@ public class DataStore {
             }
         }
 
+        if (!old.ensureUnlocked(item.getCas())) {
+            return ErrorCode.KEY_EEXISTS;
+        }
+
         item.setCas(++casCounter);
         map.put(item.getKey(), item);
         return ErrorCode.SUCCESS;
@@ -97,12 +101,20 @@ public class DataStore {
 
     public ErrorCode set(MemcachedServer server, short vBucketId, Item item) {
         Map<String, Item> map = getMap(server, vBucketId);
+
         if (item.getCas() == 0) {
+
+            Item old = lookup(map, item.getKey());
+            if (old != null && old.isLocked()) {
+                return ErrorCode.KEY_EEXISTS;
+            }
+
             item.setCas(++casCounter);
             map.put(item.getKey(), item);
             return ErrorCode.SUCCESS;
+        } else {
+            return replace(server, vBucketId, item);
         }
-        return replace(server, vBucketId, item);
     }
 
     ErrorCode delete(MemcachedServer server, short vBucketId, String key, long cas) {
@@ -112,6 +124,11 @@ public class DataStore {
         if (i == null) {
             return ErrorCode.KEY_ENOENT;
         }
+
+        if (i.ensureUnlocked(cas)) {
+            return ErrorCode.ETMPFAIL;
+        }
+
         if (cas == 0 || cas == i.getCas()) {
             map.remove(key);
             return ErrorCode.SUCCESS;
@@ -130,14 +147,27 @@ public class DataStore {
         }
     }
 
+    /**
+     * Converts an expiration value to an absolute Unix timestamp.
+     * @param original
+     * @return The converted value
+     */
+    public static int convertExptime(int original)
+    {
+        if (original == 0 || original > THIRTY_DAYS) {
+            return original;
+        }
+
+        return (int)((new Date().getTime() / 1000) + original);
+    }
+
     private Item lookup(Map<String, Item> map, String key) {
         Item ii = map.get(key);
         if (ii != null) {
             long now = new Date().getTime();
-            if (ii.getExpiryTime() == 0
-                    || (ii.getExpiryTime() > THIRTY_DAYS && now < ii.getExpiryTimeInMillis())
-                    || (ii.getExpiryTime() <= THIRTY_DAYS && now - ii.getModificationTime() < ii.getExpiryTimeInMillis())) {
+            if (ii.getExpiryTime() == 0 || now < ii.getExpiryTimeInMillis()) {
                 return ii;
+
             } else {
                 map.remove(key);
             }
