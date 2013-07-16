@@ -58,6 +58,9 @@ class AppendPrependCommandExecutor implements CommandExecutor {
                     break;
             }
         } else {
+            if (err == ErrorCode.KEY_ENOENT) {
+                err = ErrorCode.NOT_STORED;
+            }
             client.sendResponse(new BinaryResponse(cmd, err));
         }
     }
