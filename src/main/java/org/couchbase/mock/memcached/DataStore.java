@@ -33,7 +33,7 @@ import org.couchbase.mock.Bucket.BucketType;
 public class DataStore {
 
     private volatile long casCounter = 1;
-    private VBucket vBucketMap[];
+    private final VBucket vBucketMap[];
     private static final long THIRTY_DAYS = 30 * 24 * 60 * 60;
 
     public DataStore(int size) {

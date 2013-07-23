@@ -31,7 +31,7 @@ import org.couchbase.mock.memcached.protocol.CommandFactory;
  */
 public class MemcachedConnection {
 
-    private BinaryProtocolHandler protocolHandler;
+    private final BinaryProtocolHandler protocolHandler;
     private final byte header[];
     private BinaryCommand command;
     private final ByteBuffer input;

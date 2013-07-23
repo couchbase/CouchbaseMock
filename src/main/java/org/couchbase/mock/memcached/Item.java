@@ -22,8 +22,8 @@ import java.util.Date;
  * @author Trond Norbye
  */
 public class Item {
-    private String key;
-    private int flags;
+    private final String key;
+    private final int flags;
     private int exptime;
     private byte[] value;
     private long cas;

@@ -61,9 +61,6 @@ public class BinaryCommand {
         return cc;
     }
 
-    /**
-     * @return
-     */
     public int getOpaque() {
         return opaque;
     }

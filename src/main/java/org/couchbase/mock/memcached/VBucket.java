@@ -28,7 +28,7 @@ import org.couchbase.mock.Bucket.BucketType;
 public class VBucket {
 
     private MemcachedServer owner;
-    private Map<String, Item> map;
+    private final Map<String, Item> map;
 
     public VBucket(MemcachedServer owner) {
         this.owner = owner;

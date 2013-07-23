@@ -152,7 +152,7 @@ public class Getopt {
     }
 
     private int optind;
-    private List<CommandLineOption> options;
+    private final List<CommandLineOption> options;
 
     /**
      * The command line options must be specified with a short and a long option
@@ -161,9 +161,9 @@ public class Getopt {
      */
     public static class CommandLineOption {
 
-        private char shortopt;
-        private String longopt;
-        private boolean hasArgument;
+        private final char shortopt;
+        private final String longopt;
+        private final boolean hasArgument;
 
         /**
          * Create a new instance of the command line option
@@ -181,8 +181,8 @@ public class Getopt {
 
     public static class Entry {
 
-        public String key;
-        public String value;
+        public final String key;
+        public final String value;
 
         public Entry(String k, String v) {
             key = k;

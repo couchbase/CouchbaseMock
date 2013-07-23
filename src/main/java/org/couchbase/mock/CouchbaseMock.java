@@ -247,8 +247,9 @@ public class CouchbaseMock {
      * Set the required http basic authorization. To have no http auth at all, just provide
      * <code>null</code>.
      *
-     * @param requiredHttpAuthorization the credentials that need to be passed as Authorization header
-     *                                  (basic auth) when accessing the REST interface, or <code>null</code> if no http auth is wanted.
+     * @param authenticator the credentials that need to be passed as Authorization header
+     *                      (basic auth) when accessing the REST interface, or <code>null</code>
+     *                      if no http auth is wanted.
      */
     public void setAuthenticator(Authenticator authenticator) {
         this.authenticator = authenticator;

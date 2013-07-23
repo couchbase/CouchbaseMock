@@ -33,7 +33,6 @@ class AppendCommandExecutor implements CommandExecutor {
     public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
         BinaryStoreCommand command = (BinaryStoreCommand) cmd;
 
-        ErrorCode err = ErrorCode.SUCCESS;
         Item item = command.getItem();
 
         Item existing = server.getDatastore().get(server, cmd.getVBucketId(), cmd.getKey());
@@ -42,7 +41,7 @@ class AppendCommandExecutor implements CommandExecutor {
             return;
         }
         existing.append(item);
-        err = server.getDatastore().replace(server, cmd.getVBucketId(), existing);
+        ErrorCode err = server.getDatastore().replace(server, cmd.getVBucketId(), existing);
         if (err == ErrorCode.SUCCESS && cmd.getComCode() == CommandCode.APPENDQ) {
             return;
         }

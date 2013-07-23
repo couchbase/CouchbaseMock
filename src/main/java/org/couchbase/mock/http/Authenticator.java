@@ -30,10 +30,10 @@ import org.couchbase.mock.Bucket;
  */
 public class Authenticator extends BasicAuthenticator {
 
-    private String adminName;
-    private String adminPass;
+    private final String adminName;
+    private final String adminPass;
     private String bucketName;
-    private Map<String, Bucket> buckets;
+    private final Map<String, Bucket> buckets;
 
     public Authenticator(String username, String password, Map<String, Bucket> buckets) {
         super("Couchbase Mock");

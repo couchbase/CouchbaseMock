@@ -70,12 +70,7 @@ public abstract class Bucket {
         servers = new MemcachedServer[numNodes];
         this.configurationRwLock = new ReentrantReadWriteLock();
 
-        BucketType type;
-        if (this.getClass() == MemcacheBucket.class) {
-            type = BucketType.MEMCACHE;
-        } else if (this.getClass() == CouchbaseBucket.class) {
-            type = BucketType.COUCHBASE;
-        } else {
+        if (this.getClass() != MemcacheBucket.class && this.getClass() != CouchbaseBucket.class) {
             throw new FileNotFoundException("I don't know about this type...");
         }
         for (int ii = 0; ii < servers.length; ii++) {
@@ -169,9 +164,9 @@ public abstract class Bucket {
 
     public List<MemcachedServer> activeServers() {
         ArrayList<MemcachedServer> active = new ArrayList<MemcachedServer>(servers.length);
-        for (int ii = 0; ii < servers.length; ii++) {
-            if (servers[ii].isActive()) {
-                active.add(servers[ii]);
+        for (MemcachedServer server : servers) {
+            if (server.isActive()) {
+                active.add(server);
             }
         }
         return active;

@@ -48,7 +48,7 @@ public class JMembaseTest extends TestCase {
         super(testName);
     }
     CouchbaseMock instance;
-    int port = 18091;
+    final int port = 18091;
     Thread thread;
 
     private boolean serverIsReady(String host, int port) {

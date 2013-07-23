@@ -28,7 +28,7 @@ import java.util.logging.Logger;
  */
 public class Base64 {
 
-    private static char code[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".toCharArray();
+    private static final char code[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".toCharArray();
 
     /**
      * Private constructor to avoid users create instances of the class
