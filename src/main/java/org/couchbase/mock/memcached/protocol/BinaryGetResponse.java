@@ -17,10 +17,10 @@
 package org.couchbase.mock.memcached.protocol;
 
 import java.nio.ByteBuffer;
+
 import org.couchbase.mock.memcached.Item;
 
 /**
- *
  * @author Trond Norbye <trond.norbye@gmail.com>
  */
 public class BinaryGetResponse extends BinaryResponse {

@@ -19,14 +19,13 @@ package org.couchbase.mock.memcached;
 import org.couchbase.mock.memcached.protocol.BinaryCommand;
 
 /**
- *
  * @author Trond Norbye <trond.norbye@gmail.com>
  */
 interface CommandExecutor {
     /**
      * Execute a single command
      *
-     * @param cmd The incoming command
+     * @param cmd    The incoming command
      * @param server The server handling the command
      * @param client The client requesting the command
      */

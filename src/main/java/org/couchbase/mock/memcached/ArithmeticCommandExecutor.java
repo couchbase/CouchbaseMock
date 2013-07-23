@@ -24,7 +24,6 @@ import org.couchbase.mock.memcached.protocol.CommandCode;
 import org.couchbase.mock.memcached.protocol.ErrorCode;
 
 /**
- *
  * @author Trond Norbye <trond.norbye@gmail.com>
  */
 public class ArithmeticCommandExecutor implements CommandExecutor {

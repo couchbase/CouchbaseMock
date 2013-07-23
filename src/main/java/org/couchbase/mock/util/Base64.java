@@ -44,11 +44,11 @@ public class Base64 {
             val = ((s[0] << 16));
         }
 
-        out.append(code[(int)((val >> 18) & 63)]);
-        out.append(code[(int)((val >> 12) & 63)]);
+        out.append(code[(int) ((val >> 18) & 63)]);
+        out.append(code[(int) ((val >> 12) & 63)]);
 
         if (num == 2) {
-            out.append(code[(int)((val >> 6) & 63)]);
+            out.append(code[(int) ((val >> 6) & 63)]);
         } else {
             out.append('=');
         }
@@ -76,7 +76,7 @@ public class Base64 {
             case 2:
             case 1:
                 encodeRest(out, s, num);
-            // FALLTHROUGH
+                // FALLTHROUGH
             case -1:
                 return false;
             default:
@@ -86,6 +86,7 @@ public class Base64 {
 
     /**
      * Base64 encode a textual string according to RFC 3548
+     *
      * @param input The string to encode
      * @return The encoded string
      */
@@ -149,6 +150,7 @@ public class Base64 {
 
     /**
      * Decode a Base64 encoded string
+     *
      * @param input The string to decode
      * @return The decoded string
      */

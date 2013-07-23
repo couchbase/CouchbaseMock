@@ -22,11 +22,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import net.sf.json.JSONObject;
 import org.couchbase.mock.memcached.MemcachedServer;
 
 /**
  * Representation of a membase bucket
+ *
  * @author Trond Norbye
  */
 public class CouchbaseBucket extends Bucket {
@@ -60,7 +62,7 @@ public class CouchbaseBucket extends Bucket {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
 
-        Map<String, String>  stats = new HashMap<String, String>();
+        Map<String, String> stats = new HashMap<String, String>();
         stats.put("uri", "/pools/" + poolName + "/buckets/" + name + "/stats");
         map.put("stats", stats);
         map.put("nodeLocator", "vbucket");

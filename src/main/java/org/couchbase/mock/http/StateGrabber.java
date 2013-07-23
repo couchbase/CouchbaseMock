@@ -18,6 +18,7 @@ package org.couchbase.mock.http;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.couchbase.mock.Bucket;
@@ -50,7 +51,7 @@ public class StateGrabber {
         Map<String, Object> poolInfo = new HashMap<String, Object>();
         poolInfo.put("buckets", new HashMap<String, Object>());
 
-        ( (Map) poolInfo.get("buckets") ).put("uri",
+        ((Map) poolInfo.get("buckets")).put("uri",
                 "/pools/" + mock.getPoolName() + "/buckets");
         return JSONObject.fromObject(poolInfo).toString();
     }

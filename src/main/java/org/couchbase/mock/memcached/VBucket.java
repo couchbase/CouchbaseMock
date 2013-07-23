@@ -19,10 +19,10 @@ package org.couchbase.mock.memcached;
 import java.security.AccessControlException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
 import org.couchbase.mock.Bucket.BucketType;
 
 /**
- *
  * @author Trond Norbye
  */
 public class VBucket {

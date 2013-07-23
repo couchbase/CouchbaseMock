@@ -23,7 +23,6 @@ import org.couchbase.mock.memcached.MemcachedServer;
  * Hiccup will let all servers sleep after sending a specific amount of data.
  *
  * @author M. Nunberg
- *
  */
 public class HiccupCommandHandler extends ServersCommandHandler {
 

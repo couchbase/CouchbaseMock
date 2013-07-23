@@ -16,9 +16,11 @@
 package org.couchbase.mock.memcached;
 
 import org.couchbase.mock.memcached.protocol.ErrorCode;
+
 import java.security.AccessControlException;
 import java.util.Date;
 import java.util.Map;
+
 import org.couchbase.mock.Bucket.BucketType;
 
 /**
@@ -141,8 +143,8 @@ public class DataStore {
         if (ii != null) {
             long now = new Date().getTime();
             if (ii.getExptime() == 0
-                    || ( ii.getExptime() > THIRTY_DAYS && now < ii.getExptimeInMillis() )
-                    || ( ii.getExptime() <= THIRTY_DAYS && now - ii.getMtime() < ii.getExptimeInMillis() )) {
+                    || (ii.getExptime() > THIRTY_DAYS && now < ii.getExptimeInMillis())
+                    || (ii.getExptime() <= THIRTY_DAYS && now - ii.getMtime() < ii.getExptimeInMillis())) {
                 return ii;
             } else {
                 map.remove(key);

@@ -20,7 +20,6 @@ import java.net.ProtocolException;
 import java.nio.ByteBuffer;
 
 /**
- *
  * @author Sergey Avseyev <sergey.avseyev@gmail.com>
  */
 public class BinaryGetCommand extends BinaryCommand {

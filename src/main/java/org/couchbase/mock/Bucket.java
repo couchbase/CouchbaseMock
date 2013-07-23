@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 import org.couchbase.mock.memcached.DataStore;
 import org.couchbase.mock.memcached.MemcachedServer;
 
@@ -85,14 +86,14 @@ public abstract class Bucket {
     }
 
     public static Bucket create(BucketType type, String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, CouchbaseMock cluster, String password) throws IOException {
-          switch (type) {
-                case MEMCACHE:
-                    return new MemcacheBucket(name, hostname, port, numNodes, bucketStartPort, numVBuckets, cluster, password);
-                case COUCHBASE:
-                    return new CouchbaseBucket(name, hostname, port, numNodes, bucketStartPort, numVBuckets, cluster, password);
-                default:
-                    throw new FileNotFoundException("I don't know about this type...");
-            }
+        switch (type) {
+            case MEMCACHE:
+                return new MemcacheBucket(name, hostname, port, numNodes, bucketStartPort, numVBuckets, cluster, password);
+            case COUCHBASE:
+                return new CouchbaseBucket(name, hostname, port, numNodes, bucketStartPort, numVBuckets, cluster, password);
+            default:
+                throw new FileNotFoundException("I don't know about this type...");
+        }
     }
 
     public abstract BucketType getType();

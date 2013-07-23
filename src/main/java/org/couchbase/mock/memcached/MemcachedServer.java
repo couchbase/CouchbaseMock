@@ -16,10 +16,12 @@
 package org.couchbase.mock.memcached;
 
 import java.nio.ByteBuffer;
+
 import org.couchbase.mock.memcached.protocol.BinaryResponse;
 import org.couchbase.mock.memcached.protocol.CommandCode;
 import org.couchbase.mock.memcached.protocol.ErrorCode;
 import org.couchbase.mock.memcached.protocol.BinaryCommand;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -69,9 +71,9 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
     /**
      * Create a new new memcached server.
      *
-     * @param hostname The hostname to bind to (null == any)
-     * @param port The port this server should listen to (0 to choose an
-     *             ephemeral port)
+     * @param hostname  The hostname to bind to (null == any)
+     * @param port      The port this server should listen to (0 to choose an
+     *                  ephemeral port)
      * @param datastore
      * @param bucket
      * @throws IOException If we fail to create the server socket
@@ -199,8 +201,7 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
     }
 
     private int writeResponse(SocketChannel channel, ByteBuffer buf)
-            throws IOException, ClosedChannelException
-    {
+            throws IOException, ClosedChannelException {
         int wv;
         int nw = 0;
 
@@ -273,8 +274,7 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
                                             // Wait hiccupTime to write the rest of the buffer
                                             try {
                                                 Thread.sleep(hiccupTime);
-                                            }
-                                            catch (InterruptedException exintr) {
+                                            } catch (InterruptedException exintr) {
                                             }
                                         }
                                         writeResponse(channel, buf);
@@ -314,8 +314,7 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         }
     }
 
-    public Bucket getBucket()
-    {
+    public Bucket getBucket() {
         return bucket;
     }
 
@@ -357,7 +356,7 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
     }
 
     /**
-     * @param msecs how long to stall for
+     * @param msecs    how long to stall for
      * @param boundary how far along the output buffer should we hiccup
      */
     public void setHiccup(int msecs, int offset) {

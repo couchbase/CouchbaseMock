@@ -18,16 +18,17 @@ package org.couchbase.mock.http;
 import org.couchbase.mock.CouchbaseMock;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import org.couchbase.mock.Bucket;
 
 /**
- *
  * @author Sergey Avseyev
  */
 public class PoolsHandler implements HttpHandler {
@@ -48,11 +49,11 @@ public class PoolsHandler implements HttpHandler {
 
         for (Bucket bucket : mock.getBuckets().values()) {
             if ( // Public
-                    ( httpUser.isEmpty() && bucket.getPassword().isEmpty() )
-                    || // Administrator
-                    adminUser.equals(httpUser)
-                    || // Protected
-                    bucket.getName().equals(httpUser)) {
+                    (httpUser.isEmpty() && bucket.getPassword().isEmpty())
+                            || // Administrator
+                            adminUser.equals(httpUser)
+                            || // Protected
+                            bucket.getName().equals(httpUser)) {
                 bucketList.add(bucket);
             }
         }
@@ -92,11 +93,10 @@ public class PoolsHandler implements HttpHandler {
             exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, 0);
             BucketsStreamingHandler streamingHandler =
                     new BucketsStreamingHandler(mock.getMonitor(),
-                    bucket, exchange.getResponseBody());
+                            bucket, exchange.getResponseBody());
             try {
                 streamingHandler.startStreaming();
-            }
-            catch (InterruptedException ex) {
+            } catch (InterruptedException ex) {
                 Logger.getLogger(PoolsHandler.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else {
@@ -122,11 +122,9 @@ public class PoolsHandler implements HttpHandler {
             } else {
                 exchange.sendResponseHeaders(HttpURLConnection.HTTP_INTERNAL_ERROR, -1);
             }
-        }
-        catch (ResourceNotFoundException ex) {
+        } catch (ResourceNotFoundException ex) {
             exchange.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, -1);
-        }
-        finally {
+        } finally {
             body.close();
         }
     }

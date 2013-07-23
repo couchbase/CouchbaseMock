@@ -17,7 +17,6 @@
 package org.couchbase.mock.memcached.protocol;
 
 /**
- *
  * @author Trond Norbye <trond.norbye@gmail.com>
  */
 public class BinaryArithmeticResponse extends BinaryResponse {

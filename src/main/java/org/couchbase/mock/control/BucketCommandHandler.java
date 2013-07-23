@@ -23,8 +23,8 @@ import org.couchbase.mock.CouchbaseMock;
 /**
  * This is an abstract class which operates on a specific
  * server on a specific bucket.
- * @author M. Nunberg
  *
+ * @author M. Nunberg
  */
 abstract public class BucketCommandHandler implements MockControlCommandHandler {
 

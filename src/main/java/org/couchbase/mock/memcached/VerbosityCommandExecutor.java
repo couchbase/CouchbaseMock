@@ -17,6 +17,7 @@ package org.couchbase.mock.memcached;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import org.couchbase.mock.memcached.protocol.BinaryCommand;
 import org.couchbase.mock.memcached.protocol.BinaryResponse;
 import org.couchbase.mock.memcached.protocol.ErrorCode;

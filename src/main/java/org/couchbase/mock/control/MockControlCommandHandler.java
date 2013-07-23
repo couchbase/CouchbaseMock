@@ -16,13 +16,14 @@
 package org.couchbase.mock.control;
 
 import java.util.List;
+
 import org.couchbase.mock.CouchbaseMock;
 
 /**
  * This provides an interface for mock commands. They are all issued by providing
  * ','-delimited tokens.
- * @author M. Nunberg
  *
+ * @author M. Nunberg
  */
 public interface MockControlCommandHandler {
 

@@ -16,6 +16,7 @@
 package org.couchbase.mock;
 
 import com.sun.net.httpserver.HttpServer;
+
 import java.io.BufferedReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -100,7 +101,7 @@ public class CouchbaseMock {
         private OutputStream output;
         private Socket sock;
         private Thread thread;
-        private final Map<String,MockControlCommandHandler> commandHandlers;
+        private final Map<String, MockControlCommandHandler> commandHandlers;
 
 
         public HarakiriMonitor(String host, int port, boolean terminate, CouchbaseMock mock) throws IOException {
@@ -118,14 +119,12 @@ public class CouchbaseMock {
 
         }
 
-        public void start()
-        {
+        public void start() {
             thread = new Thread(this, "HarakiriMonitor");
             thread.start();
         }
 
-        public void stop()
-        {
+        public void stop() {
             thread.interrupt();
         }
 
@@ -143,8 +142,7 @@ public class CouchbaseMock {
 
             try {
                 handler.execute(mock, tokens);
-            }
-            catch (NumberFormatException ex) {
+            } catch (NumberFormatException ex) {
                 System.err.printf("Got exception: %s\n", ex.toString());
                 return;
             }
@@ -221,6 +219,7 @@ public class CouchbaseMock {
     public CouchbaseMock(String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets) throws IOException {
         this(hostname, port, numNodes, bucketStartPort, numVBuckets, null);
     }
+
     public CouchbaseMock(String hostname, int port, int numNodes, int numVBuckets) throws IOException {
         this(hostname, port, numNodes, 0, numVBuckets, null);
     }
@@ -247,8 +246,9 @@ public class CouchbaseMock {
     /**
      * Set the required http basic authorization. To have no http auth at all, just provide
      * <code>null</code>.
+     *
      * @param requiredHttpAuthorization the credentials that need to be passed as Authorization header
-     *  (basic auth) when accessing the REST interface, or <code>null</code> if no http auth is wanted.
+     *                                  (basic auth) when accessing the REST interface, or <code>null</code> if no http auth is wanted.
      */
     public void setAuthenticator(Authenticator authenticator) {
         this.authenticator = authenticator;
@@ -256,6 +256,7 @@ public class CouchbaseMock {
 
     /**
      * Program entry point
+     *
      * @param args Command line arguments
      */
     public static void main(String[] args) {

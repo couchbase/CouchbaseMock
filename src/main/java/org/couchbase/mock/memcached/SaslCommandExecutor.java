@@ -22,7 +22,6 @@ import org.couchbase.mock.memcached.protocol.CommandCode;
 import org.couchbase.mock.memcached.protocol.ErrorCode;
 
 /**
- *
  * @author Sergey Avseyev <sergey.avseyev@gmail.com>
  */
 public class SaslCommandExecutor implements CommandExecutor {

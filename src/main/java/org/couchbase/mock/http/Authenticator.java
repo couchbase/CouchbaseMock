@@ -18,13 +18,14 @@ package org.couchbase.mock.http;
 import com.sun.net.httpserver.BasicAuthenticator;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpPrincipal;
+
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import org.couchbase.mock.Bucket;
 
 /**
- *
  * @author Sergey Avseyev
  */
 public class Authenticator extends BasicAuthenticator {

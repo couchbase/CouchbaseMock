@@ -144,6 +144,7 @@ public class Getopt {
 
     /**
      * Get the index of the first non-argument option.
+     *
      * @return The position in the argument vector for the first non-argument option
      */
     public int getOptind() {
@@ -167,8 +168,8 @@ public class Getopt {
         /**
          * Create a new instance of the command line option
          *
-         * @param shortopt the single character for the option
-         * @param longopt the name of the long option
+         * @param shortopt    the single character for the option
+         * @param longopt     the name of the long option
          * @param hasArgument if this option takes a mandatory argument
          */
         public CommandLineOption(char shortopt, String longopt, boolean hasArgument) {

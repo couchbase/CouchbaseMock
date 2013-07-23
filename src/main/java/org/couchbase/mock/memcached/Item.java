@@ -19,7 +19,6 @@ package org.couchbase.mock.memcached;
 import java.util.Date;
 
 /**
- *
  * @author Trond Norbye
  */
 public class Item {
@@ -43,7 +42,7 @@ public class Item {
     }
 
     public long getExptimeInMillis() {
-        return (long)exptime * 1000L;
+        return (long) exptime * 1000L;
     }
 
     public void setExptime(int e) {

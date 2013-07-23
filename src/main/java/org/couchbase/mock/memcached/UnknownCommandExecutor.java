@@ -21,7 +21,6 @@ import org.couchbase.mock.memcached.protocol.ErrorCode;
 import org.couchbase.mock.memcached.protocol.BinaryCommand;
 
 /**
- *
  * @author Trond Norbye <trond.norbye@gmail.com>
  */
 public class UnknownCommandExecutor implements CommandExecutor {

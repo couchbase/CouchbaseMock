@@ -17,13 +17,13 @@
 package org.couchbase.mock.memcached;
 
 import java.util.Map.Entry;
+
 import org.couchbase.mock.memcached.protocol.BinaryResponse;
 import org.couchbase.mock.memcached.protocol.ErrorCode;
 import org.couchbase.mock.memcached.protocol.BinaryCommand;
 import org.couchbase.mock.memcached.protocol.BinaryStatResponse;
 
 /**
- *
  * @author Trond Norbye <trond.norbye@gmail.com>
  */
 public class StatCommandExecutor implements CommandExecutor {

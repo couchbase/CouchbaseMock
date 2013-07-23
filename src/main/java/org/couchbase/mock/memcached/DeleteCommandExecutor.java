@@ -22,7 +22,6 @@ import org.couchbase.mock.memcached.protocol.ErrorCode;
 import org.couchbase.mock.memcached.protocol.BinaryCommand;
 
 /**
- *
  * @author Trond Norbye <trond.norbye@gmail.com>
  */
 public class DeleteCommandExecutor implements CommandExecutor {
@@ -30,7 +29,7 @@ public class DeleteCommandExecutor implements CommandExecutor {
     @Override
     public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
         ErrorCode err = server.getDatastore().delete(server, cmd.getVBucketId(),
-                                cmd.getKey(), cmd.getCas());
+                cmd.getKey(), cmd.getCas());
         if (!(cmd.getComCode() == CommandCode.DELETEQ && err == ErrorCode.SUCCESS)) {
             client.sendResponse(new BinaryResponse(cmd, err));
         }

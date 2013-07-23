@@ -20,10 +20,9 @@ import java.nio.ByteBuffer;
 
 /**
  * @author Trond Norbye
- *
  */
 public class BinaryResponse {
-    private static final byte MAGIC = (byte)0x81;
+    private static final byte MAGIC = (byte) 0x81;
     private static final byte DATATYPE = 0;
     protected final ByteBuffer buffer;
 
@@ -40,22 +39,22 @@ public class BinaryResponse {
     }
 
     static ByteBuffer createAndRewind(BinaryCommand command, ErrorCode errorCode, int extlen, int keylen, int datalen, long cas) {
-       ByteBuffer message = create(command, errorCode, extlen, keylen, datalen, cas);
-       message.rewind();
-       return message;
+        ByteBuffer message = create(command, errorCode, extlen, keylen, datalen, cas);
+        message.rewind();
+        return message;
     }
 
     static ByteBuffer create(BinaryCommand command, ErrorCode errorCode, int extlen, int keylen, int datalen, long cas) {
         ByteBuffer message = ByteBuffer.allocate(24 + extlen + keylen + datalen);
-           message.put(MAGIC);
-           message.put(command.getComCode().cc());
-           message.putShort((short)keylen);
-           message.put((byte)extlen);
-           message.put(DATATYPE);
-           message.putShort(errorCode.value());
-           message.putInt(datalen + keylen + extlen);
-           message.putInt(command.getOpaque());
-           message.putLong(cas);
+        message.put(MAGIC);
+        message.put(command.getComCode().cc());
+        message.putShort((short) keylen);
+        message.put((byte) extlen);
+        message.put(DATATYPE);
+        message.putShort(errorCode.value());
+        message.putInt(datalen + keylen + extlen);
+        message.putInt(command.getOpaque());
+        message.putLong(cas);
         return message;
     }
 

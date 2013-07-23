@@ -17,11 +17,13 @@ package org.couchbase.mock.memcached;
 
 import org.couchbase.mock.memcached.protocol.BinaryResponse;
 import org.couchbase.mock.memcached.protocol.BinaryCommand;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.util.LinkedList;
 import java.util.Queue;
+
 import org.couchbase.mock.memcached.protocol.CommandFactory;
 
 /**

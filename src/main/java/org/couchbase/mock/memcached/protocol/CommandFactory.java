@@ -27,7 +27,7 @@ import java.nio.ByteBuffer;
 public class CommandFactory {
     public static BinaryCommand create(ByteBuffer header) throws ProtocolException {
         header.rewind();
-        if (header.get() != (byte)0x80) {
+        if (header.get() != (byte) 0x80) {
             // create a better one... this is an illegal command
             throw new ProtocolException("Illegal magic");
         }

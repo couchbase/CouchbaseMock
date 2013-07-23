@@ -23,11 +23,11 @@ import java.util.Observer;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
 import org.couchbase.mock.Bucket;
 import org.couchbase.mock.CouchbaseMock.HarakiriMonitor;
 
 /**
- *
  * @author M. Nunberg
  */
 public class BucketsStreamingHandler implements Observer {
@@ -62,8 +62,7 @@ public class BucketsStreamingHandler implements Observer {
              */
             output.write(getConfigBytes());
             output.flush();
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             completed.countDown();
         } finally {
             updateHandlerLock.unlock();

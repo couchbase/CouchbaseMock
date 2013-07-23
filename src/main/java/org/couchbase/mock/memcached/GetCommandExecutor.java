@@ -23,7 +23,6 @@ import org.couchbase.mock.memcached.protocol.BinaryGetCommand;
 import org.couchbase.mock.memcached.protocol.BinaryGetResponse;
 
 /**
- *
  * @author Trond Norbye <trond.norbye@gmail.com>
  */
 public class GetCommandExecutor implements CommandExecutor {

@@ -17,10 +17,10 @@
 package org.couchbase.mock.memcached;
 
 import org.couchbase.mock.memcached.protocol.BinaryCommand;
+
 import java.io.IOException;
 
 /**
- *
  * @author Trond Norbye
  */
 public interface BinaryProtocolHandler {
