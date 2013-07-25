@@ -29,7 +29,7 @@ import org.couchbase.mock.memcached.protocol.CommandFactory;
 /**
  * @author Trond Norbye
  */
-public class MemcachedConnection {
+class MemcachedConnection {
 
     private final BinaryProtocolHandler protocolHandler;
     private final byte header[];
@@ -92,10 +92,6 @@ public class MemcachedConnection {
 
     void shutdown() {
         closed = true;
-    }
-
-    boolean isClosed() {
-        return closed;
     }
 
     void setAuthenticated() {

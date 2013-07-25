@@ -2,18 +2,39 @@
   <dictionary name="couchbase">
     <words>
       <w>argv</w>
+      <w>codehaus</w>
       <w>couchbase</w>
+      <w>creds</w>
+      <w>failover</w>
       <w>fallthrough</w>
       <w>getopt</w>
+      <w>harakiri</w>
+      <w>htdocs</w>
       <w>ingenthron</w>
+      <w>jpda</w>
+      <w>junit</w>
       <w>ketama</w>
+      <w>licensable</w>
+      <w>licensor</w>
       <w>membase</w>
+      <w>memcache</w>
       <w>memcached</w>
+      <w>mojo</w>
+      <w>netbeans</w>
+      <w>noop</w>
       <w>norbye</w>
       <w>optind</w>
+      <w>rebalance</w>
+      <w>respawn</w>
       <w>sasl</w>
+      <w>scpexe</w>
       <w>trond</w>
+      <w>unkown</w>
       <w>vbucket</w>
+      <w>vbuckets</w>
+      <w>xdebug</w>
+      <w>xrunjdwp</w>
+      <w>yyyy</w>
     </words>
   </dictionary>
 </component>

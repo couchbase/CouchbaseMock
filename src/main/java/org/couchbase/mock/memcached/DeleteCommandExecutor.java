@@ -28,7 +28,7 @@ public class DeleteCommandExecutor implements CommandExecutor {
 
     @Override
     public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
-        ErrorCode err = server.getDatastore().delete(server, cmd.getVBucketId(),
+        ErrorCode err = server.getDataStore().delete(server, cmd.getVBucketId(),
                 cmd.getKey(), cmd.getCas());
         if (!(cmd.getComCode() == CommandCode.DELETEQ && err == ErrorCode.SUCCESS)) {
             client.sendResponse(new BinaryResponse(cmd, err));

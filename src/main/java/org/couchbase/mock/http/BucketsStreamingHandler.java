@@ -30,7 +30,7 @@ import org.couchbase.mock.CouchbaseMock.HarakiriMonitor;
 /**
  * @author M. Nunberg
  */
-public class BucketsStreamingHandler implements Observer {
+class BucketsStreamingHandler implements Observer {
 
     private final OutputStream output;
     private final Bucket bucket;
@@ -98,7 +98,7 @@ public class BucketsStreamingHandler implements Observer {
 
         completed.await();
         /*
-         * Error or somesuch
+         * Error or some such
          */
         output.close();
     }

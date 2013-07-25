@@ -47,13 +47,13 @@ public class JMembaseTest extends TestCase {
     public JMembaseTest(String testName) {
         super(testName);
     }
-    CouchbaseMock instance;
-    final int port = 18091;
+    private CouchbaseMock instance;
+    private final int port = 18091;
 
-    private boolean serverNotReady(String host, int port) {
+    private boolean serverNotReady(int port) {
         Socket socket = null;
         try {
-            socket = new Socket(host, port);
+            socket = new Socket("localhost", port);
             return false;
         } catch (UnknownHostException ex) {
         } catch (IOException ex) {
@@ -75,7 +75,7 @@ public class JMembaseTest extends TestCase {
         instance.start();
         do {
             Thread.sleep(100);
-        } while (serverNotReady("localhost", port));
+        } while (serverNotReady(port));
     }
 
     @Override
@@ -87,7 +87,7 @@ public class JMembaseTest extends TestCase {
     public void testHandleHttpRequest() throws IOException {
         System.out.println("testHandleHttpRequest");
         URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/protected");
-        HttpURLConnection conn = null;
+        HttpURLConnection conn;
 
         try {
             conn = (HttpURLConnection) url.openConnection();
@@ -102,7 +102,7 @@ public class JMembaseTest extends TestCase {
     public void testHandleHttpRequestWithTrailingSlash() throws IOException {
         System.out.println("testHandleHttpRequestWithTrailingSlash");
         URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/protected/");
-        HttpURLConnection conn = null;
+        HttpURLConnection conn;
 
         try {
             conn = (HttpURLConnection) url.openConnection();
@@ -117,7 +117,7 @@ public class JMembaseTest extends TestCase {
     public void testAdministratorCouldAccessProtectedBuckets() throws IOException {
         System.out.println("testAdministratorCouldAccessProtectedBuckets");
         URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/protected");
-        HttpURLConnection conn = null;
+        HttpURLConnection conn;
 
         try {
             conn = (HttpURLConnection) url.openConnection();
@@ -132,7 +132,7 @@ public class JMembaseTest extends TestCase {
     public void testDefaultBucketShouldBeAccessibleForEveryone() throws IOException {
         System.out.println("testDefaultBucketShouldBeAccessibleForEveryone");
         URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/default");
-        HttpURLConnection conn = null;
+        HttpURLConnection conn;
 
         try {
             conn = (HttpURLConnection) url.openConnection();
@@ -146,7 +146,7 @@ public class JMembaseTest extends TestCase {
     public void testProtectedBucketsShouldBeFilteredOutFromList() throws IOException {
         System.out.println("testProtectedBucketsShouldBeFilteredOutFromList");
         URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets");
-        HttpURLConnection conn = null;
+        HttpURLConnection conn;
 
         try {
             conn = (HttpURLConnection) url.openConnection();
@@ -199,7 +199,7 @@ public class JMembaseTest extends TestCase {
     public void testHandleHttpRequestMissingAuth() throws IOException {
         System.out.println("testHandleHttpRequestMissingAuth");
         URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/protected");
-        HttpURLConnection conn = null;
+        HttpURLConnection conn;
 
         try {
             conn = (HttpURLConnection) url.openConnection();
@@ -210,10 +210,11 @@ public class JMembaseTest extends TestCase {
         }
     }
 
+    @SuppressWarnings("SpellCheckingInspection")
     public void testHandleHttpRequestIncorrectCred() throws IOException {
         System.out.println("testHandleHttpRequestIncorrectCred");
         URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/protected");
-        HttpURLConnection conn = null;
+        HttpURLConnection conn;
 
         try {
             conn = (HttpURLConnection) url.openConnection();
@@ -229,7 +230,7 @@ public class JMembaseTest extends TestCase {
     public void testHandleHttpRequestUnkownFile() throws IOException {
         System.out.println("testHandleHttpRequestUnkownFile");
         URL url = new URL("http://localhost:" + instance.getHttpPort() + "/");
-        HttpURLConnection conn = null;
+        HttpURLConnection conn;
 
         try {
             conn = (HttpURLConnection) url.openConnection();
@@ -241,6 +242,7 @@ public class JMembaseTest extends TestCase {
         }
     }
 
+    @SuppressWarnings("UnusedAssignment")
     public void testHarakiriMonitorInvalidHost() throws IOException {
         System.out.println("testHarakiriMonitorInvalidHost");
         try {
@@ -250,6 +252,7 @@ public class JMembaseTest extends TestCase {
         }
     }
 
+    @SuppressWarnings("UnusedAssignment")
     public void testHarakiriMonitorInvalidPort() throws IOException {
         System.out.println("testHarakiriMonitorInvalidPort");
         try {
@@ -294,6 +297,7 @@ public class JMembaseTest extends TestCase {
         return cfg.toString();
     }
 
+    @SuppressWarnings("SpellCheckingInspection")
     public void testConfigStreaming() throws IOException {
         System.out.println("testConfigStreaming");
         ServerSocket server = new ServerSocket(0);

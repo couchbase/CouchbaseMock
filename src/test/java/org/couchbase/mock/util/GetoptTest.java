@@ -75,7 +75,7 @@ public class GetoptTest extends TestCase {
         assertEquals(0, getopt.getOptind());
     }
 
-    public void testParseSingleLongoptWithoutArgument() {
+    public void testParseSingleLongOptionWithoutArgument() {
         System.out.println("parse: { --bravo}");
         String[] argv = {"--bravo"};
         List<Entry> options = getopt.parse(argv);
@@ -85,7 +85,7 @@ public class GetoptTest extends TestCase {
         assertEquals(-1, getopt.getOptind());
     }
 
-    public void testParseSingleLongoptWithoutRequiredArgument() {
+    public void testParseSingleLongOptionWithoutRequiredArgument() {
         System.out.println("parse: { --alpha}");
         String[] argv = {"--alpha"};
         try {
@@ -95,7 +95,7 @@ public class GetoptTest extends TestCase {
         }
     }
 
-    public void testParseSingleLongoptWithRequiredArgument() {
+    public void testParseSingleLongOptionWithRequiredArgument() {
         System.out.println("parse: { --alpha=foo}");
         String[] argv = {"--alpha=foo"};
         List<Entry> options = getopt.parse(argv);
@@ -105,7 +105,7 @@ public class GetoptTest extends TestCase {
         assertEquals(-1, getopt.getOptind());
     }
 
-    public void testParseSingleLongoptWithRequiredArgument1() {
+    public void testParseSingleLongOptionWithRequiredArgument1() {
         System.out.println("parse: { --alpha, foo}");
         String[] argv = {"--alpha", "foo"};
         List<Entry> options = getopt.parse(argv);
@@ -115,7 +115,7 @@ public class GetoptTest extends TestCase {
         assertEquals(-1, getopt.getOptind());
     }
 
-    public void testParseMulipleLongoptWithArgumentsAndOptions() {
+    public void testParseMultipleLongOptionWithArgumentsAndOptions() {
         System.out.println("parse: { --alpha=foo, --bravo, --charlie, foo}");
         String[] argv = {"--alpha=foo", "--bravo", "--charlie", "foo"};
         List<Entry> options = getopt.parse(argv);
@@ -129,7 +129,7 @@ public class GetoptTest extends TestCase {
         assertEquals(3, getopt.getOptind());
     }
 
-    public void testParseMulipleLongoptWithArgumentsAndOptionsAndSeparator() {
+    public void testParseMultipleLongOptionWithArgumentsAndOptionsAndSeparator() {
         System.out.println("parse: { --alpha=foo, --, --bravo, --charlie, foo}");
         String[] argv = {"--alpha=foo", "--", "--bravo", "--charlie", "foo"};
         List<Entry> options = getopt.parse(argv);
@@ -139,7 +139,7 @@ public class GetoptTest extends TestCase {
         assertEquals(2, getopt.getOptind());
     }
 
-    public void testParseMulipleLongoptWithArgumentsAndOptionsAndSeparator1() {
+    public void testParseMultipleLongOptionWithArgumentsAndOptionsAndSeparator1() {
         System.out.println("parse: { --alpha, foo, --, --bravo, --charlie, foo}");
         String[] argv = {"--alpha", "foo", "--", "--bravo", "--charlie", "foo"};
         List<Entry> options = getopt.parse(argv);
@@ -149,7 +149,7 @@ public class GetoptTest extends TestCase {
         assertEquals(3, getopt.getOptind());
     }
 
-    public void testParseSingleShortoptWithoutArgument() {
+    public void testParseSingleShortOptionWithoutArgument() {
         System.out.println("parse: { -b}");
         String[] argv = {"-b"};
         List<Entry> options = getopt.parse(argv);
@@ -159,7 +159,7 @@ public class GetoptTest extends TestCase {
         assertEquals(-1, getopt.getOptind());
     }
 
-    public void testParseSingleShortoptWithoutRequiredArgument() {
+    public void testParseSingleShortOptionWithoutRequiredArgument() {
         System.out.println("parse: { -a}");
         String[] argv = {"-a"};
         try {
@@ -169,7 +169,7 @@ public class GetoptTest extends TestCase {
         }
     }
 
-    public void testParseSingleShortoptWithRequiredArgument() {
+    public void testParseSingleShortOptionWithRequiredArgument() {
         System.out.println("parse: { -a, foo}");
         String[] argv = {"-a", "foo"};
         List<Entry> options = getopt.parse(argv);
@@ -179,7 +179,7 @@ public class GetoptTest extends TestCase {
         assertEquals(-1, getopt.getOptind());
     }
 
-    public void testParseMulipleShortoptWithArgumentsAndOptions() {
+    public void testParseMultipleShortOptionWithArgumentsAndOptions() {
         System.out.println("parse: { -a, foo, -b -c, foo}");
         String[] argv = {"-a", "foo", "-b", "-c", "foo"};
         List<Entry> options = getopt.parse(argv);
@@ -193,7 +193,7 @@ public class GetoptTest extends TestCase {
         assertEquals(4, getopt.getOptind());
     }
 
-    public void testParseMulipleShortoptWithArgumentsAndOptions1() {
+    public void testParseMultipleShortOptionWithArgumentsAndOptions1() {
         System.out.println("parse: { -abc, foo, foo}");
         String[] argv = {"-abc", "foo", "foo"};
         List<Entry> options = getopt.parse(argv);
@@ -207,7 +207,7 @@ public class GetoptTest extends TestCase {
         assertEquals(2, getopt.getOptind());
     }
 
-    public void testParseMulipleShortoptWithArgumentsAndOptionsAndSeparator() {
+    public void testParseMultipleShortOptionWithArgumentsAndOptionsAndSeparator() {
         System.out.println("parse: { -a, foo, --, -b, -c, foo}");
         String[] argv = {"-a", "foo", "--", "-b", "-c", "foo"};
         List<Entry> options = getopt.parse(argv);

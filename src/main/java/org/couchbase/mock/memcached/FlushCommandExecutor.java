@@ -29,7 +29,7 @@ public class FlushCommandExecutor implements CommandExecutor {
 
     @Override
     public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
-        server.getDatastore().flush(server);
+        server.getDataStore().flush(server);
         if (cmd.getComCode() == CommandCode.FLUSH) {
             client.sendResponse(new BinaryResponse(cmd, ErrorCode.SUCCESS));
         }

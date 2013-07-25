@@ -23,10 +23,6 @@ import java.nio.ByteBuffer;
  */
 public class BinaryStatResponse extends BinaryResponse {
 
-    public BinaryStatResponse(BinaryCommand command, ErrorCode error) {
-        super(command, error);
-    }
-
     public BinaryStatResponse(BinaryCommand command, String key, String value) {
         super(create(command, key.getBytes(), value.getBytes()));
     }

@@ -32,9 +32,10 @@ public class MembaseBucketTest extends TestCase {
     /**
      * Test of getJSON method, of class CouchbaseBucket.
      */
+    @SuppressWarnings("UnusedDeclaration")
     public void testGetJSON() throws IOException {
         System.out.println("getJSON");
         CouchbaseBucket instance = new CouchbaseBucket("membase", "localhost", 0, 100, 0, 100);
-        String result = instance.getJSON();
+        assertNotNull(instance.getJSON());
     }
 }

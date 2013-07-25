@@ -30,7 +30,7 @@ import org.couchbase.mock.CouchbaseMock;
  *
  * @author M. Nunberg
  */
-public class StateGrabber {
+class StateGrabber {
 
     /*
      * Locking not needed here (yet)
@@ -47,7 +47,7 @@ public class StateGrabber {
         return JSONObject.fromObject(map).toString();
     }
 
-    static String getPoolJSON(CouchbaseMock mock, String poolName) {
+    static String getPoolJSON(CouchbaseMock mock) {
         Map<String, Object> poolInfo = new HashMap<String, Object>();
         HashMap<String, Object> buckets = new HashMap<String, Object>();
         poolInfo.put("buckets", buckets);
@@ -66,7 +66,7 @@ public class StateGrabber {
         return ret;
     }
 
-    static String getAllBucketsJSON(CouchbaseMock mock, String poolName, List<Bucket> allowedBuckets) {
+    static String getAllBucketsJSON(List<Bucket> allowedBuckets) {
         JSONArray bucketsJSON = new JSONArray();
         for (Bucket bucket : allowedBuckets) {
             bucketsJSON.add(getBucketJSON(bucket));
@@ -74,6 +74,7 @@ public class StateGrabber {
         return bucketsJSON.toString();
     }
 
+    @SuppressWarnings("SameReturnValue")
     static String getStreamDelimiter() {
         return "\n\n\n\n";
     }

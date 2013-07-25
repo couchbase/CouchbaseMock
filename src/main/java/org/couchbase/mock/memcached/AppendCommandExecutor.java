@@ -35,13 +35,13 @@ class AppendCommandExecutor implements CommandExecutor {
 
         Item item = command.getItem();
 
-        Item existing = server.getDatastore().get(server, cmd.getVBucketId(), cmd.getKey());
+        Item existing = server.getDataStore().get(server, cmd.getVBucketId(), cmd.getKey());
         if (existing == null) {
             client.sendResponse(new BinaryResponse(cmd, ErrorCode.NOT_STORED));
             return;
         }
         existing.append(item);
-        ErrorCode err = server.getDatastore().replace(server, cmd.getVBucketId(), existing);
+        ErrorCode err = server.getDataStore().replace(server, cmd.getVBucketId(), existing);
         if (err == ErrorCode.SUCCESS && cmd.getComCode() == CommandCode.APPENDQ) {
             return;
         }

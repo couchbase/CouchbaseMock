@@ -23,36 +23,36 @@ import java.nio.ByteBuffer;
  */
 public class BinaryResponse {
     private static final byte MAGIC = (byte) 0x81;
-    private static final byte DATATYPE = 0;
-    protected final ByteBuffer buffer;
+    private static final byte DATA_TYPE = 0;
+    final ByteBuffer buffer;
 
-    protected BinaryResponse(final ByteBuffer buffer) {
+    BinaryResponse(final ByteBuffer buffer) {
         this.buffer = buffer;
     }
 
-    protected BinaryResponse(BinaryCommand command, ErrorCode errorCode, int extlen, int keylen, int datalen, long cas) {
-        buffer = createAndRewind(command, errorCode, extlen, keylen, datalen, cas);
+    BinaryResponse(BinaryCommand command, ErrorCode errorCode, int extraLength, int keyLength, int dataLength, long cas) {
+        buffer = createAndRewind(command, errorCode, extraLength, keyLength, dataLength, cas);
     }
 
     public BinaryResponse(BinaryCommand command, ErrorCode errorCode) {
         buffer = createAndRewind(command, errorCode, 0, 0, 0, 0);
     }
 
-    static ByteBuffer createAndRewind(BinaryCommand command, ErrorCode errorCode, int extlen, int keylen, int datalen, long cas) {
-        ByteBuffer message = create(command, errorCode, extlen, keylen, datalen, cas);
+    private static ByteBuffer createAndRewind(BinaryCommand command, ErrorCode errorCode, int extraLength, int keyLength, int dataLength, long cas) {
+        ByteBuffer message = create(command, errorCode, extraLength, keyLength, dataLength, cas);
         message.rewind();
         return message;
     }
 
-    static ByteBuffer create(BinaryCommand command, ErrorCode errorCode, int extlen, int keylen, int datalen, long cas) {
-        ByteBuffer message = ByteBuffer.allocate(24 + extlen + keylen + datalen);
+    static ByteBuffer create(BinaryCommand command, ErrorCode errorCode, int extraLength, int keyLength, int dataLength, long cas) {
+        ByteBuffer message = ByteBuffer.allocate(24 + extraLength + keyLength + dataLength);
         message.put(MAGIC);
         message.put(command.getComCode().cc());
-        message.putShort((short) keylen);
-        message.put((byte) extlen);
-        message.put(DATATYPE);
+        message.putShort((short) keyLength);
+        message.put((byte) extraLength);
+        message.put(DATA_TYPE);
         message.putShort(errorCode.value());
-        message.putInt(datalen + keylen + extlen);
+        message.putInt(dataLength + keyLength + extraLength);
         message.putInt(command.getOpaque());
         message.putLong(cas);
         return message;

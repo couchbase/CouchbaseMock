@@ -32,11 +32,11 @@ import org.couchbase.mock.memcached.MemcachedServer;
 public class MemcachedBucket extends Bucket {
 
     public MemcachedBucket(String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, CouchbaseMock cluster, String password) throws IOException {
-        super(name, hostname, port, numNodes, bucketStartPort, numVBuckets, cluster, password);
+        super(name, hostname, numNodes, bucketStartPort, numVBuckets, cluster, password);
     }
 
     public MemcachedBucket(String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets) throws IOException {
-        super(name, hostname, port, numNodes, bucketStartPort, numVBuckets, null);
+        super(name, hostname, numNodes, bucketStartPort, numVBuckets, null);
     }
 
     @Override
@@ -66,6 +66,6 @@ public class MemcachedBucket extends Bucket {
 
     @Override
     public BucketType getType() {
-        return BucketType.MEMCACHE;
+        return BucketType.MEMCACHED;
     }
 }

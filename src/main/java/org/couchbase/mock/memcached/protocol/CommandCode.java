@@ -19,6 +19,7 @@ package org.couchbase.mock.memcached.protocol;
 /**
  * @author Trond Norbye
  */
+@SuppressWarnings({"SpellCheckingInspection", "UnusedDeclaration"})
 public enum CommandCode {
     GET(0x00), SET(0x01), ADD(0x02), REPLACE(0x03),
     DELETE(0x04), INCREMENT(0x05), DECREMENT(0x06), QUIT(0x07),

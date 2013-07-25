@@ -24,23 +24,23 @@ import java.nio.ByteBuffer;
  */
 public class BinaryCommand {
 
-    protected final CommandCode cc;
-    protected final short keyLength;
-    protected final byte extraLength;
-    protected final short vbucket;
-    protected final int bodyLength;
-    protected final int opaque;
-    protected final long cas;
-    protected final ByteBuffer bodyBuffer;
+    private final CommandCode cc;
+    private final short keyLength;
+    final byte extraLength;
+    private final short vbucket;
+    private final int bodyLength;
+    private final int opaque;
+    final long cas;
+    final ByteBuffer bodyBuffer;
 
-    protected BinaryCommand(ByteBuffer header) throws ProtocolException {
+    BinaryCommand(ByteBuffer header) throws ProtocolException {
         header.rewind();
         header.get(); // magic already validated
         cc = CommandCode.valueOf(header.get());
         keyLength = header.getShort();
         extraLength = header.get();
         if (header.get() != 0) {
-            throw new ProtocolException("Illegal datatype"); // illegal datatype
+            throw new ProtocolException("Illegal data type");
         }
         vbucket = header.getShort();
         bodyLength = header.getInt();

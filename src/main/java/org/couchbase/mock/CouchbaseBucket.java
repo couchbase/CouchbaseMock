@@ -16,8 +16,6 @@
 package org.couchbase.mock;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -34,11 +32,11 @@ import org.couchbase.mock.memcached.MemcachedServer;
 public class CouchbaseBucket extends Bucket {
 
     public CouchbaseBucket(String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, CouchbaseMock cluster, String password) throws IOException {
-        super(name, hostname, port, numNodes, bucketStartPort, numVBuckets, cluster, password);
+        super(name, hostname, numNodes, bucketStartPort, numVBuckets, cluster, password);
     }
 
     public CouchbaseBucket(String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets) throws IOException {
-        super(name, hostname, port, numNodes, bucketStartPort, numVBuckets, null);
+        super(name, hostname, numNodes, bucketStartPort, numVBuckets, null);
     }
 
     @Override

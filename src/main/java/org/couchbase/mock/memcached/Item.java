@@ -24,33 +24,33 @@ import java.util.Date;
 public class Item {
     private final String key;
     private final int flags;
-    private int exptime;
+    private int expiryTime;
     private byte[] value;
     private long cas;
-    private long mtime;
+    private long modificationTime;
 
-    public Item(String key, int flags, int exptime, byte[] value, long cas) {
+    public Item(String key, int flags, int expiryTime, byte[] value, long cas) {
         this.key = key;
         this.flags = flags;
-        this.exptime = exptime;
+        this.expiryTime = expiryTime;
         this.value = value;
         this.cas = cas;
     }
 
-    public int getExptime() {
-        return exptime;
+    public int getExpiryTime() {
+        return expiryTime;
     }
 
-    public long getExptimeInMillis() {
-        return (long) exptime * 1000L;
+    public long getExpiryTimeInMillis() {
+        return (long) expiryTime * 1000L;
     }
 
-    public void setExptime(int e) {
-        exptime = e;
+    public void setExpiryTime(int e) {
+        expiryTime = e;
     }
 
-    public long getMtime() {
-        return mtime;
+    public long getModificationTime() {
+        return modificationTime;
     }
 
     public int getFlags() {
@@ -70,7 +70,7 @@ public class Item {
     }
 
     void setCas(long l) {
-        mtime = new Date().getTime();
+        modificationTime = new Date().getTime();
         cas = l;
     }
 

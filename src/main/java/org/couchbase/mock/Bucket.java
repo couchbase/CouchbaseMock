@@ -32,19 +32,19 @@ import org.couchbase.mock.memcached.MemcachedServer;
  */
 public abstract class Bucket {
 
-    public DataStore getDatastore() {
+    public DataStore getDataStore() {
         return datastore;
     }
 
     public enum BucketType {
-        MEMCACHE, COUCHBASE
+        MEMCACHED, COUCHBASE
     }
 
-    protected final DataStore datastore;
+    final DataStore datastore;
     private final MemcachedServer[] servers;
-    protected final int numVBuckets;
-    protected final String poolName = "default";
-    protected final String name;
+    final int numVBuckets;
+    final String poolName = "default";
+    final String name;
     private final CouchbaseMock cluster;
     private final String password;
     private final ReentrantReadWriteLock configurationRwLock;
@@ -53,15 +53,15 @@ public abstract class Bucket {
         return "/pools/" + poolName + "/bucketsStreaming/" + name;
     }
 
-    public Bucket(String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, CouchbaseMock cluster) throws IOException {
-        this(name, hostname, port, numNodes, bucketStartPort, numVBuckets, cluster, "");
+    Bucket(String name, String hostname, int numNodes, int bucketStartPort, int numVBuckets, CouchbaseMock cluster) throws IOException {
+        this(name, hostname, numNodes, bucketStartPort, numVBuckets, cluster, "");
     }
 
     public MemcachedServer[] getServers() {
         return servers;
     }
 
-    public Bucket(String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, CouchbaseMock cluster, String password) throws IOException {
+    Bucket(String name, String hostname, int numNodes, int bucketStartPort, int numVBuckets, CouchbaseMock cluster, String password) throws IOException {
         this.cluster = cluster;
         this.name = name;
         this.numVBuckets = numVBuckets;
@@ -82,7 +82,7 @@ public abstract class Bucket {
 
     public static Bucket create(BucketType type, String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, CouchbaseMock cluster, String password) throws IOException {
         switch (type) {
-            case MEMCACHE:
+            case MEMCACHED:
                 return new MemcachedBucket(name, hostname, port, numNodes, bucketStartPort, numVBuckets, cluster, password);
             case COUCHBASE:
                 return new CouchbaseBucket(name, hostname, port, numNodes, bucketStartPort, numVBuckets, cluster, password);
@@ -172,7 +172,7 @@ public abstract class Bucket {
         return active;
     }
 
-    public final void rebalance() {
+    final void rebalance() {
         // Let's start distribute the vbuckets across the servers
         configurationRwLock.writeLock().lock();
         try {

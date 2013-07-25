@@ -28,8 +28,8 @@ import org.couchbase.mock.CouchbaseMock;
  */
 abstract public class BucketCommandHandler implements MockControlCommandHandler {
 
-    public Bucket bucket;
-    public int idx;
+    Bucket bucket;
+    int idx;
 
     abstract void doBucketCommand();
 

@@ -201,7 +201,7 @@ public class CouchbaseMock {
                     if (parts.length > 1) {
                         pass = parts[1];
                         if (parts.length > 2 && "memcache".equals(parts[2])) {
-                            type = BucketType.MEMCACHE;
+                            type = BucketType.MEMCACHED;
                         }
                     }
                     bucket = Bucket.create(type, name, hostname, port, numNodes, bucketStartPort, numVBuckets, this, pass);
@@ -265,7 +265,7 @@ public class CouchbaseMock {
         int port = 8091;
         int nodes = 100;
         int vbuckets = 4096;
-        String harakirimonitor = null;
+        String harakiriMonitor = null;
         String hostname = null;
         String bucketsSpec = null;
 
@@ -295,7 +295,7 @@ public class CouchbaseMock {
                 if (idx == -1) {
                     System.err.println("ERROR: --harakiri-monitor requires host:port");
                 }
-                harakirimonitor = e.value;
+                harakiriMonitor = e.value;
             } else if (e.key.equals("-?") || e.key.equals("--help")) {
                 System.out.println("Usage: --host=hostname --buckets=bucketsSpec --port=REST-port --nodes=#nodes --vbuckets=#vbuckets --harakiri-monitor=host:port");
                 System.out.println("  Default values: REST-port:    8091");
@@ -312,8 +312,8 @@ public class CouchbaseMock {
 
         try {
             CouchbaseMock mock = new CouchbaseMock(hostname, port, nodes, vbuckets, bucketsSpec);
-            if (harakirimonitor != null) {
-                mock.setupHarakiriMonitor(harakirimonitor, true);
+            if (harakiriMonitor != null) {
+                mock.setupHarakiriMonitor(harakiriMonitor, true);
             }
             mock.start();
         } catch (Exception e) {

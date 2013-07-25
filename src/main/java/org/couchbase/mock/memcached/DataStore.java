@@ -24,8 +24,8 @@ import java.util.Map;
 import org.couchbase.mock.Bucket.BucketType;
 
 /**
- * A small little datastore.. Please note that since this is a dummy
- * datastore I'm using in my test program, I don't care if the operations
+ * A small little data store.. Please note that since this is a dummy
+ * data store I'm using in my test program, I don't care if the operations
  * are atomic... feel free to change that if you like...
  *
  * @author Trond Norbye
@@ -51,15 +51,6 @@ public class DataStore {
         return vBucketMap[vbucket];
     }
 
-    @SuppressWarnings("unchecked")
-    public Map<String, Item>[] getData() {
-        Map<String, Item>[] res = new Map[vBucketMap.length];
-        for (int i = 0; i < vBucketMap.length; i++) {
-            res[i] = vBucketMap[i].getMap(vBucketMap[i].getOwner());
-        }
-        return res;
-    }
-
     private Map<String, Item> getMap(MemcachedServer server, short vbucket) throws AccessControlException {
         if (vbucket >= vBucketMap.length && server.getType() == BucketType.COUCHBASE) {
             // Illegal vbucket.. just report as no access..
@@ -73,7 +64,7 @@ public class DataStore {
     }
 
     public ErrorCode add(MemcachedServer server, short vBucketId, Item item) {
-        // I don't give a shit about atomicy right now..
+        // I don't give a shit about atomicity right now..
         Map<String, Item> map = getMap(server, vBucketId);
         Item old = lookup(map, item.getKey());
         if (old != null || item.getCas() != 0) {
@@ -86,7 +77,7 @@ public class DataStore {
     }
 
     public ErrorCode replace(MemcachedServer server, short vBucketId, Item item) {
-        // I don't give a shit about atomicy right now..
+        // I don't give a shit about atomicity right now..
         Map<String, Item> map = getMap(server, vBucketId);
         Item old = lookup(map, item.getKey());
         if (old == null) {
@@ -115,7 +106,7 @@ public class DataStore {
     }
 
     ErrorCode delete(MemcachedServer server, short vBucketId, String key, long cas) {
-        // I don't give a shit about atomicy right now..
+        // I don't give a shit about atomicity right now..
         Map<String, Item> map = getMap(server, vBucketId);
         Item i = lookup(map, key);
         if (i == null) {
@@ -143,9 +134,9 @@ public class DataStore {
         Item ii = map.get(key);
         if (ii != null) {
             long now = new Date().getTime();
-            if (ii.getExptime() == 0
-                    || (ii.getExptime() > THIRTY_DAYS && now < ii.getExptimeInMillis())
-                    || (ii.getExptime() <= THIRTY_DAYS && now - ii.getMtime() < ii.getExptimeInMillis())) {
+            if (ii.getExpiryTime() == 0
+                    || (ii.getExpiryTime() > THIRTY_DAYS && now < ii.getExpiryTimeInMillis())
+                    || (ii.getExpiryTime() <= THIRTY_DAYS && now - ii.getModificationTime() < ii.getExpiryTimeInMillis())) {
                 return ii;
             } else {
                 map.remove(key);

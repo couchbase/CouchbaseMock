@@ -28,6 +28,7 @@ import java.util.logging.Logger;
  */
 public class Base64 {
 
+    @SuppressWarnings("SpellCheckingInspection")
     private static final char code[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".toCharArray();
 
     /**

@@ -55,7 +55,7 @@ import org.couchbase.mock.Bucket.BucketType;
  */
 public class MemcachedServer implements Runnable, BinaryProtocolHandler {
 
-    private final DataStore datastore;
+    private final DataStore dataStore;
     private final long bootTime;
     private final String hostname;
     private final ServerSocketChannel server;
@@ -75,12 +75,12 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
      * @param hostname  The hostname to bind to (null == any)
      * @param port      The port this server should listen to (0 to choose an
      *                  ephemeral port)
-     * @param datastore The store used to keep the data
+     * @param dataStore The store used to keep the data
      * @throws IOException If we fail to create the server socket
      */
-    public MemcachedServer(Bucket bucket, String hostname, int port, DataStore datastore) throws IOException {
+    public MemcachedServer(Bucket bucket, String hostname, int port, DataStore dataStore) throws IOException {
         this.bucket = bucket;
-        this.datastore = datastore;
+        this.dataStore = dataStore;
 
         UnknownCommandExecutor unknownHandler = new UnknownCommandExecutor();
         for (int ii = 0; ii < executors.length; ++ii) {
@@ -148,10 +148,11 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         server.register(selector, SelectionKey.OP_ACCEPT);
     }
 
-    public DataStore getDatastore() {
-        return datastore;
+    public DataStore getDataStore() {
+        return dataStore;
     }
 
+    @SuppressWarnings("SpellCheckingInspection")
     @Override
     public String toString() {
         Map<String, Object> map = new HashMap<String, Object>();
@@ -177,6 +178,7 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         return JSONObject.fromObject(map).toString();
     }
 
+    @SuppressWarnings("SpellCheckingInspection")
     public Map<String, String> getStats() {
         HashMap<String, String> stats = new HashMap<String, String>();
         stats.put("pid", Long.toString(Thread.currentThread().getId()));
@@ -240,65 +242,7 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
                         SelectionKey key = iterator.next();
                         iterator.remove();
 
-                        MemcachedConnection client = (MemcachedConnection) key.attachment();
-
-                        if (client != null) {
-                            try {
-
-                                int ioevents = SelectionKey.OP_READ;
-                                SocketChannel channel = (SocketChannel) key.channel();
-
-                                if (key.isReadable()) {
-                                    if (channel.read(client.getInputBuffer()) == -1) {
-                                        channel.close();
-                                        throw new ClosedChannelException();
-                                    } else {
-                                        client.step();
-                                    }
-                                }
-
-                                if (key.isWritable()) {
-                                    ByteBuffer buf;
-                                    while ((buf = client.getOutputBuffer()) != null) {
-                                        if (truncateLimit > 0 && buf.limit() > truncateLimit) {
-                                            buf.limit(truncateLimit);
-                                        }
-
-                                        if (hiccupOffset > 0 && buf.limit() > hiccupOffset) {
-                                            ByteBuffer immediateBuf = buf.slice();
-                                            buf.position(hiccupOffset);
-                                            immediateBuf.limit(hiccupOffset);
-                                            writeResponse(channel, immediateBuf);
-
-                                            // Wait hiccupTime to write the rest of the buffer
-                                            //noinspection EmptyCatchBlock
-                                            try {
-                                                Thread.sleep(hiccupTime);
-                                            } catch (InterruptedException exintr) {
-                                            }
-                                        }
-                                        writeResponse(channel, buf);
-                                    }
-                                }
-
-                                if (client.hasOutput()) {
-                                    ioevents |= SelectionKey.OP_WRITE;
-                                }
-
-                                channel.register(selector, ioevents, client);
-                            } catch (ClosedChannelException exp) {
-                                // just ditch this client..
-                            } catch (IOException ioexp) {
-                                // hmm.. should this really be silently ignored?
-                            }
-
-                        } else {
-                            if (key.isAcceptable()) {
-                                SocketChannel cc = server.accept();
-                                cc.configureBlocking(false);
-                                cc.register(selector, SelectionKey.OP_READ, new MemcachedConnection(this));
-                            }
-                        }
+                        handleClient(key);
                     }
                 } catch (IOException e) {
                     Logger.getLogger(MemcachedServer.class.getName()).log(Level.SEVERE, null, e);
@@ -314,18 +258,72 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         }
     }
 
+    private void handleClient(SelectionKey key) throws IOException {
+        MemcachedConnection client = (MemcachedConnection) key.attachment();
+
+        if (client != null) {
+            try {
+
+                int ioEvents = SelectionKey.OP_READ;
+                SocketChannel channel = (SocketChannel) key.channel();
+
+                if (key.isReadable()) {
+                    if (channel.read(client.getInputBuffer()) == -1) {
+                        channel.close();
+                        throw new ClosedChannelException();
+                    } else {
+                        client.step();
+                    }
+                }
+
+                if (key.isWritable()) {
+                    ByteBuffer buf;
+                    while ((buf = client.getOutputBuffer()) != null) {
+                        if (truncateLimit > 0 && buf.limit() > truncateLimit) {
+                            buf.limit(truncateLimit);
+                        }
+
+                        if (hiccupOffset > 0 && buf.limit() > hiccupOffset) {
+                            ByteBuffer immediateBuf = buf.slice();
+                            buf.position(hiccupOffset);
+                            immediateBuf.limit(hiccupOffset);
+                            writeResponse(channel, immediateBuf);
+
+                            // Wait hiccupTime to write the rest of the buffer
+                            //noinspection EmptyCatchBlock
+                            try {
+                                Thread.sleep(hiccupTime);
+                            } catch (InterruptedException ex) {
+                            }
+                        }
+                        writeResponse(channel, buf);
+                    }
+                }
+
+                if (client.hasOutput()) {
+                    ioEvents |= SelectionKey.OP_WRITE;
+                }
+
+                channel.register(selector, ioEvents, client);
+            } catch (ClosedChannelException exp) {
+                // just ditch this client..
+            } catch (IOException ex) {
+                // hmm.. should this really be silently ignored?
+            }
+
+        } else {
+            if (key.isAcceptable()) {
+                SocketChannel cc = server.accept();
+                cc.configureBlocking(false);
+                cc.register(selector, SelectionKey.OP_READ, new MemcachedConnection(this));
+            }
+        }
+    }
+
     public Bucket getBucket() {
         return bucket;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * org.membase.libmembase.test.BinaryProtocolHandler#execute(org.membase
-     * .libmembase.test.BinaryCommand,
-     * org.membase.libmembase.test.MemcachedConnection)
-     */
     @Override
     public void execute(BinaryCommand cmd, MemcachedConnection client)
             throws IOException {
@@ -356,15 +354,15 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
     }
 
     /**
-     * @param msecs    how long to stall for
+     * @param milliSeconds how long to stall for
      * @param offset how far along the output buffer should we hiccup
      */
-    public void setHiccup(int msecs, int offset) {
-        if (msecs < 0 || offset < 0) {
+    public void setHiccup(int milliSeconds, int offset) {
+        if (milliSeconds < 0 || offset < 0) {
             throw new IllegalArgumentException("Time and offset must be >= 0");
         }
 
-        hiccupTime = msecs;
+        hiccupTime = milliSeconds;
         hiccupOffset = offset;
     }
 

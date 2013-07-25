@@ -22,13 +22,10 @@ import junit.framework.TestCase;
  *
  * @author Trond Norbye
  */
+@SuppressWarnings("SpellCheckingInspection")
 public class Base64Test extends TestCase {
 
-    public Base64Test(String testName) {
-        super(testName);
-    }
-
-    public void validateEncode(String input, String expResult) {
+    private void validateEncode(String input, String expResult) {
         String result = Base64.encode(input);
         assertEquals(expResult, result);
     }
@@ -81,7 +78,7 @@ public class Base64Test extends TestCase {
         validateEncode("blahblah:bla@@h\n", "YmxhaGJsYWg6YmxhQEBoCg==");
     }
 
-    public void validateDecode(String input, String expResult) {
+    private void validateDecode(String input, String expResult) {
         String result = Base64.decode(input);
         assertEquals(expResult, result);
     }

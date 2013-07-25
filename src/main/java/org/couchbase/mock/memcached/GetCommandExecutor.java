@@ -30,7 +30,7 @@ public class GetCommandExecutor implements CommandExecutor {
     @Override
     public void execute(BinaryCommand command, MemcachedServer server, MemcachedConnection client) {
         BinaryGetCommand cmd = (BinaryGetCommand) command;
-        DataStore datastore = server.getDatastore();
+        DataStore datastore = server.getDataStore();
         Item item = datastore.get(server, cmd.getVBucketId(), cmd.getKey());
         CommandCode cc = cmd.getComCode();
 
@@ -40,7 +40,7 @@ public class GetCommandExecutor implements CommandExecutor {
             }
         } else {
             if (cc == CommandCode.TOUCH || cc == CommandCode.GAT || cc == CommandCode.GATQ) {
-                item.setExptime(cmd.getExpiration());
+                item.setExpiryTime(cmd.getExpiration());
             }
             if (cc == CommandCode.TOUCH) {
                 client.sendResponse(new BinaryGetResponse(cmd, ErrorCode.SUCCESS));

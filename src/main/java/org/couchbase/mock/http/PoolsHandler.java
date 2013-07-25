@@ -60,7 +60,7 @@ public class PoolsHandler implements HttpHandler {
         return bucketList;
     }
 
-    private byte[] extractPayload(HttpExchange exchange, String bucketName, String path)
+    private byte[] extractPayload(HttpExchange exchange, String path)
             throws ResourceNotFoundException, IOException {
         byte[] payload = null;
 
@@ -70,12 +70,12 @@ public class PoolsHandler implements HttpHandler {
 
         } else if (path.matches("^/pools/" + mock.getPoolName() + "$/?")) {
             // GET /pools/:poolName
-            payload = StateGrabber.getPoolJSON(mock, mock.getPoolName()).getBytes();
+            payload = StateGrabber.getPoolJSON(mock).getBytes();
 
         } else if (path.matches("^/pools/" + mock.getPoolName() + "/buckets/?$")) {
             // GET /pools/:poolName/buckets
-            payload = StateGrabber.getAllBucketsJSON(mock,
-                    mock.getPoolName(), getAllowedBuckets(exchange)).getBytes();
+            payload = StateGrabber.getAllBucketsJSON(
+                    getAllowedBuckets(exchange)).getBytes();
 
         } else if (path.matches("^/pools/" + mock.getPoolName() + "/buckets/[^/]+/?$")) {
             // GET /pools/:poolName/buckets/:bucketName
@@ -111,11 +111,10 @@ public class PoolsHandler implements HttpHandler {
     public void handle(HttpExchange exchange) throws IOException {
         String path = exchange.getRequestURI().getPath();
         OutputStream body = exchange.getResponseBody();
-        String bucketName = exchange.getPrincipal().getName();
         byte[] payload;
 
         try {
-            payload = extractPayload(exchange, bucketName, path);
+            payload = extractPayload(exchange, path);
             if (payload != null) {
                 exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, payload.length);
                 body.write(payload);

@@ -26,17 +26,17 @@ import org.couchbase.mock.memcached.MemcachedServer;
  */
 public class HiccupCommandHandler extends ServersCommandHandler {
 
-    private int msecs;
+    private int milliSeconds;
     private int offset;
 
     @Override
     void extractParams(List<String> tokens) {
-        msecs = Integer.parseInt(tokens.get(0));
+        milliSeconds = Integer.parseInt(tokens.get(0));
         offset = Integer.parseInt(tokens.get(1));
     }
 
     @Override
     void doServerCommand(MemcachedServer server) {
-        server.setHiccup(msecs, offset);
+        server.setHiccup(milliSeconds, offset);
     }
 }

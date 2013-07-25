@@ -39,15 +39,15 @@ public class StoreCommandExecutor implements CommandExecutor {
         switch (cc) {
             case ADD:
             case ADDQ:
-                err = server.getDatastore().add(server, cmd.getVBucketId(), item);
+                err = server.getDataStore().add(server, cmd.getVBucketId(), item);
                 break;
             case REPLACE:
             case REPLACEQ:
-                err = server.getDatastore().replace(server, cmd.getVBucketId(), item);
+                err = server.getDataStore().replace(server, cmd.getVBucketId(), item);
                 break;
             case SET:
             case SETQ:
-                err = server.getDatastore().set(server, cmd.getVBucketId(), item);
+                err = server.getDataStore().set(server, cmd.getVBucketId(), item);
                 break;
             default:
                 client.sendResponse(new BinaryResponse(cmd, ErrorCode.EINTERNAL));

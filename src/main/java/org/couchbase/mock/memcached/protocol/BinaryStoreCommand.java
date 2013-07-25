@@ -29,13 +29,13 @@ public class BinaryStoreCommand extends BinaryCommand {
     }
 
     public Item getItem() {
-        int flags = 0, exptime = 0;
+        int flags = 0, expiryTime = 0;
 
         if (extraLength == 8) {
             flags = bodyBuffer.getInt(0);
-            exptime = bodyBuffer.getInt(4);
+            expiryTime = bodyBuffer.getInt(4);
         }
-        return new Item(getKey(), flags, exptime, getValue(), cas);
+        return new Item(getKey(), flags, expiryTime, getValue(), cas);
     }
 
 }
