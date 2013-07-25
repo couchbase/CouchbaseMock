@@ -38,7 +38,7 @@ public class Getopt {
      * Add a new option to the list of options we accept
      *
      * @param option the new option
-     * @return ourself so that you may chain the calls
+     * @return ourselves so that you may chain the calls
      */
     public Getopt addOption(CommandLineOption option) {
         options.add(option);
@@ -71,64 +71,9 @@ public class Getopt {
 
 
             if (argv[idx].startsWith("--")) {
-                String key = argv[idx];
-                int ii = key.indexOf('=');
-                if (ii != -1) {
-                    key = key.substring(0, ii);
-                }
-
-                // Try to look up the option
-                boolean found = false;
-                for (CommandLineOption o : options) {
-                    if (key.equals(o.longopt)) {
-                        found = true;
-                        // this is a match :)
-                        String value = null;
-                        if (o.hasArgument) {
-                            if (ii != -1) {
-                                value = argv[idx].substring(ii + 1);
-                            } else if (idx + 1 < argv.length) {
-                                value = argv[idx + 1];
-                                ++idx;
-                            } else {
-                                throw new IllegalArgumentException("option requires an argument -- " + key);
-                            }
-                        }
-                        ret.add(new Entry(key, value));
-                    }
-                }
-
-                if (!found) {
-                    // Illegal option!!!!!
-                    throw new IllegalArgumentException("Illegal option -- " + key);
-                }
+                idx = parseLongOption(argv, ret, idx);
             } else if (argv[idx].startsWith("-")) {
-                String keys = argv[idx].substring(1);
-                for (char c : keys.toCharArray()) {
-                    String key = "-" + c;
-                    boolean found = false;
-                    for (CommandLineOption o : options) {
-                        if (key.charAt(1) == o.shortopt) {
-                            found = true;
-                            // this is a match :)
-                            String value = null;
-                            if (o.hasArgument) {
-                                if (idx + 1 < argv.length) {
-                                    value = argv[idx + 1];
-                                    ++idx;
-                                } else {
-                                    throw new IllegalArgumentException("option requires an argument -- " + key);
-                                }
-                            }
-                            ret.add(new Entry(key, value));
-                        }
-                    }
-
-                    if (!found) {
-                        // Illegal option!!!!!
-                        throw new IllegalArgumentException("Illegal option -- " + key);
-                    }
-                }
+                idx = parseShortOption(argv, ret, idx);
             } else {
                 break;
             }
@@ -140,6 +85,71 @@ public class Getopt {
         }
 
         return ret;
+    }
+
+    private int parseShortOption(String[] argv, List<Entry> ret, int idx) {
+        String keys = argv[idx].substring(1);
+        for (char c : keys.toCharArray()) {
+            String key = "-" + c;
+            boolean found = false;
+            for (CommandLineOption o : options) {
+                if (key.charAt(1) == o.shortOption) {
+                    found = true;
+                    // this is a match :)
+                    String value = null;
+                    if (o.hasArgument) {
+                        if (idx + 1 < argv.length) {
+                            value = argv[idx + 1];
+                            ++idx;
+                        } else {
+                            throw new IllegalArgumentException("option requires an argument -- " + key);
+                        }
+                    }
+                    ret.add(new Entry(key, value));
+                }
+            }
+
+            if (!found) {
+                // Illegal option!!!!!
+                throw new IllegalArgumentException("Illegal option -- " + key);
+            }
+        }
+        return idx;
+    }
+
+    private int parseLongOption(String[] argv, List<Entry> ret, int idx) {
+        String key = argv[idx];
+        int ii = key.indexOf('=');
+        if (ii != -1) {
+            key = key.substring(0, ii);
+        }
+
+        // Try to look up the option
+        boolean found = false;
+        for (CommandLineOption o : options) {
+            if (key.equals(o.longOption)) {
+                found = true;
+                // this is a match :)
+                String value = null;
+                if (o.hasArgument) {
+                    if (ii != -1) {
+                        value = argv[idx].substring(ii + 1);
+                    } else if (idx + 1 < argv.length) {
+                        value = argv[idx + 1];
+                        ++idx;
+                    } else {
+                        throw new IllegalArgumentException("option requires an argument -- " + key);
+                    }
+                }
+                ret.add(new Entry(key, value));
+            }
+        }
+
+        if (!found) {
+            // Illegal option!!!!!
+            throw new IllegalArgumentException("Illegal option -- " + key);
+        }
+        return idx;
     }
 
     /**
@@ -161,20 +171,20 @@ public class Getopt {
      */
     public static class CommandLineOption {
 
-        private final char shortopt;
-        private final String longopt;
+        private final char shortOption;
+        private final String longOption;
         private final boolean hasArgument;
 
         /**
          * Create a new instance of the command line option
          *
-         * @param shortopt    the single character for the option
-         * @param longopt     the name of the long option
+         * @param shortOption    the single character for the option
+         * @param longOption     the name of the long option
          * @param hasArgument if this option takes a mandatory argument
          */
-        public CommandLineOption(char shortopt, String longopt, boolean hasArgument) {
-            this.shortopt = shortopt;
-            this.longopt = longopt;
+        public CommandLineOption(char shortOption, String longOption, boolean hasArgument) {
+            this.shortOption = shortOption;
+            this.longOption = longOption;
             this.hasArgument = hasArgument;
         }
     }
