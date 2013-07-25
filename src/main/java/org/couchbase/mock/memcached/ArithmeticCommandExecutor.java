@@ -54,7 +54,6 @@ public class ArithmeticCommandExecutor implements CommandExecutor {
             } else {
                 client.sendResponse(new BinaryResponse(command, ErrorCode.KEY_ENOENT));
             }
-            return;
         } else {
             long value;
             try {
@@ -71,12 +70,12 @@ public class ArithmeticCommandExecutor implements CommandExecutor {
             }
 
             int exp = cmd.getExpiration() > 0 ? cmd.getExpiration() : item.getExptime();
-            Item nval = new Item(cmd.getKey(), item.getFlags(), exp, Long.toString(value).getBytes(), item.getCas());
-            ErrorCode err = server.getDatastore().set(server, cmd.getVBucketId(), nval);
+            Item newValue = new Item(cmd.getKey(), item.getFlags(), exp, Long.toString(value).getBytes(), item.getCas());
+            ErrorCode err = server.getDatastore().set(server, cmd.getVBucketId(), newValue);
             if (err == ErrorCode.SUCCESS) {
                 if (cc == CommandCode.INCREMENT || cc == CommandCode.DECREMENT) {
                     // return value
-                    client.sendResponse(new BinaryArithmeticResponse(cmd, value, nval.getCas()));
+                    client.sendResponse(new BinaryArithmeticResponse(cmd, value, newValue.getCas()));
                 }
             } else {
                 client.sendResponse(new BinaryResponse(command, err));

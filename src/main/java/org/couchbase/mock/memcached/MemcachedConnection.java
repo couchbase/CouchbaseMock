@@ -39,13 +39,9 @@ public class MemcachedConnection {
     private boolean authenticated;
     private boolean closed;
 
-    public MemcachedConnection(MemcachedServer server) throws IOException {
+    public MemcachedConnection(MemcachedServer server) {
         closed = false;
-        if (server.getBucket().getPassword().length() > 0) {
-            authenticated = false;
-        } else {
-            authenticated = true;
-        }
+        authenticated = server.getBucket().getPassword().length() <= 0;
         header = new byte[24];
         input = ByteBuffer.wrap(header);
         protocolHandler = server.getProtocolHandler();
@@ -102,8 +98,8 @@ public class MemcachedConnection {
         return closed;
     }
 
-    void setAuthenticated(boolean state) {
-        authenticated = state;
+    void setAuthenticated() {
+        authenticated = true;
     }
 
     public boolean isAuthenticated() {

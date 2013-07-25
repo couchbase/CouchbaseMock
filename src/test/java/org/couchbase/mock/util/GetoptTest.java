@@ -38,16 +38,6 @@ public class GetoptTest extends TestCase {
                 addOption(new CommandLineOption('c', "--charlie", false));
     }
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-    }
-
     public void testParseEmptyNoOptions() {
         System.out.println("parse: { }");
         String[] argv = new String[0];

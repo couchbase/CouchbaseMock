@@ -31,7 +31,7 @@ public class BinaryStoreCommand extends BinaryCommand {
     public Item getItem() {
         int flags = 0, exptime = 0;
 
-        if (extlen == 8) {
+        if (extraLength == 8) {
             flags = bodyBuffer.getInt(0);
             exptime = bodyBuffer.getInt(4);
         }

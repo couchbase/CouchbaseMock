@@ -28,22 +28,12 @@ public class CacheBucketTest extends TestCase {
         super(testName);
     }
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-    }
-
     /**
      * Test of getJSON method, of class CacheBucket.
      */
     public void testGetJSON() throws IOException {
         System.out.println("getJSON");
-        MemcacheBucket instance = new MemcacheBucket("default", "localhost", 0, 1, 0, 1);
+        MemcachedBucket instance = new MemcachedBucket("default", "localhost", 0, 1, 0, 1);
         String result = instance.getJSON();
     }
 }

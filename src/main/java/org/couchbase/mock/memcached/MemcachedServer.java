@@ -156,8 +156,8 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
     public String toString() {
         Map<String, Object> map = new HashMap<String, Object>();
         long now = System.currentTimeMillis() / 1000;
-        int uptime = (int) (now - bootTime);
-        map.put("uptime", new Long(uptime));
+        long uptime = now - bootTime;
+        map.put("uptime", uptime);
         map.put("replication", 1);
         map.put("clusterMembership", "active");
         map.put("status", "healthy");
@@ -200,7 +200,7 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         return hostname + ":" + port;
     }
 
-    private int writeResponse(SocketChannel channel, ByteBuffer buf)
+    private void writeResponse(SocketChannel channel, ByteBuffer buf)
             throws IOException {
         int wv;
         int nw = 0;
@@ -213,7 +213,6 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
             channel.close();
             throw new ClosedChannelException();
         }
-        return nw;
     }
 
     @Override

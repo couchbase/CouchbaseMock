@@ -41,13 +41,13 @@ public abstract class Bucket {
     }
 
     protected final DataStore datastore;
-    protected final MemcachedServer servers[];
+    private final MemcachedServer[] servers;
     protected final int numVBuckets;
     protected final String poolName = "default";
     protected final String name;
-    protected final CouchbaseMock cluster;
-    protected final String password;
-    protected final ReentrantReadWriteLock configurationRwLock;
+    private final CouchbaseMock cluster;
+    private final String password;
+    private final ReentrantReadWriteLock configurationRwLock;
 
     public String getBucketUri() {
         return "/pools/" + poolName + "/bucketsStreaming/" + name;
@@ -70,7 +70,7 @@ public abstract class Bucket {
         servers = new MemcachedServer[numNodes];
         this.configurationRwLock = new ReentrantReadWriteLock();
 
-        if (this.getClass() != MemcacheBucket.class && this.getClass() != CouchbaseBucket.class) {
+        if (this.getClass() != MemcachedBucket.class && this.getClass() != CouchbaseBucket.class) {
             throw new FileNotFoundException("I don't know about this type...");
         }
         for (int ii = 0; ii < servers.length; ii++) {
@@ -83,7 +83,7 @@ public abstract class Bucket {
     public static Bucket create(BucketType type, String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, CouchbaseMock cluster, String password) throws IOException {
         switch (type) {
             case MEMCACHE:
-                return new MemcacheBucket(name, hostname, port, numNodes, bucketStartPort, numVBuckets, cluster, password);
+                return new MemcachedBucket(name, hostname, port, numNodes, bucketStartPort, numVBuckets, cluster, password);
             case COUCHBASE:
                 return new CouchbaseBucket(name, hostname, port, numNodes, bucketStartPort, numVBuckets, cluster, password);
             default:

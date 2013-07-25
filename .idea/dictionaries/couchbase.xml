@@ -1,13 +1,19 @@
 <component name="ProjectDictionaryState">
-  <dictionary name="trond">
+  <dictionary name="couchbase">
     <words>
+      <w>argv</w>
       <w>couchbase</w>
       <w>fallthrough</w>
+      <w>getopt</w>
       <w>ingenthron</w>
+      <w>ketama</w>
       <w>membase</w>
       <w>memcached</w>
       <w>norbye</w>
+      <w>optind</w>
+      <w>sasl</w>
       <w>trond</w>
+      <w>vbucket</w>
     </words>
   </dictionary>
 </component>

@@ -25,10 +25,10 @@ import java.nio.ByteBuffer;
 public class BinaryCommand {
 
     protected final CommandCode cc;
-    protected final short keylen;
-    protected final byte extlen;
+    protected final short keyLength;
+    protected final byte extraLength;
     protected final short vbucket;
-    protected final int bodylen;
+    protected final int bodyLength;
     protected final int opaque;
     protected final long cas;
     protected final ByteBuffer bodyBuffer;
@@ -37,17 +37,17 @@ public class BinaryCommand {
         header.rewind();
         header.get(); // magic already validated
         cc = CommandCode.valueOf(header.get());
-        keylen = header.getShort();
-        extlen = header.get();
+        keyLength = header.getShort();
+        extraLength = header.get();
         if (header.get() != 0) {
             throw new ProtocolException("Illegal datatype"); // illegal datatype
         }
         vbucket = header.getShort();
-        bodylen = header.getInt();
+        bodyLength = header.getInt();
         opaque = header.getInt();
         cas = header.getLong();
-        if (bodylen > 0) {
-            bodyBuffer = ByteBuffer.allocate(bodylen);
+        if (bodyLength > 0) {
+            bodyBuffer = ByteBuffer.allocate(bodyLength);
         } else {
             bodyBuffer = null;
         }
@@ -74,20 +74,20 @@ public class BinaryCommand {
     }
 
     public String getKey() {
-        if (keylen == 0) {
+        if (keyLength == 0) {
             return null;
         } else {
-            return new String(bodyBuffer.array(), extlen, keylen);
+            return new String(bodyBuffer.array(), extraLength, keyLength);
         }
     }
 
     public byte[] getValue() {
-        byte ret[] = new byte[bodylen - extlen - keylen];
-        System.arraycopy(bodyBuffer.array(), extlen + keylen, ret, 0, ret.length);
+        byte ret[] = new byte[bodyLength - extraLength - keyLength];
+        System.arraycopy(bodyBuffer.array(), extraLength + keyLength, ret, 0, ret.length);
         return ret;
     }
 
     public boolean complete() {
-        return bodylen == 0 || !bodyBuffer.hasRemaining();
+        return bodyLength == 0 || !bodyBuffer.hasRemaining();
     }
 }

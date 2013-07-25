@@ -59,7 +59,6 @@ import org.couchbase.mock.control.TruncateCommandHandler;
 public class CouchbaseMock {
 
     private final Map<String, Bucket> buckets;
-    private final String poolName = "default";
     private int port = 8091;
     private HttpServer httpServer;
     private Authenticator authenticator;
@@ -78,8 +77,9 @@ public class CouchbaseMock {
     /**
      * @return the poolName
      */
+    @SuppressWarnings("SameReturnValue")
     public String getPoolName() {
-        return poolName;
+        return "default";
     }
 
     /**
@@ -169,7 +169,7 @@ public class CouchbaseMock {
                     packet = input.readLine();
                     if (packet == null) {
                         closed = true;
-                    } else if (mock != null) {
+                    } else {
                         dispatchMockCommand(packet);
                     }
                 } catch (IOException e) {
@@ -184,7 +184,7 @@ public class CouchbaseMock {
         }
     }
 
-    public CouchbaseMock(String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, String bucketSpec) throws IOException {
+    private CouchbaseMock(String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, String bucketSpec) throws IOException {
         startupLatch = new CountDownLatch(1);
         buckets = new HashMap<String, Bucket>();
         try {
@@ -216,7 +216,7 @@ public class CouchbaseMock {
         }
     }
 
-    public CouchbaseMock(String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets) throws IOException {
+    private CouchbaseMock(String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets) throws IOException {
         this(hostname, port, numNodes, bucketStartPort, numVBuckets, null);
     }
 
@@ -228,7 +228,7 @@ public class CouchbaseMock {
         this(hostname, port, numNodes, 0, numVBuckets, bucketSpec);
     }
 
-    public void waitForStartup() throws InterruptedException {
+    void waitForStartup() throws InterruptedException {
         startupLatch.await();
     }
 
@@ -251,6 +251,7 @@ public class CouchbaseMock {
      *                      (basic auth) when accessing the REST interface, or <code>null</code>
      *                      if no http auth is wanted.
      */
+    @SuppressWarnings("UnusedDeclaration")
     public void setAuthenticator(Authenticator authenticator) {
         this.authenticator = authenticator;
     }
@@ -320,6 +321,7 @@ public class CouchbaseMock {
         }
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public void failSome(String name, float percentage) {
         Bucket bucket = getBuckets().get(name);
         if (bucket != null) {
@@ -328,6 +330,7 @@ public class CouchbaseMock {
 
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public void fixSome(String name, float percentage) {
         Bucket bucket = getBuckets().get(name);
         if (bucket != null) {
@@ -375,10 +378,10 @@ public class CouchbaseMock {
                 }
                 try {
                     httpServer = HttpServer.create(new InetSocketAddress(port), 10);
+                    busy = false;
                 } catch (BindException ex) {
                     System.err.println("Looks like port " + port + " busy, lets try another one");
                 }
-                busy = false;
             } while (busy);
             httpServer.createContext("/pools", new PoolsHandler(this)).setAuthenticator(authenticator);
             httpServer.setExecutor(Executors.newCachedThreadPool());

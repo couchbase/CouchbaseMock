@@ -59,9 +59,6 @@ public class CouchbaseBucket extends Bucket {
         }
         map.put("nodes", nodes);
 
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-
         Map<String, String> stats = new HashMap<String, String>();
         stats.put("uri", "/pools/" + poolName + "/buckets/" + name + "/stats");
         map.put("stats", stats);

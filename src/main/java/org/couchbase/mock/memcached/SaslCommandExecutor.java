@@ -19,7 +19,6 @@ import org.couchbase.mock.Bucket;
 import org.couchbase.mock.memcached.protocol.BinaryCommand;
 import org.couchbase.mock.memcached.protocol.BinarySaslResponse;
 import org.couchbase.mock.memcached.protocol.CommandCode;
-import org.couchbase.mock.memcached.protocol.ErrorCode;
 
 /**
  * @author Sergey Avseyev <sergey.avseyev@gmail.com>
@@ -39,18 +38,18 @@ public class SaslCommandExecutor implements CommandExecutor {
                 Bucket bucket = server.getBucket();
                 if (bucket.getName().equals(clientin[1]) && bucket.getPassword().equals(clientin[2])) {
                     client.sendResponse(new BinarySaslResponse(cmd, "Authenticated"));
-                    client.setAuthenticated(true);
+                    client.setAuthenticated();
                 } else {
-                    client.sendResponse(new BinarySaslResponse(cmd, ErrorCode.AUTH_ERROR));
+                    client.sendResponse(new BinarySaslResponse(cmd));
                 }
                 break;
             case SASL_STEP:
-                client.sendResponse(new BinarySaslResponse(cmd, ErrorCode.AUTH_ERROR));
+                client.sendResponse(new BinarySaslResponse(cmd));
                 // This is only useful when the above returns SASL_CONTINUE.  In this
                 // implementation, only PLAIN is supported, so it never will
                 break;
             default:
-                client.sendResponse(new BinarySaslResponse(cmd, ErrorCode.AUTH_ERROR));
+                client.sendResponse(new BinarySaslResponse(cmd));
         }
     }
 }

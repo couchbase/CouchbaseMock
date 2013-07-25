@@ -36,7 +36,7 @@ public abstract class ServersCommandHandler implements MockControlCommandHandler
 
         for (Bucket bucket : mock.getBuckets().values()) {
             for (MemcachedServer server : bucket.getServers()) {
-                if (servers.contains(server) == false) {
+                if (!servers.contains(server)) {
                     doServerCommand(server);
                     servers.add(server);
                 }

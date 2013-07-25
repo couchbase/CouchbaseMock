@@ -56,7 +56,7 @@ public class Base64 {
         out.append('=');
     }
 
-    private static void encodeTriplet(StringBuilder out, byte[] s) throws IOException {
+    private static void encodeTriplet(StringBuilder out, byte[] s) {
         int val = ((s[0] << 16) | ((s[1]) << 8) | s[2]);
         out.append(code[(val >> 18) & 63]);
         out.append(code[(val >> 12) & 63]);
@@ -90,6 +90,7 @@ public class Base64 {
      * @param input The string to encode
      * @return The encoded string
      */
+    @SuppressWarnings("StatementWithEmptyBody")
     public static String encode(String input) {
         ByteArrayInputStream in = new ByteArrayInputStream(input.getBytes());
         StringBuilder sb = new StringBuilder();
@@ -154,6 +155,7 @@ public class Base64 {
      * @param input The string to decode
      * @return The decoded string
      */
+    @SuppressWarnings("StatementWithEmptyBody")
     public static String decode(String input) {
         ByteArrayInputStream in = new ByteArrayInputStream(input.getBytes());
         StringBuilder sb = new StringBuilder();

@@ -49,6 +49,7 @@ public class Authenticator extends BasicAuthenticator {
         }
 
         Bucket bucket = buckets.get(username);
+        //noinspection SimplifiableIfStatement
         if (bucket == null || !bucketName.equals(username)) {
             return false;
         }

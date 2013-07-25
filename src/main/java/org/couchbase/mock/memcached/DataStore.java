@@ -51,6 +51,7 @@ public class DataStore {
         return vBucketMap[vbucket];
     }
 
+    @SuppressWarnings("unchecked")
     public Map<String, Item>[] getData() {
         Map<String, Item>[] res = new Map[vBucketMap.length];
         for (int i = 0; i < vBucketMap.length; i++) {

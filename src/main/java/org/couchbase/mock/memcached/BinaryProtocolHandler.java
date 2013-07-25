@@ -24,6 +24,7 @@ import java.io.IOException;
  * @author Trond Norbye
  */
 public interface BinaryProtocolHandler {
+    @SuppressWarnings("RedundantThrows")
     public void execute(BinaryCommand cmd, MemcachedConnection client)
             throws IOException;
 }

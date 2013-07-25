@@ -49,13 +49,12 @@ public class JMembaseTest extends TestCase {
     }
     CouchbaseMock instance;
     final int port = 18091;
-    Thread thread;
 
-    private boolean serverIsReady(String host, int port) {
+    private boolean serverNotReady(String host, int port) {
         Socket socket = null;
         try {
             socket = new Socket(host, port);
-            return true;
+            return false;
         } catch (UnknownHostException ex) {
         } catch (IOException ex) {
         } finally {
@@ -66,7 +65,7 @@ public class JMembaseTest extends TestCase {
                 }
             }
         }
-        return false;
+        return true;
     }
 
     @Override
@@ -76,7 +75,7 @@ public class JMembaseTest extends TestCase {
         instance.start();
         do {
             Thread.sleep(100);
-        } while (!serverIsReady("localhost", port));
+        } while (serverNotReady("localhost", port));
     }
 
     @Override

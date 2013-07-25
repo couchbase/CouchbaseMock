@@ -49,10 +49,9 @@ public class StateGrabber {
 
     static String getPoolJSON(CouchbaseMock mock, String poolName) {
         Map<String, Object> poolInfo = new HashMap<String, Object>();
-        poolInfo.put("buckets", new HashMap<String, Object>());
-
-        ((Map) poolInfo.get("buckets")).put("uri",
-                "/pools/" + mock.getPoolName() + "/buckets");
+        HashMap<String, Object> buckets = new HashMap<String, Object>();
+        poolInfo.put("buckets", buckets);
+        buckets.put("uri", "/pools/" + mock.getPoolName() + "/buckets");
         return JSONObject.fromObject(poolInfo).toString();
     }
 

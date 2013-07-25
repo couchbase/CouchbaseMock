@@ -29,13 +29,13 @@ import org.couchbase.mock.memcached.MemcachedServer;
  *
  * @author Trond Norbye
  */
-public class MemcacheBucket extends Bucket {
+public class MemcachedBucket extends Bucket {
 
-    public MemcacheBucket(String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, CouchbaseMock cluster, String password) throws IOException {
+    public MemcachedBucket(String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, CouchbaseMock cluster, String password) throws IOException {
         super(name, hostname, port, numNodes, bucketStartPort, numVBuckets, cluster, password);
     }
 
-    public MemcacheBucket(String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets) throws IOException {
+    public MemcachedBucket(String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets) throws IOException {
         super(name, hostname, port, numNodes, bucketStartPort, numVBuckets, null);
     }
 

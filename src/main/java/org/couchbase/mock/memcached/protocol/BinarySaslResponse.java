@@ -23,8 +23,8 @@ import java.nio.ByteBuffer;
  */
 public class BinarySaslResponse extends BinaryResponse {
 
-    public BinarySaslResponse(BinaryCommand command, ErrorCode error) {
-        super(command, error);
+    public BinarySaslResponse(BinaryCommand command) {
+        super(command, ErrorCode.AUTH_ERROR);
     }
 
     public BinarySaslResponse(BinaryCommand command, String data) {

@@ -33,7 +33,7 @@ class PrependCommandExecutor implements CommandExecutor {
     public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
         BinaryStoreCommand command = (BinaryStoreCommand) cmd;
 
-        ErrorCode err = ErrorCode.SUCCESS;
+        ErrorCode err;
         Item item = command.getItem();
 
         Item existing = server.getDatastore().get(server, cmd.getVBucketId(), cmd.getKey());

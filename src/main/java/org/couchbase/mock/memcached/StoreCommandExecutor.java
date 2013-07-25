@@ -32,7 +32,7 @@ public class StoreCommandExecutor implements CommandExecutor {
     public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
         BinaryStoreCommand command = (BinaryStoreCommand) cmd;
 
-        ErrorCode err = ErrorCode.SUCCESS;
+        ErrorCode err;
         Item item = command.getItem();
         CommandCode cc = cmd.getComCode();
 

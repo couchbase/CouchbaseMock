@@ -57,7 +57,7 @@ public class BucketSpecTest extends TestCase {
         assert(buckets.containsKey("kkk"));
         assert(buckets.containsKey("aaa"));
         assertEquals(CouchbaseBucket.class, buckets.get("xxx").getClass());
-        assertEquals(MemcacheBucket.class, buckets.get("yyy").getClass());
+        assertEquals(MemcachedBucket.class, buckets.get("yyy").getClass());
         assertEquals(CouchbaseBucket.class, buckets.get("zzz").getClass());
         assertEquals(CouchbaseBucket.class, buckets.get("kkk").getClass());
         assertEquals(CouchbaseBucket.class, buckets.get("aaa").getClass());
@@ -69,7 +69,7 @@ public class BucketSpecTest extends TestCase {
         assertEquals(2, buckets.size());
         assert(buckets.containsKey("xxx"));
         assert(buckets.containsKey("yyy"));
-        assertEquals(MemcacheBucket.class, buckets.get("xxx").getClass());
+        assertEquals(MemcachedBucket.class, buckets.get("xxx").getClass());
         assertEquals(CouchbaseBucket.class, buckets.get("yyy").getClass());
         assertEquals("pass", buckets.get("xxx").getPassword());
         assertEquals("secret", buckets.get("yyy").getPassword());
