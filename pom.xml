@@ -20,6 +20,13 @@
     <url>https://github.com/couchbase/CouchbaseMock</url>
   </scm>
 
+  <repositories>
+    <repository>
+      <id>couchbase</id>
+      <url>http://files.couchbase.com/maven2</url>
+    </repository>
+  </repositories>
+
   <distributionManagement>
     <repository>
       <id>ssh-repository</id>
@@ -113,6 +120,12 @@
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
       <version>2.2.4</version>
+    </dependency>
+    <dependency>
+      <groupId>couchbase</groupId>
+      <artifactId>couchbase-client</artifactId>
+      <version>1.1.7</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
   <properties>
