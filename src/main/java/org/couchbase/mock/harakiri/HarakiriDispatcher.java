@@ -29,7 +29,7 @@ import org.couchbase.mock.control.*;
 public class HarakiriDispatcher {
     public enum PayloadFormat { JSON, PLAIN }
 
-    private static final Map<String,Class> commandMap = new HashMap<String, Class>();
+    public static final Map<String,Class> commandMap = new HashMap<String, Class>();
     private static final Map<HarakiriCommand.Command, Class> classMap
             = new EnumMap<HarakiriCommand.Command, Class>(HarakiriCommand.Command.class);
 
@@ -49,6 +49,14 @@ public class HarakiriDispatcher {
         registerClass(HarakiriCommand.Command.FAILOVER, FailoverCommandHandler.class);
         registerClass(HarakiriCommand.Command.TRUNCATE, TruncateCommandHandler.class);
         registerClass(HarakiriCommand.Command.RESPAWN, RespawnCommandHandler.class);
+        registerClass(HarakiriCommand.Command.MOCKINFO, MockInfoCommandHandler.class);
+        registerClass(HarakiriCommand.Command.CACHE, PersistenceCommandHandler.class);
+        registerClass(HarakiriCommand.Command.UNCACHE, PersistenceCommandHandler.class);
+        registerClass(HarakiriCommand.Command.PERSIST, PersistenceCommandHandler.class);
+        registerClass(HarakiriCommand.Command.UNPERSIST, PersistenceCommandHandler.class);
+        registerClass(HarakiriCommand.Command.ENDURE, PersistenceCommandHandler.class);
+        registerClass(HarakiriCommand.Command.PURGE, PersistenceCommandHandler.class);
+        registerClass(HarakiriCommand.Command.KEYINFO, KeyInfoCommandHandler.class);
         registerClass(HarakiriCommand.Command.HELP, HarakiriHelpCommand.class);
     }
 

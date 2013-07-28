@@ -28,6 +28,16 @@ public abstract class HarakiriCommand {
         RESPAWN,
         HICCUP,
         TRUNCATE,
+        MOCKINFO,
+
+        PERSIST,
+        CACHE,
+        UNPERSIST,
+        UNCACHE,
+        ENDURE,
+        PURGE,
+
+        KEYINFO,
         HELP
     }
 
