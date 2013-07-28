@@ -248,7 +248,7 @@ public class JMembaseTest extends TestCase {
     @SuppressWarnings("UnusedAssignment")
     public void testHarakiriMonitorInvalidHost() throws IOException {
         try {
-            HarakiriMonitor m = new HarakiriMonitor("ItWouldSuckIfYouHadAHostNamedThis", 0, false, instance);
+            HarakiriMonitor m = new HarakiriMonitor("ItWouldSuckIfYouHadAHostNamedThis", 0, false, instance.getDispatcher());
             fail("I was not expecting to be able to connect to: \"ItWouldSuckIfYouHadAHostNamedThis:0\"");
         } catch (Throwable t) {
         }
@@ -257,7 +257,7 @@ public class JMembaseTest extends TestCase {
     @SuppressWarnings("UnusedAssignment")
     public void testHarakiriMonitorInvalidPort() throws IOException {
         try {
-            HarakiriMonitor m = new HarakiriMonitor(null, 0, false, instance);
+            HarakiriMonitor m = new HarakiriMonitor(null, 0, false, instance.getDispatcher());
             fail("I was not expecting to be able to connect to port 0");
         } catch (Throwable t) {
         }
@@ -266,7 +266,7 @@ public class JMembaseTest extends TestCase {
     public void testHarakiriMonitor() throws IOException {
         ServerSocket server = new ServerSocket(0);
         HarakiriMonitor m;
-        m = new HarakiriMonitor(null, server.getLocalPort(), false, instance);
+        m = new HarakiriMonitor(null, server.getLocalPort(), false, instance.getDispatcher());
 
         Thread t = new Thread(m);
         t.start();

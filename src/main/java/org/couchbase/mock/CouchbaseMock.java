@@ -32,7 +32,9 @@ import java.util.concurrent.Executors;
 
 import org.couchbase.mock.harakiri.HarakiriMonitor;
 import org.couchbase.mock.Bucket.BucketType;
+import org.couchbase.mock.harakiri.HarakiriDispatcher;
 import org.couchbase.mock.http.Authenticator;
+import org.couchbase.mock.http.ControlHandler;
 import org.couchbase.mock.http.PoolsHandler;
 import org.couchbase.mock.util.Getopt;
 import org.couchbase.mock.util.Getopt.CommandLineOption;
@@ -55,12 +57,13 @@ public class CouchbaseMock {
     private ArrayList<Thread> nodeThreads;
     private final CountDownLatch startupLatch = new CountDownLatch(1);
     private HarakiriMonitor harakiriMonitor;
+    private HarakiriDispatcher controlDispatcher;
 
     public void setupHarakiriMonitor(String host, boolean terminate) throws IOException {
         int idx = host.indexOf(':');
         String h = host.substring(0, idx);
         int p = Integer.parseInt(host.substring(idx + 1));
-        harakiriMonitor = new HarakiriMonitor(h, p, terminate, this);
+        harakiriMonitor = new HarakiriMonitor(h, p, terminate, controlDispatcher);
         harakiriMonitor.start();
     }
 
@@ -81,6 +84,10 @@ public class CouchbaseMock {
 
     public HarakiriMonitor getMonitor() {
         return harakiriMonitor;
+    }
+
+    public HarakiriDispatcher getDispatcher() {
+        return controlDispatcher;
     }
 
     private static BucketConfiguration parseBucketString(String spec, BucketConfiguration defaults)
@@ -153,6 +160,7 @@ public class CouchbaseMock {
             buckets.put(bucket.getName(), bucket);
         }
         authenticator = new Authenticator("Administrator", "password", buckets);
+        controlDispatcher = new HarakiriDispatcher(this);
     }
 
     public void waitForStartup() throws InterruptedException {
@@ -316,6 +324,7 @@ public class CouchbaseMock {
                 }
             } while (busy);
             httpServer.createContext("/pools", new PoolsHandler(this)).setAuthenticator(authenticator);
+            httpServer.createContext("/mock", new ControlHandler(controlDispatcher));
             httpServer.setExecutor(Executors.newCachedThreadPool());
             httpServer.start();
             startupLatch.countDown();

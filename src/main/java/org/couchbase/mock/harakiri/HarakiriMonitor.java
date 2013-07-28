@@ -15,6 +15,8 @@
  */
 package org.couchbase.mock.harakiri;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -22,33 +24,20 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.util.*;
 import org.couchbase.mock.CouchbaseMock;
-import org.couchbase.mock.control.*;
+import org.couchbase.mock.harakiri.HarakiriDispatcher.PayloadFormat;
 
 public class HarakiriMonitor extends Observable implements Runnable {
 
     private final boolean terminate;
-    private final CouchbaseMock mock;
     private BufferedReader input;
     private OutputStream output;
     private Socket sock;
     private Thread thread;
+    private final HarakiriDispatcher dispatcher;
+    private static final Gson gs = new Gson();
 
-    static {
-        HarakiriCommand.registerClass(HarakiriCommand.Command.HICCUP,
-                HiccupCommandHandler.class);
-
-        HarakiriCommand.registerClass(HarakiriCommand.Command.FAILOVER,
-                FailoverCommandHandler.class);
-
-        HarakiriCommand.registerClass(HarakiriCommand.Command.TRUNCATE,
-                TruncateCommandHandler.class);
-
-        HarakiriCommand.registerClass(HarakiriCommand.Command.RESPAWN,
-                RespawnCommandHandler.class);
-    }
-
-    public HarakiriMonitor(String host, int port, boolean terminate, CouchbaseMock mock) throws IOException {
-        this.mock = mock;
+    public HarakiriMonitor(String host, int port, boolean terminate, HarakiriDispatcher dispatcher) throws IOException {
+        this.dispatcher = dispatcher;
         this.terminate = terminate;
         sock = new Socket(host, port);
         input = new BufferedReader(new InputStreamReader(sock.getInputStream()));
@@ -64,18 +53,47 @@ public class HarakiriMonitor extends Observable implements Runnable {
         thread.interrupt();
     }
 
-    private HarakiriCommand dispatchMockCommand(String packet) {
-        HarakiriCommand cmd = HarakiriCommand.getCommand(mock, packet);
-        cmd.execute();
+    private HarakiriCommand dispatchMockCommand(String s) {
+        Object payloadObj;
+        JsonObject payload;
+        ArrayList<String> compat;
+        String cmdstr;
+        HarakiriCommand ret;
+        PayloadFormat fmt;
+
+        if (s.startsWith("{")) {
+            // JSON
+            JsonObject o = gs.fromJson(s, JsonObject.class);
+            cmdstr = o.get("command").getAsString();
+            if (!o.has("payload")) {
+                payload = new JsonObject();
+            } else {
+                payload = o.get("payload").getAsJsonObject();
+            }
+            fmt = PayloadFormat.JSON;
+            payloadObj = payload;
+
+        } else {
+            compat = new ArrayList<String>();
+            compat.addAll(Arrays.asList(s.split(",")));
+            cmdstr = compat.get(0);
+            compat.remove(0);
+            fmt = PayloadFormat.PLAIN;
+            payloadObj = compat;
+        }
+
+        ret = dispatcher.getCommand(fmt, cmdstr, payloadObj);
+
         setChanged();
         notifyObservers();
-        return cmd;
+        return ret;
     }
 
     @Override
     public void run() {
         boolean closed = false;
         String packet;
+        CouchbaseMock mock = dispatcher.getMock();
         try {
             mock.waitForStartup();
             String http = "" + mock.getHttpPort() + '\0';
