@@ -25,9 +25,20 @@ import junit.framework.TestCase;
  * @author Sergey Avseyev <sergey.avseyev@gmail.com>
  */
 public class BucketSpecTest extends TestCase {
+    private int numNodes = 100;
+    private int numVBuckets = 4096;
+
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        if (System.getProperty("os.name").equals("Mac OS X")) {
+            numNodes = 4;
+            numVBuckets = 10;
+        }
+    }
 
     public void testDefaults() throws Exception {
-        CouchbaseMock mock = new CouchbaseMock(null, 8091, 100, 4096);
+        CouchbaseMock mock = new CouchbaseMock(null, 8091, numNodes, numVBuckets);
         Map<String, Bucket> buckets = mock.getBuckets();
         assertEquals(1, buckets.size());
         assert(buckets.containsKey("default"));
@@ -36,7 +47,7 @@ public class BucketSpecTest extends TestCase {
     }
 
     public void testPasswords() throws Exception {
-        CouchbaseMock mock = new CouchbaseMock(null, 8091, 100, 4096, "xxx:,yyy:pass,zzz");
+        CouchbaseMock mock = new CouchbaseMock(null, 8091, numNodes, numVBuckets, "xxx:,yyy:pass,zzz");
         Map<String, Bucket> buckets = mock.getBuckets();
         assertEquals(3, buckets.size());
         assert(buckets.containsKey("xxx"));
@@ -48,7 +59,7 @@ public class BucketSpecTest extends TestCase {
     }
 
     public void testTypes() throws Exception {
-        CouchbaseMock mock = new CouchbaseMock(null, 8091, 100, 4096, "xxx::,yyy::memcache,zzz,kkk::couchbase,aaa::unknown");
+        CouchbaseMock mock = new CouchbaseMock(null, 8091, numNodes, numVBuckets, "xxx::,yyy::memcache,zzz,kkk::couchbase,aaa::unknown");
         Map<String, Bucket> buckets = mock.getBuckets();
         assertEquals(5, buckets.size());
         assert(buckets.containsKey("xxx"));
@@ -64,7 +75,7 @@ public class BucketSpecTest extends TestCase {
     }
 
     public void testMixed() throws Exception {
-        CouchbaseMock mock = new CouchbaseMock(null, 8091, 100, 4096, "xxx:pass:memcache,yyy:secret:couchbase");
+        CouchbaseMock mock = new CouchbaseMock(null, 8091, numNodes, numVBuckets, "xxx:pass:memcache,yyy:secret:couchbase");
         Map<String, Bucket> buckets = mock.getBuckets();
         assertEquals(2, buckets.size());
         assert(buckets.containsKey("xxx"));

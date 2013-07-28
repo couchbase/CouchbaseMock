@@ -49,6 +49,8 @@ public class JMembaseTest extends TestCase {
     }
     private CouchbaseMock instance;
     private final int port = 18091;
+    private int numNodes = 100;
+    private int numVBuckets = 4096;
 
     private boolean serverNotReady(int port) {
         Socket socket = null;
@@ -71,7 +73,12 @@ public class JMembaseTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        instance = new CouchbaseMock(null, port, 100, 4096, "default:,protected:secret");
+        if (System.getProperty("os.name").equals("Mac OS X")) {
+            numNodes = 4;
+            numVBuckets = 10;
+        }
+
+        instance = new CouchbaseMock(null, port, numNodes, numVBuckets, "default:,protected:secret");
         instance.start();
         do {
             Thread.sleep(100);
@@ -307,18 +314,18 @@ public class JMembaseTest extends TestCase {
         String currCfg, nextCfg;
 
         currCfg = readConfig(stream);
-        assertEquals(100, bucket.activeServers().size());
+        assertEquals(numNodes, bucket.activeServers().size());
 
         cout.write("failover,1,protected\n".getBytes());
         nextCfg = readConfig(stream);
         assertNotSame(currCfg, nextCfg);
-        assertEquals(99, bucket.activeServers().size());
+        assertEquals(numNodes - 1, bucket.activeServers().size());
         currCfg = nextCfg;
 
         cout.write("respawn,1,protected\n".getBytes());
         nextCfg = readConfig(stream);
         assertNotSame(currCfg, nextCfg);
-        assertEquals(100, bucket.activeServers().size());
+        assertEquals(numNodes, bucket.activeServers().size());
 
         cout.write("hiccup,10000,20\n".getBytes());
         server.close();
