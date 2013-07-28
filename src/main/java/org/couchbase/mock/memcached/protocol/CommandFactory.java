@@ -64,6 +64,9 @@ public class CommandFactory {
             case GET_REPLICA:
                 return new BinaryGetCommand(header);
 
+            case OBSERVE:
+                return new BinaryObserveCommand(header);
+
             default:
                 return new BinaryCommand(header);
         }

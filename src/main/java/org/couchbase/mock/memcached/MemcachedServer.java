@@ -122,6 +122,7 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         executors[CommandCode.SASL_LIST_MECHS.cc()] = new SaslCommandExecutor();
         executors[CommandCode.SASL_AUTH.cc()] = executors[CommandCode.SASL_LIST_MECHS.cc()];
         executors[CommandCode.SASL_STEP.cc()] = executors[CommandCode.SASL_LIST_MECHS.cc()];
+        executors[CommandCode.OBSERVE.cc()] = new ObserveCommandExecutor();
 
         bootTime = System.currentTimeMillis() / 1000;
         selector = Selector.open();
