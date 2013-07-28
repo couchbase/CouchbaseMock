@@ -33,17 +33,26 @@ public class BinaryGetResponse extends BinaryResponse {
     }
 
     private static ByteBuffer create(BinaryCommand command, Item item) {
+        int keySize;
+        switch (command.getComCode()) {
+            case GETK:
+            case GETKQ:
+            case GET_REPLICA:
+                keySize = command.getKey().length();
+                break;
+            default:
+                keySize = 0;
+        }
         final ByteBuffer message = BinaryResponse.create(command, ErrorCode.SUCCESS,
                 4 /* flags */,
-                (command.getComCode() == CommandCode.GETK || command.getComCode() == CommandCode.GETKQ) ? command.getKey().length() : 0,
+                keySize,
                 item.getValue().length, item.getCas());
         message.putInt(item.getFlags());
-        if ((command.getComCode() == CommandCode.GETK || command.getComCode() == CommandCode.GETKQ)) {
+        if (keySize > 0) {
             message.put(command.getKey().getBytes());
         }
         message.put(item.getValue());
         message.rewind();
         return message;
     }
-
 }

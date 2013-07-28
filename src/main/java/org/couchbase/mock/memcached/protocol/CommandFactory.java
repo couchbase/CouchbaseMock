@@ -61,6 +61,7 @@ public class CommandFactory {
             case GATQ:
             case TOUCH:
             case GETL:
+            case GET_REPLICA:
                 return new BinaryGetCommand(header);
 
             default:

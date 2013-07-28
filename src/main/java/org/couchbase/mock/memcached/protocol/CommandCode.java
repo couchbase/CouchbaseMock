@@ -36,6 +36,7 @@ public enum CommandCode {
     GET_VBUCKET(0x3e), DEL_VBUCKET(0x3f), TAP_CONNECT(0x40), TAP_MUTATION(0x41),
     TAP_DELETE(0x42), TAP_FLUSH(0x43), TAP_OPAQUE(0x44), TAP_VBUCKET_SET(0x45),
     LAST_RESERVED(0xef), SCRUB(0xf0),
+    GET_REPLICA(0x83),
     GETL(0x94), UNL(0x95), ILLEGAL(0xff);
 
 
@@ -126,6 +127,7 @@ public enum CommandCode {
             case (byte)0x95:
                 return UNL;
             case (byte)0x83:
+                return GET_REPLICA;
             default:
                 return ILLEGAL;
         }
@@ -207,6 +209,8 @@ public enum CommandCode {
                 return "getl";
             case UNL:
                 return "unl";
+            case GET_REPLICA:
+                return "get_replica";
             default:
                 return "unknown";
 

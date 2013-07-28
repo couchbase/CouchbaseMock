@@ -35,7 +35,15 @@ public class GetCommandExecutor implements CommandExecutor {
         BinaryGetCommand cmd = (BinaryGetCommand) command;
         VBucketStore cache;
         CommandCode cc = cmd.getComCode();
-        cache = server.getStorage().getCache(server, cmd.getVBucketId());
+
+        if (cc == CommandCode.GET_REPLICA) {
+            cache = server.getStorage().getCache(cmd.getVBucketId());
+            if (!server.getStorage().getVBucketInfo(cmd.getVBucketId()).hasAccess(server)) {
+                throw new AccessControlException("we're not a master or replica");
+            }
+        } else {
+            cache = server.getStorage().getCache(server, cmd.getVBucketId());
+        }
 
         Item item = cache.get(cmd.getKeySpec());
 
