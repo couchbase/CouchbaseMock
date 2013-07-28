@@ -85,7 +85,6 @@ public class JMembaseTest extends TestCase {
     }
 
     public void testHandleHttpRequest() throws IOException {
-        System.out.println("testHandleHttpRequest");
         URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/protected");
         HttpURLConnection conn;
 
@@ -100,7 +99,6 @@ public class JMembaseTest extends TestCase {
     }
 
     public void testHandleHttpRequestWithTrailingSlash() throws IOException {
-        System.out.println("testHandleHttpRequestWithTrailingSlash");
         URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/protected/");
         HttpURLConnection conn;
 
@@ -115,7 +113,6 @@ public class JMembaseTest extends TestCase {
     }
 
     public void testAdministratorCouldAccessProtectedBuckets() throws IOException {
-        System.out.println("testAdministratorCouldAccessProtectedBuckets");
         URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/protected");
         HttpURLConnection conn;
 
@@ -130,7 +127,6 @@ public class JMembaseTest extends TestCase {
     }
 
     public void testDefaultBucketShouldBeAccessibleForEveryone() throws IOException {
-        System.out.println("testDefaultBucketShouldBeAccessibleForEveryone");
         URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/default");
         HttpURLConnection conn;
 
@@ -144,7 +140,6 @@ public class JMembaseTest extends TestCase {
     }
 
     public void testProtectedBucketsShouldBeFilteredOutFromList() throws IOException {
-        System.out.println("testProtectedBucketsShouldBeFilteredOutFromList");
         URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets");
         HttpURLConnection conn;
 
@@ -168,7 +163,6 @@ public class JMembaseTest extends TestCase {
     }
 
     public void testHandleHttpRequestNetwork() throws IOException {
-        System.out.println("testHandleHttpRequestNetwork");
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
 
@@ -197,7 +191,6 @@ public class JMembaseTest extends TestCase {
     }
 
     public void testHandleHttpRequestMissingAuth() throws IOException {
-        System.out.println("testHandleHttpRequestMissingAuth");
         URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/protected");
         HttpURLConnection conn;
 
@@ -212,7 +205,6 @@ public class JMembaseTest extends TestCase {
 
     @SuppressWarnings("SpellCheckingInspection")
     public void testHandleHttpRequestIncorrectCred() throws IOException {
-        System.out.println("testHandleHttpRequestIncorrectCred");
         URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/protected");
         HttpURLConnection conn;
 
@@ -228,7 +220,6 @@ public class JMembaseTest extends TestCase {
     }
 
     public void testHandleHttpRequestUnkownFile() throws IOException {
-        System.out.println("testHandleHttpRequestUnkownFile");
         URL url = new URL("http://localhost:" + instance.getHttpPort() + "/");
         HttpURLConnection conn;
 
@@ -244,7 +235,6 @@ public class JMembaseTest extends TestCase {
 
     @SuppressWarnings("UnusedAssignment")
     public void testHarakiriMonitorInvalidHost() throws IOException {
-        System.out.println("testHarakiriMonitorInvalidHost");
         try {
             CouchbaseMock.HarakiriMonitor m = new CouchbaseMock.HarakiriMonitor("ItWouldSuckIfYouHadAHostNamedThis", 0, false, instance);
             fail("I was not expecting to be able to connect to: \"ItWouldSuckIfYouHadAHostNamedThis:0\"");
@@ -254,7 +244,6 @@ public class JMembaseTest extends TestCase {
 
     @SuppressWarnings("UnusedAssignment")
     public void testHarakiriMonitorInvalidPort() throws IOException {
-        System.out.println("testHarakiriMonitorInvalidPort");
         try {
             CouchbaseMock.HarakiriMonitor m = new CouchbaseMock.HarakiriMonitor(null, 0, false, instance);
             fail("I was not expecting to be able to connect to port 0");
@@ -263,7 +252,6 @@ public class JMembaseTest extends TestCase {
     }
 
     public void testHarakiriMonitor() throws IOException {
-        System.out.println("testHarakiriMonitor");
         ServerSocket server = new ServerSocket(0);
         CouchbaseMock.HarakiriMonitor m;
         m = new CouchbaseMock.HarakiriMonitor(null, server.getLocalPort(), false, instance);
@@ -299,7 +287,6 @@ public class JMembaseTest extends TestCase {
 
     @SuppressWarnings("SpellCheckingInspection")
     public void testConfigStreaming() throws IOException {
-        System.out.println("testConfigStreaming");
         ServerSocket server = new ServerSocket(0);
         instance.setupHarakiriMonitor("localhost:" + server.getLocalPort(), false);
         Socket client = server.accept();

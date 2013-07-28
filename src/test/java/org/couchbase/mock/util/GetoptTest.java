@@ -39,7 +39,6 @@ public class GetoptTest extends TestCase {
     }
 
     public void testParseEmptyNoOptions() {
-        System.out.println("parse: { }");
         String[] argv = new String[0];
         Getopt instance = new Getopt();
         if (!instance.parse(argv).isEmpty()) {
@@ -49,7 +48,6 @@ public class GetoptTest extends TestCase {
     }
 
     public void testParseEmpty() {
-        System.out.println("parse: { }");
         String[] argv = new String[0];
         if (!getopt.parse(argv).isEmpty()) {
             fail("Parse should return an empty set");
@@ -58,7 +56,6 @@ public class GetoptTest extends TestCase {
     }
 
     public void testParseOnlyArguments() {
-        System.out.println("parse: { foo, bar}");
         String[] argv = {"foo", "bar"};
         if (!getopt.parse(argv).isEmpty()) {
             fail("Parse should return an empty set");
@@ -67,7 +64,6 @@ public class GetoptTest extends TestCase {
     }
 
     public void testParseOnlyArgumentsWithSeparatorInThere() {
-        System.out.println("parse: { foo, --, bar}");
         String[] argv = {"foo", "--", "bar"};
         if (!getopt.parse(argv).isEmpty()) {
             fail("Parse should return an empty set");
@@ -76,7 +72,6 @@ public class GetoptTest extends TestCase {
     }
 
     public void testParseSingleLongOptionWithoutArgument() {
-        System.out.println("parse: { --bravo}");
         String[] argv = {"--bravo"};
         List<Entry> options = getopt.parse(argv);
         assertEquals(1, options.size());
@@ -86,7 +81,6 @@ public class GetoptTest extends TestCase {
     }
 
     public void testParseSingleLongOptionWithoutRequiredArgument() {
-        System.out.println("parse: { --alpha}");
         String[] argv = {"--alpha"};
         try {
             getopt.parse(argv);
@@ -96,7 +90,6 @@ public class GetoptTest extends TestCase {
     }
 
     public void testParseSingleLongOptionWithRequiredArgument() {
-        System.out.println("parse: { --alpha=foo}");
         String[] argv = {"--alpha=foo"};
         List<Entry> options = getopt.parse(argv);
         assertEquals(1, options.size());
@@ -106,7 +99,6 @@ public class GetoptTest extends TestCase {
     }
 
     public void testParseSingleLongOptionWithRequiredArgument1() {
-        System.out.println("parse: { --alpha, foo}");
         String[] argv = {"--alpha", "foo"};
         List<Entry> options = getopt.parse(argv);
         assertEquals(1, options.size());
@@ -116,7 +108,6 @@ public class GetoptTest extends TestCase {
     }
 
     public void testParseMultipleLongOptionWithArgumentsAndOptions() {
-        System.out.println("parse: { --alpha=foo, --bravo, --charlie, foo}");
         String[] argv = {"--alpha=foo", "--bravo", "--charlie", "foo"};
         List<Entry> options = getopt.parse(argv);
         assertEquals(3, options.size());
@@ -130,7 +121,6 @@ public class GetoptTest extends TestCase {
     }
 
     public void testParseMultipleLongOptionWithArgumentsAndOptionsAndSeparator() {
-        System.out.println("parse: { --alpha=foo, --, --bravo, --charlie, foo}");
         String[] argv = {"--alpha=foo", "--", "--bravo", "--charlie", "foo"};
         List<Entry> options = getopt.parse(argv);
         assertEquals(1, options.size());
@@ -140,7 +130,6 @@ public class GetoptTest extends TestCase {
     }
 
     public void testParseMultipleLongOptionWithArgumentsAndOptionsAndSeparator1() {
-        System.out.println("parse: { --alpha, foo, --, --bravo, --charlie, foo}");
         String[] argv = {"--alpha", "foo", "--", "--bravo", "--charlie", "foo"};
         List<Entry> options = getopt.parse(argv);
         assertEquals(1, options.size());
@@ -150,7 +139,6 @@ public class GetoptTest extends TestCase {
     }
 
     public void testParseSingleShortOptionWithoutArgument() {
-        System.out.println("parse: { -b}");
         String[] argv = {"-b"};
         List<Entry> options = getopt.parse(argv);
         assertEquals(1, options.size());
@@ -160,7 +148,6 @@ public class GetoptTest extends TestCase {
     }
 
     public void testParseSingleShortOptionWithoutRequiredArgument() {
-        System.out.println("parse: { -a}");
         String[] argv = {"-a"};
         try {
             getopt.parse(argv);
@@ -170,7 +157,6 @@ public class GetoptTest extends TestCase {
     }
 
     public void testParseSingleShortOptionWithRequiredArgument() {
-        System.out.println("parse: { -a, foo}");
         String[] argv = {"-a", "foo"};
         List<Entry> options = getopt.parse(argv);
         assertEquals(1, options.size());
@@ -180,7 +166,6 @@ public class GetoptTest extends TestCase {
     }
 
     public void testParseMultipleShortOptionWithArgumentsAndOptions() {
-        System.out.println("parse: { -a, foo, -b -c, foo}");
         String[] argv = {"-a", "foo", "-b", "-c", "foo"};
         List<Entry> options = getopt.parse(argv);
         assertEquals(3, options.size());
@@ -194,7 +179,6 @@ public class GetoptTest extends TestCase {
     }
 
     public void testParseMultipleShortOptionWithArgumentsAndOptions1() {
-        System.out.println("parse: { -abc, foo, foo}");
         String[] argv = {"-abc", "foo", "foo"};
         List<Entry> options = getopt.parse(argv);
         assertEquals(3, options.size());
@@ -208,7 +192,6 @@ public class GetoptTest extends TestCase {
     }
 
     public void testParseMultipleShortOptionWithArgumentsAndOptionsAndSeparator() {
-        System.out.println("parse: { -a, foo, --, -b, -c, foo}");
         String[] argv = {"-a", "foo", "--", "-b", "-c", "foo"};
         List<Entry> options = getopt.parse(argv);
         assertEquals(1, options.size());
@@ -218,7 +201,6 @@ public class GetoptTest extends TestCase {
     }
 
     public void testParseMix() {
-        System.out.println("parse: { --alpha, foo, -a, bar, -b, -c, --bravo, -bc, foo}");
         String[] argv = {"--alpha", "foo", "-a", "bar", "-b", "-c", "--bravo", "-bc", "foo"};
         List<Entry> options = getopt.parse(argv);
         assertEquals(7, options.size());

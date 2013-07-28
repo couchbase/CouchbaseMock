@@ -31,10 +31,8 @@ public class CacheBucketTest extends TestCase {
     /**
      * Test of getJSON method, of class CacheBucket.
      */
-    @SuppressWarnings("UnusedAssignment")
     public void testGetJSON() throws IOException {
-        System.out.println("getJSON");
         MemcachedBucket instance = new MemcachedBucket("default", "localhost", 0, 1, 0, 1);
-        String result = instance.getJSON();
+        assertNotNull(instance.getJSON());
     }
 }

@@ -34,7 +34,6 @@ public class Base64Test extends TestCase {
      * Test of encode method, of class Base64.
      */
     public void testEncode() {
-        System.out.println("encode");
         validateEncode("Aladdin:open sesame", "QWxhZGRpbjpvcGVuIHNlc2FtZQ==");
 
         /* Test cases from RFC 4648 */
@@ -87,8 +86,6 @@ public class Base64Test extends TestCase {
      * Test of decode method, of class Base64.
      */
     public void testDecode() {
-        System.out.println("decode");
-
         validateDecode("QWxhZGRpbjpvcGVuIHNlc2FtZQ==", "Aladdin:open sesame");
 
         /* Test cases from RFC 4648 */
