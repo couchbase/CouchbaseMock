@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.couchbase.mock.memcached.DataStore;
@@ -45,6 +46,7 @@ public abstract class Bucket {
     final int numVBuckets;
     final String poolName = "default";
     final String name;
+    private final UUID uuid;
     private final CouchbaseMock cluster;
     private final String password;
     private final ReentrantReadWriteLock configurationRwLock;
@@ -68,6 +70,7 @@ public abstract class Bucket {
         this.password = password;
         datastore = new DataStore(numVBuckets);
         servers = new MemcachedServer[numNodes];
+        uuid = UUID.randomUUID();
         this.configurationRwLock = new ReentrantReadWriteLock();
 
         if (this.getClass() != MemcachedBucket.class && this.getClass() != CouchbaseBucket.class) {
@@ -193,5 +196,9 @@ public abstract class Bucket {
 
     public String getName() {
         return name;
+    }
+
+    public String getUUID() {
+        return uuid.toString();
     }
 }
