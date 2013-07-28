@@ -20,9 +20,6 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpPrincipal;
 
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.couchbase.mock.Bucket;
 
 /**
@@ -32,7 +29,7 @@ public class Authenticator extends BasicAuthenticator {
 
     private final String adminName;
     private final String adminPass;
-    private String bucketName;
+    private String currentBucketName;
     private final Map<String, Bucket> buckets;
 
     public Authenticator(String username, String password, Map<String, Bucket> buckets) {
@@ -44,33 +41,66 @@ public class Authenticator extends BasicAuthenticator {
 
     @Override
     public boolean checkCredentials(String username, String password) {
+        // Always allow admin
         if (adminName.equals(username) && adminPass.equals(password)) {
             return true;
         }
 
         Bucket bucket = buckets.get(username);
+        // No such bucket
         //noinspection SimplifiableIfStatement
-        if (bucket == null || !bucketName.equals(username)) {
+        if (bucket == null) {
             return false;
         }
+
+        // No credentials
+        if (username == null || username.isEmpty()) {
+            if (bucket.getPassword().isEmpty()) {
+                return true;
+            }
+            return false;
+        }
+
+        if (!currentBucketName.equals(username)) {
+            return false;
+        }
+
+        if (bucket.getPassword().isEmpty()) {
+            // Ignore provided password
+            return true;
+        }
+
         return bucket.getPassword().equals(password);
     }
 
     @Override
     public Result authenticate(HttpExchange exchange) {
-        String requestPath = exchange.getRequestURI().getPath();
-        Matcher m = Pattern.compile("/pools/\\w+/buckets(Streaming)?/(\\w+)/?.*").matcher(requestPath);
-        bucketName = null;
-        if (m.find()) {
-            bucketName = m.group(2);
+        String path = exchange.getRequestURI().normalize().getPath();
+        path = path.replaceAll("^/", "");
+        String[] components = path.split("/");
+        exchange.setAttribute(realm, this);
+        // pools, default, buckets(Streaming)/ bucket
+        currentBucketName = null;
+
+        if (components.length > 3 && components[2].startsWith("buckets")) {
+            currentBucketName = components[3];
         }
 
-        if (!exchange.getRequestHeaders().containsKey("Authorization")) {
-            Bucket bucket = buckets.get(bucketName);
-            if (bucket == null || bucket.getPassword().isEmpty()) {
-                return new Authenticator.Success(new HttpPrincipal("", realm));
-            }
+        // For now, if we don't have a bucket name, just continue
+        if (currentBucketName == null) {
+            return new Authenticator.Success(new HttpPrincipal("", realm));
         }
+
+        Bucket bucket = buckets.get(currentBucketName);
+        if (bucket == null) {
+            return super.authenticate(exchange);
+        }
+
+        // Have a bucket
+        if (bucket.getPassword() == null || bucket.getPassword().isEmpty()) {
+            return new Authenticator.Success(new HttpPrincipal("", realm));
+        }
+
         return super.authenticate(exchange);
     }
 

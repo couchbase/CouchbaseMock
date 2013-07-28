@@ -15,8 +15,12 @@
  */
 package org.couchbase.mock.http;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import java.io.IOException;
 import junit.framework.TestCase;
+import net.sf.json.JSONObject;
 import org.couchbase.mock.CouchbaseMock;
 
 /**
@@ -37,8 +41,26 @@ public class PoolsHandlerTest extends TestCase {
      * Test of getPoolsJSON method, of class PoolsHandler.
      */
     public void testGetPoolsJSON() {
-        String expResult = "{\"isAdminCreds\":true,\"pools\":{\"name\":\"default\",\"streamingUri\":\"/poolsStreaming/default\",\"uri\":\"/pools/default\"}}";
+        System.out.println("getPoolsJSON");
+        PoolsHandler instance = new PoolsHandler(mock);
         String result = StateGrabber.getAllPoolsJSON(mock);
-        assertEquals(expResult, result);
+        JsonObject jObj = new Gson().fromJson(result, JsonObject.class);
+        JsonArray poolsArray;
+        assertNotNull(jObj);
+        assertTrue(jObj.has("isAdminCreds"));
+        assertTrue(jObj.get("isAdminCreds").getAsBoolean());
+        assertTrue(jObj.has("pools"));
+
+        poolsArray = jObj.getAsJsonArray("pools");
+        assertNotNull(jObj);
+
+        JsonObject firstPool = poolsArray.get(0).getAsJsonObject();
+        assertNotNull(firstPool);
+        assertEquals(firstPool.get("name").getAsString(), "default");
+        assertEquals(firstPool.get("streamingUri").getAsString(),
+                "/poolsStreaming/default");
+        assertEquals(firstPool.get("uri").getAsString(),
+                "/pools/default");
+
     }
 }

@@ -17,7 +17,6 @@ package org.couchbase.mock;
 
 import com.sun.net.httpserver.HttpServer;
 import java.io.BufferedReader;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.List;
@@ -49,20 +48,20 @@ import org.couchbase.mock.util.Getopt.Entry;
  */
 public class CouchbaseMock {
 
-    private final Map<String, Bucket> buckets;
+    private final Map<String, Bucket> buckets = new HashMap<String, Bucket>();
     private int port = 8091;
     private HttpServer httpServer;
     private Authenticator authenticator;
     private ArrayList<Thread> nodeThreads;
-    private final CountDownLatch startupLatch;
-    private HarakiriMonitor monitor;
+    private final CountDownLatch startupLatch = new CountDownLatch(1);
+    private HarakiriMonitor harakiriMonitor;
 
     public void setupHarakiriMonitor(String host, boolean terminate) throws IOException {
         int idx = host.indexOf(':');
         String h = host.substring(0, idx);
         int p = Integer.parseInt(host.substring(idx + 1));
-        monitor = new HarakiriMonitor(h, p, terminate, this);
-        monitor.start();
+        harakiriMonitor = new HarakiriMonitor(h, p, terminate, this);
+        harakiriMonitor.start();
     }
 
     /**
@@ -81,51 +80,79 @@ public class CouchbaseMock {
     }
 
     public HarakiriMonitor getMonitor() {
-        return monitor;
+        return harakiriMonitor;
     }
 
-    public CouchbaseMock(String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, String bucketSpec) throws IOException {
-        startupLatch = new CountDownLatch(1);
-        buckets = new HashMap<String, Bucket>();
-        try {
-            Bucket bucket;
+    private static BucketConfiguration parseBucketString(String spec, BucketConfiguration defaults)
+    {
+        BucketConfiguration config = new BucketConfiguration(defaults);
 
-            if (bucketSpec == null) {
-                bucket = Bucket.create(BucketType.COUCHBASE, "default", hostname, port, numNodes, bucketStartPort, numVBuckets, this, "");
-                buckets.put("default", bucket);
-            } else {
-                for (String spec : bucketSpec.split(",")) {
-                    String[] parts = spec.split(":");
-                    String name = parts[0], pass = "";
-                    BucketType type = BucketType.COUCHBASE;
-                    if (parts.length > 1) {
-                        pass = parts[1];
-                        if (parts.length > 2 && "memcache".equals(parts[2])) {
-                            type = BucketType.MEMCACHED;
-                        }
-                    }
-                    bucket = Bucket.create(type, name, hostname, port, numNodes, bucketStartPort, numVBuckets, this, pass);
-                    buckets.put(name, bucket);
+        String[] parts = spec.split(":");
+        String name = parts[0];
+        String pass = "";
+
+        config.name = name;
+        if (parts.length > 1) {
+            pass = parts[1];
+            if (parts.length > 2) {
+                if (parts[2].equals("memcache")) {
+                    config.type = BucketType.MEMCACHED;
                 }
             }
-
-            this.port = port;
-            authenticator = new Authenticator("Administrator", "password", buckets);
-        } catch (SecurityException ex) {
-            Logger.getLogger(CouchbaseMock.class.getName()).log(Level.SEVERE, null, ex);
         }
+        config.password = pass;
+        return config;
     }
 
-    private CouchbaseMock(String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets) throws IOException {
-        this(hostname, port, numNodes, bucketStartPort, numVBuckets, null);
+    public CouchbaseMock(String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, String bucketSpec, int numReplicas) throws IOException {
+        List<BucketConfiguration> configs = new ArrayList<BucketConfiguration>();
+        BucketConfiguration defaultConfig = new BucketConfiguration();
+
+        defaultConfig.name = "default";
+        defaultConfig.type = BucketType.COUCHBASE;
+        defaultConfig.hostname = hostname;
+        defaultConfig.port = port;
+        defaultConfig.numNodes = numNodes;
+        if (numReplicas > -1) {
+            defaultConfig.numReplicas = numReplicas;
+        }
+
+        defaultConfig.bucketStartPort = bucketStartPort;
+        defaultConfig.numVBuckets = numVBuckets;
+        if (bucketSpec == null) {
+            configs.add(defaultConfig);
+        } else {
+            for (String spec : bucketSpec.split(",")) {
+                configs.add(parseBucketString(spec, defaultConfig));
+            }
+        }
+
+        initCommon(port, configs);
+    }
+
+    public CouchbaseMock(String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets) throws IOException {
+        this(hostname, port, numNodes, bucketStartPort, numVBuckets, null, -1);
     }
 
     public CouchbaseMock(String hostname, int port, int numNodes, int numVBuckets) throws IOException {
-        this(hostname, port, numNodes, 0, numVBuckets, null);
+        this(hostname, port, numNodes, 0, numVBuckets, null, -1);
     }
 
     public CouchbaseMock(String hostname, int port, int numNodes, int numVBuckets, String bucketSpec) throws IOException {
-        this(hostname, port, numNodes, 0, numVBuckets, bucketSpec);
+        this(hostname, port, numNodes, 0, numVBuckets, bucketSpec, -1);
+    }
+
+    public CouchbaseMock(int port, List<BucketConfiguration> configs) throws IOException {
+        initCommon(port, configs);
+    }
+
+    private void initCommon(int port, List<BucketConfiguration> configs) throws IOException {
+        this.port = port;
+        for (BucketConfiguration config : configs) {
+            Bucket bucket = Bucket.create(this, config);
+            buckets.put(bucket.getName(), bucket);
+        }
+        authenticator = new Authenticator("Administrator", "password", buckets);
     }
 
     public void waitForStartup() throws InterruptedException {
@@ -165,9 +192,10 @@ public class CouchbaseMock {
         int port = 8091;
         int nodes = 100;
         int vbuckets = 4096;
-        String harakiriMonitor = null;
+        String harakirimonitor = null;
         String hostname = null;
         String bucketsSpec = null;
+        int replicaCount = -1;
 
         Getopt getopt = new Getopt();
         getopt.addOption(new CommandLineOption('h', "--host", true)).
@@ -176,6 +204,7 @@ public class CouchbaseMock {
                 addOption(new CommandLineOption('n', "--nodes", true)).
                 addOption(new CommandLineOption('v', "--vbuckets", true)).
                 addOption(new CommandLineOption('\0', "--harakiri-monitor", true)).
+                addOption(new CommandLineOption('R', "--replicas", true)).
                 addOption(new CommandLineOption('?', "--help", false));
 
         List<Entry> options = getopt.parse(args);
@@ -190,18 +219,21 @@ public class CouchbaseMock {
                 nodes = Integer.parseInt(e.value);
             } else if (e.key.equals("-v") || e.key.equals("--vbuckets")) {
                 vbuckets = Integer.parseInt(e.value);
+            } else if (e.key.equals("-R") || e.key.equals("--replicas")) {
+                replicaCount = Integer.parseInt(e.value);
             } else if (e.key.equals("--harakiri-monitor")) {
                 int idx = e.value.indexOf(':');
                 if (idx == -1) {
                     System.err.println("ERROR: --harakiri-monitor requires host:port");
                 }
-                harakiriMonitor = e.value;
+                harakirimonitor = e.value;
             } else if (e.key.equals("-?") || e.key.equals("--help")) {
-                System.out.println("Usage: --host=hostname --buckets=bucketsSpec --port=REST-port --nodes=#nodes --vbuckets=#vbuckets --harakiri-monitor=host:port");
+                System.out.println("Usage: --host=hostname --buckets=bucketsSpec --port=REST-port --nodes=#nodes --vbuckets=#vbuckets --harakiri-monitor=host:port --replicas=#replicas");
                 System.out.println("  Default values: REST-port:    8091");
                 System.out.println("                  bucketsSpec:  default:");
-                System.out.println("                  #nodes:       100");
+                System.out.println("                  #nodes:       10");
                 System.out.println("                  #vbuckets:    4096");
+                System.out.println("                  #replicas:    2");
                 System.out.println("Buckets descriptions is a comma-separated list of {name}:{password}:{bucket type} pairs. "
                         + "To allow unauthorized connections, omit password. "
                         + "Third parameter could be either 'memcache' or 'couchbase' (default value is 'couchbase'). E.g.\n"
@@ -211,9 +243,9 @@ public class CouchbaseMock {
         }
 
         try {
-            CouchbaseMock mock = new CouchbaseMock(hostname, port, nodes, vbuckets, bucketsSpec);
-            if (harakiriMonitor != null) {
-                mock.setupHarakiriMonitor(harakiriMonitor, true);
+            CouchbaseMock mock = new CouchbaseMock(hostname, port, nodes, 0, vbuckets, bucketsSpec, replicaCount);
+            if (harakirimonitor != null) {
+                mock.setupHarakiriMonitor(harakirimonitor, true);
             }
             mock.start();
         } catch (Exception e) {

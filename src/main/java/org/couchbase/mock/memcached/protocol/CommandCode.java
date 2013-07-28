@@ -51,7 +51,7 @@ public enum CommandCode {
     }
 
     static CommandCode valueOf(int cc) {
-            switch (cc) {
+        switch (cc) {
             case 0x00:
                 return GET;
             case 0x01:
@@ -120,10 +120,12 @@ public enum CommandCode {
                 return SASL_AUTH;
             case 0x22:
                 return SASL_STEP;
+
             case (byte)0x94:
                 return GETL;
             case (byte)0x95:
                 return UNL;
+            case (byte)0x83:
             default:
                 return ILLEGAL;
         }
@@ -205,7 +207,6 @@ public enum CommandCode {
                 return "getl";
             case UNL:
                 return "unl";
-
             default:
                 return "unknown";
 

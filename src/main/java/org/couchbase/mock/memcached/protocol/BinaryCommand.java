@@ -18,6 +18,7 @@ package org.couchbase.mock.memcached.protocol;
 
 import java.net.ProtocolException;
 import java.nio.ByteBuffer;
+import org.couchbase.mock.memcached.KeySpec;
 
 /**
  * @author Trond Norbye
@@ -81,6 +82,10 @@ public class BinaryCommand {
         }
     }
 
+    public KeySpec getKeySpec() {
+        return new KeySpec(getKey(), vbucket);
+    }
+
     public byte[] getValue() {
         byte ret[] = new byte[bodyLength - extraLength - keyLength];
         System.arraycopy(bodyBuffer.array(), extraLength + keyLength, ret, 0, ret.length);
@@ -89,5 +94,14 @@ public class BinaryCommand {
 
     public boolean complete() {
         return bodyLength == 0 || !bodyBuffer.hasRemaining();
+    }
+
+
+    /**
+     * Any postprocessing on the body should be done here.
+     * Used mainly for observe
+     * @throws ProtocolException
+     */
+    public void process() throws ProtocolException {
     }
 }

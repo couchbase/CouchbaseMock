@@ -15,6 +15,7 @@
  */
 package org.couchbase.mock.http;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,20 +35,25 @@ class StateGrabber {
 
     /*
      * Locking not needed here (yet)
+     * Handler for /pools$
      */
     static String getAllPoolsJSON(CouchbaseMock mock) {
-        Map<String, Object> pools = new HashMap<String, Object>();
-        pools.put("name", mock.getPoolName());
-        pools.put("uri", "/pools/" + mock.getPoolName());
-        pools.put("streamingUri", "/poolsStreaming/" + mock.getPoolName());
+        Map<String,Object> retObj = new HashMap<String, Object>();
+        List<Object> pools = new ArrayList<Object>();
+        Map<String,Object> defaultPool = new HashMap<String, Object>();
 
-        Map<String, Object> map = new HashMap<String, Object>();
-        map.put("pools", pools);
-        map.put("isAdminCreds", Boolean.TRUE);
-        return JSONObject.fromObject(map).toString();
+        defaultPool.put("name", mock.getPoolName());
+        defaultPool.put("uri", "/pools/" + mock.getPoolName());
+        defaultPool.put("streamingUri", "/poolsStreaming/" + mock.getPoolName());
+
+        pools.add(defaultPool);
+        retObj.put("pools", pools);
+        retObj.put("isAdminCreds", Boolean.TRUE);
+        retObj.put("implementationVersion", "CouchbaseMock");
+        return JSONObject.fromObject(retObj).toString();
     }
 
-    static String getPoolJSON(CouchbaseMock mock) {
+    static String getPoolInfoJSON(CouchbaseMock mock) {
         Map<String, Object> poolInfo = new HashMap<String, Object>();
         HashMap<String, Object> buckets = new HashMap<String, Object>();
         poolInfo.put("buckets", buckets);
@@ -72,10 +78,5 @@ class StateGrabber {
             bucketsJSON.add(getBucketJSON(bucket));
         }
         return bucketsJSON.toString();
-    }
-
-    @SuppressWarnings("SameReturnValue")
-    static String getStreamDelimiter() {
-        return "\n\n\n\n";
     }
 }

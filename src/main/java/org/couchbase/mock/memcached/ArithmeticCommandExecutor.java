@@ -31,13 +31,14 @@ public class ArithmeticCommandExecutor implements CommandExecutor {
     @Override
     public void execute(BinaryCommand command, MemcachedServer server, MemcachedConnection client) {
         BinaryArithmeticCommand cmd = (BinaryArithmeticCommand) command;
-        Item item = server.getDataStore().get(server, cmd.getVBucketId(), cmd.getKey());
+        VBucketStore cache = server.getStorage().getCache(server, cmd.getVBucketId());
+        Item item = cache.get(cmd.getKeySpec());
         CommandCode cc = cmd.getComCode();
 
         if (item == null) {
             if (cmd.create()) {
-                item = new Item(cmd.getKey(), 0, cmd.getExpiration(), Long.toString(cmd.getInitial()).getBytes(), 0);
-                ErrorCode err = server.getDataStore().add(server, cmd.getVBucketId(), item);
+                item = new Item(cmd.getKeySpec(), 0, cmd.getExpiration(), Long.toString(cmd.getInitial()).getBytes(), 0);
+                ErrorCode err = cache.add(item);
 
                 switch (err) {
                     case KEY_EEXISTS:
@@ -76,8 +77,8 @@ public class ArithmeticCommandExecutor implements CommandExecutor {
             }
 
             int exp = cmd.getExpiration() > 0 ? cmd.getExpiration() : item.getExpiryTime();
-            Item newValue = new Item(cmd.getKey(), item.getFlags(), exp, Long.toString(value).getBytes(), item.getCas());
-            ErrorCode err = server.getDataStore().set(server, cmd.getVBucketId(), newValue);
+            Item newValue = new Item(cmd.getKeySpec(), item.getFlags(), exp, Long.toString(value).getBytes(), item.getCas());
+            ErrorCode err = cache.set(newValue);
             if (err == ErrorCode.SUCCESS) {
                 if (cc == CommandCode.INCREMENT || cc == CommandCode.DECREMENT) {
                     // return value

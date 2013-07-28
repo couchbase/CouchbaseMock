@@ -18,13 +18,13 @@ package org.couchbase.mock;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import org.couchbase.mock.memcached.DataStore;
 import org.couchbase.mock.memcached.MemcachedServer;
+import org.couchbase.mock.memcached.VBucketInfo;
 
 /**
  * Representation of the bucket in the membase concept.
@@ -32,66 +32,91 @@ import org.couchbase.mock.memcached.MemcachedServer;
  * @author Trond Norbye
  */
 public abstract class Bucket {
-
-    public DataStore getDataStore() {
-        return datastore;
-    }
-
     public enum BucketType {
         MEMCACHED, COUCHBASE
     }
 
-    final DataStore datastore;
-    private final MemcachedServer[] servers;
-    final int numVBuckets;
-    final String poolName = "default";
-    final String name;
+    protected final VBucketInfo vbInfo[];
+    protected final MemcachedServer servers[];
+    protected final int numVBuckets;
+    protected final int numReplicas;
+    protected final String poolName = "default";
+    protected final String name;
+    protected final CouchbaseMock cluster;
+    protected final String password;
+    protected final ReentrantReadWriteLock configurationRwLock;
     private final UUID uuid;
-    private final CouchbaseMock cluster;
-    private final String password;
-    private final ReentrantReadWriteLock configurationRwLock;
 
     public String getBucketUri() {
         return "/pools/" + poolName + "/bucketsStreaming/" + name;
     }
 
-    Bucket(String name, String hostname, int numNodes, int bucketStartPort, int numVBuckets, CouchbaseMock cluster) throws IOException {
-        this(name, hostname, numNodes, bucketStartPort, numVBuckets, cluster, "");
+    public VBucketInfo[] getVBucketInfo() {
+        return vbInfo;
     }
 
     public MemcachedServer[] getServers() {
         return servers;
     }
 
-    Bucket(String name, String hostname, int numNodes, int bucketStartPort, int numVBuckets, CouchbaseMock cluster, String password) throws IOException {
+
+    /**
+     * Get the server index for a given key
+     * @param key The key to look up
+     * @return an index which can be used in the servers array (via getServers)
+     */
+    public short getVbIndexForKey(String key) {
+        return -1;
+    }
+
+    public Bucket(CouchbaseMock cluster, BucketConfiguration config) throws IOException {
+        if (config.numVBuckets < 0) {
+            throw new IllegalArgumentException("Vbucket count must be > 0");
+        }
+
+        if ( (config.numVBuckets & (config.numVBuckets-1)) != 0 ) {
+            throw new IllegalArgumentException(
+                    "vBucket count must be a power of 2");
+        }
+
         this.cluster = cluster;
-        this.name = name;
-        this.numVBuckets = numVBuckets;
-        this.password = password;
-        datastore = new DataStore(numVBuckets);
-        servers = new MemcachedServer[numNodes];
+        name = config.name;
+        numVBuckets = config.numVBuckets;
+        numReplicas = config.numReplicas;
+        password = config.password;
+
+        vbInfo = new VBucketInfo[numVBuckets];
+        servers = new MemcachedServer[config.numNodes];
         uuid = UUID.randomUUID();
+
         this.configurationRwLock = new ReentrantReadWriteLock();
+
+        for (int ii = 0; ii < vbInfo.length; ii++) {
+            vbInfo[ii] = new VBucketInfo();
+        }
 
         if (this.getClass() != MemcachedBucket.class && this.getClass() != CouchbaseBucket.class) {
             throw new FileNotFoundException("I don't know about this type...");
         }
         for (int ii = 0; ii < servers.length; ii++) {
-            servers[ii] = new MemcachedServer(this, hostname, (bucketStartPort == 0 ? 0 : bucketStartPort + ii), datastore);
+            servers[ii] = new MemcachedServer(this,
+                    config.hostname,
+                    (config.bucketStartPort == 0 ? 0 : config.bucketStartPort + ii),
+                    vbInfo);
         }
 
         rebalance();
     }
 
-    public static Bucket create(BucketType type, String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, CouchbaseMock cluster, String password) throws IOException {
-        switch (type) {
-            case MEMCACHED:
-                return new MemcachedBucket(name, hostname, port, numNodes, bucketStartPort, numVBuckets, cluster, password);
-            case COUCHBASE:
-                return new CouchbaseBucket(name, hostname, port, numNodes, bucketStartPort, numVBuckets, cluster, password);
-            default:
-                throw new FileNotFoundException("I don't know about this type...");
-        }
+    public static Bucket create(CouchbaseMock mock, BucketConfiguration config) throws IOException {
+          switch (config.type) {
+                case MEMCACHED:
+                    return new MemcachedBucket(mock, config);
+                case COUCHBASE:
+                    return new CouchbaseBucket(mock, config);
+                default:
+                    throw new FileNotFoundException("I don't know about this type...");
+            }
     }
 
     public abstract BucketType getType();
@@ -131,6 +156,8 @@ public abstract class Bucket {
             configurationRwLock.writeLock().unlock();
         }
     }
+
+
 
     public void failover(int index) {
         configurationRwLock.writeLock().lock();
@@ -182,8 +209,16 @@ public abstract class Bucket {
             Random random = new Random();
             List<MemcachedServer> nodes = activeServers();
             for (int ii = 0; ii < numVBuckets; ++ii) {
-                int idx = random.nextInt(nodes.size());
-                datastore.setOwnership(ii, nodes.get(idx));
+                Collections.shuffle(nodes);
+                vbInfo[ii].setOwner(nodes.get(0));
+                if (nodes.size() < 2) {
+                    continue;
+                }
+                List<MemcachedServer> replicas = nodes.subList(1, nodes.size());
+                if (replicas.size() > numReplicas) {
+                    replicas = replicas.subList(0, numReplicas);
+                }
+                vbInfo[ii].setReplicas(replicas);
             }
         } finally {
             configurationRwLock.writeLock().unlock();

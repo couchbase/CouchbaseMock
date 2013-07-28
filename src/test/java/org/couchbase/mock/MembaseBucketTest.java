@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 package org.couchbase.mock;
+import org.couchbase.mock.Bucket.BucketType;
 
 import java.io.IOException;
 import junit.framework.TestCase;
@@ -34,7 +35,11 @@ public class MembaseBucketTest extends TestCase {
      */
     @SuppressWarnings("UnusedDeclaration")
     public void testGetJSON() throws IOException {
-        CouchbaseBucket instance = new CouchbaseBucket("membase", "localhost", 0, 100, 0, 100);
-        assertNotNull(instance.getJSON());
+        System.out.println("getJSON");
+        BucketConfiguration config = new BucketConfiguration();
+        config.type = BucketType.COUCHBASE;
+        config.name = "membase";
+        CouchbaseBucket instance = new CouchbaseBucket(null, config);
+        String result = instance.getJSON();
     }
 }

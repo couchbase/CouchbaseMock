@@ -35,7 +35,6 @@ public class BinaryStoreCommand extends BinaryCommand {
             flags = bodyBuffer.getInt(0);
             expiryTime = bodyBuffer.getInt(4);
         }
-        return new Item(getKey(), flags, expiryTime, getValue(), cas);
+        return new Item(getKeySpec(), flags, expiryTime, getValue(), cas);
     }
-
 }

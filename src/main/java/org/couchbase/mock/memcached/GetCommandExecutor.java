@@ -16,6 +16,7 @@
  */
 package org.couchbase.mock.memcached;
 
+import java.security.AccessControlException;
 import org.couchbase.mock.memcached.protocol.CommandCode;
 import org.couchbase.mock.memcached.protocol.ErrorCode;
 import org.couchbase.mock.memcached.protocol.BinaryCommand;
@@ -32,9 +33,11 @@ public class GetCommandExecutor implements CommandExecutor {
     @Override
     public void execute(BinaryCommand command, MemcachedServer server, MemcachedConnection client) {
         BinaryGetCommand cmd = (BinaryGetCommand) command;
-        DataStore datastore = server.getDataStore();
-        Item item = datastore.get(server, cmd.getVBucketId(), cmd.getKey());
+        VBucketStore cache;
         CommandCode cc = cmd.getComCode();
+        cache = server.getStorage().getCache(server, cmd.getVBucketId());
+
+        Item item = cache.get(cmd.getKeySpec());
 
         if (item == null) {
             if (cc != CommandCode.GETKQ && cc != CommandCode.GETQ && cc != CommandCode.GATQ) {
@@ -54,9 +57,11 @@ public class GetCommandExecutor implements CommandExecutor {
                     lockExptime = DEFAULT_EXPTIME;
                 }
                 item.setLockExpiryTime(lockExptime);
+                cache.onItemMutated.onAction(cache, item);
             }
         } else if (cc == CommandCode.TOUCH || cc == CommandCode.GAT || cc == CommandCode.GATQ) {
             item.setExpiryTime(cmd.getExpiration());
+            cache.onItemMutated.onAction(cache, item);
         }
 
         if (cc == CommandCode.TOUCH) {

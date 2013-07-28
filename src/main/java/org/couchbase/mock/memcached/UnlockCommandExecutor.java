@@ -22,10 +22,8 @@ import org.couchbase.mock.memcached.protocol.ErrorCode;
 public class UnlockCommandExecutor implements CommandExecutor {
     @Override
     public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
-        Item item = server.getDataStore().get(server,
-                cmd.getVBucketId(),
-                cmd.getKey());
-
+        VBucketStore cache = server.getCache(cmd);
+        Item item = cache.get(cmd.getKeySpec());
         ErrorCode ec;
 
         if (item == null) {

@@ -58,6 +58,7 @@ class MemcachedConnection {
             }
 
             if (command.complete()) {
+                command.process();
                 protocolHandler.execute(command, this);
                 command = null;
                 input.rewind();

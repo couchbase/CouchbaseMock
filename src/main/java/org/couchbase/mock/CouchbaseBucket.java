@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import java.util.zip.CRC32;
 import net.sf.json.JSONObject;
 import org.couchbase.mock.memcached.MemcachedServer;
 
@@ -30,13 +30,19 @@ import org.couchbase.mock.memcached.MemcachedServer;
  * @author Trond Norbye
  */
 public class CouchbaseBucket extends Bucket {
-
-    public CouchbaseBucket(String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, CouchbaseMock cluster, String password) throws IOException {
-        super(name, hostname, numNodes, bucketStartPort, numVBuckets, cluster, password);
+    public CouchbaseBucket(CouchbaseMock cluster, BucketConfiguration config)
+    throws IOException
+    {
+        super(cluster, config);
     }
 
-    public CouchbaseBucket(String name, String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets) throws IOException {
-        super(name, hostname, numNodes, bucketStartPort, numVBuckets, null);
+    @Override
+    public short getVbIndexForKey(String key) {
+        CRC32 crc32 = new CRC32();
+        crc32.update(key.getBytes());
+        long digest = ( crc32.getValue() >> 16 ) & 0x7fff;
+        long vbkey = digest & ( vbInfo.length - 1 );
+        return (short) vbkey;
     }
 
     @Override
@@ -64,7 +70,7 @@ public class CouchbaseBucket extends Bucket {
 
         Map<String, Object> vbm = new HashMap<String, Object>();
         vbm.put("hashAlgorithm", "CRC");
-        vbm.put("numReplicas", 0);
+        vbm.put("numReplicas", numReplicas);
         List<String> serverList = new ArrayList<String>();
         for (MemcachedServer server : active) {
             serverList.add(server.getSocketName());
@@ -72,9 +78,21 @@ public class CouchbaseBucket extends Bucket {
         vbm.put("serverList", serverList);
         ArrayList<ArrayList<Integer>> m = new ArrayList<ArrayList<Integer>>();
         for (short ii = 0; ii < numVBuckets; ++ii) {
-            MemcachedServer resp = datastore.getVBucket(ii).getOwner();
+            MemcachedServer master = vbInfo[ii].getOwner();
+            List<MemcachedServer> replicas = vbInfo[ii].getReplicas();
             ArrayList<Integer> line = new ArrayList<Integer>();
-            line.add(active.indexOf(resp));
+            line.add(active.indexOf(master));
+            for (MemcachedServer replica : replicas) {
+                line.add(active.indexOf(replica));
+            }
+
+            // If numReplicas is greater than list.size() - 1
+            // (because we also have the master) then fill it with
+            // zeros until we have the desired count
+            while (line.size()-1 < numReplicas) {
+                line.add(-1);
+            }
+
             m.add(line);
         }
         vbm.put("vBucketMap", m);

@@ -22,7 +22,7 @@ import java.util.Date;
  * @author Trond Norbye
  */
 public class Item {
-    private final String key;
+    private KeySpec keySpec;
     private final int flags;
     private int expiryTime;
     private byte[] value;
@@ -32,12 +32,35 @@ public class Item {
     /** When the lock expires, if any */
     private int lockExpiryTime;
 
-    public Item(String key, int flags, int expiryTime, byte[] value, long cas) {
-        this.key = key;
+    public Item(KeySpec ks, int flags, int expiryTime, byte[] value, long cas) {
+        this.keySpec = ks;
         this.flags = flags;
-        this.expiryTime = expiryTime;
         this.value = value;
         this.cas = cas;
+        this.expiryTime = VBucketStore.convertExptime(expiryTime);
+    }
+
+    public Item(KeySpec ks) {
+        this.keySpec = ks;
+        this.flags = -1;
+        this.expiryTime = -1;
+        this.value = null;
+        this.cas = -1;
+        this.modificationTime = -1;
+    }
+
+    /**
+     * Copy constructor
+     * @param src Item whose contents we should copy
+     */
+    public Item(Item src) {
+        this.keySpec = src.keySpec;
+        this.flags = src.flags;
+        this.expiryTime = src.expiryTime;
+        this.value = src.value;
+        this.cas = src.cas;
+        this.modificationTime = src.modificationTime;
+        this.lockExpiryTime = src.lockExpiryTime;
     }
 
     public int getExpiryTime() {
@@ -49,7 +72,7 @@ public class Item {
     }
 
     public void setExpiryTime(int e) {
-        expiryTime = DataStore.convertExptime(e);
+        expiryTime = VBucketStore.convertExptime(e);
     }
 
     public long getModificationTime() {
@@ -60,8 +83,8 @@ public class Item {
         return flags;
     }
 
-    public String getKey() {
-        return key;
+    public KeySpec getKeySpec() {
+        return this.keySpec;
     }
 
     public byte[] getValue() {
@@ -78,7 +101,7 @@ public class Item {
     }
 
     void setLockExpiryTime(int e) {
-        lockExpiryTime = DataStore.convertExptime(e);
+        lockExpiryTime = VBucketStore.convertExptime(e);
     }
 
     int getLockExpiryTime() {
@@ -133,4 +156,5 @@ public class Item {
         System.arraycopy(s1, 0, dst, s2.length, s1.length);
         value = dst;
     }
+
 }

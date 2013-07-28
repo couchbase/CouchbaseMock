@@ -15,6 +15,7 @@
  */
 package org.couchbase.mock;
 
+import org.couchbase.mock.Bucket.BucketType;
 import java.io.IOException;
 import junit.framework.TestCase;
 
@@ -32,7 +33,11 @@ public class CacheBucketTest extends TestCase {
      * Test of getJSON method, of class CacheBucket.
      */
     public void testGetJSON() throws IOException {
-        MemcachedBucket instance = new MemcachedBucket("default", "localhost", 0, 1, 0, 1);
-        assertNotNull(instance.getJSON());
+        BucketConfiguration config = new BucketConfiguration();
+        config.type = BucketType.MEMCACHED;
+        config.name = "default";
+
+        MemcachedBucket instance = new MemcachedBucket(null, config);
+        instance.getJSON();
     }
 }

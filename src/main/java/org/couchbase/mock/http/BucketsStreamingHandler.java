@@ -15,9 +15,7 @@
  */
 package org.couchbase.mock.http;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.StringWriter;
+import java.io.*;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.concurrent.CountDownLatch;
@@ -37,6 +35,7 @@ class BucketsStreamingHandler implements Observer {
     private final HarakiriMonitor monitor;
     private final CountDownLatch completed;
     private final Lock updateHandlerLock;
+    private static final byte[] chunkedDelimiter = { '\n', '\n', '\n', '\n' };
 
     public BucketsStreamingHandler(HarakiriMonitor monitor, Bucket bucket, OutputStream output) {
         this.output = output;
@@ -47,10 +46,14 @@ class BucketsStreamingHandler implements Observer {
     }
 
     private byte[] getConfigBytes() {
-        StringWriter sw = new StringWriter();
-        sw.append(StateGrabber.getBucketJSON(bucket));
-        sw.append(StateGrabber.getStreamDelimiter());
-        return sw.toString().getBytes();
+        return StateGrabber.getBucketJSON(bucket).getBytes();
+    }
+
+    private void writeConfigBytes(byte[] payload) throws IOException {
+        output.write(payload);
+        output.flush();
+        output.write(chunkedDelimiter);
+        output.flush();
     }
 
     @Override
@@ -60,9 +63,9 @@ class BucketsStreamingHandler implements Observer {
             /*
              * getConfigBytes acquires a lock while retrieving the info
              */
-            output.write(getConfigBytes());
-            output.flush();
-        } catch (IOException ex) {
+            writeConfigBytes(getConfigBytes());
+        }
+        catch (IOException ex) {
             completed.countDown();
         } finally {
             updateHandlerLock.unlock();
@@ -89,8 +92,7 @@ class BucketsStreamingHandler implements Observer {
         bucket.configReadUnlock();
 
         try {
-            output.write(configBytes);
-            output.flush();
+            writeConfigBytes(configBytes);
         } finally {
             // Allow any subsequent updates to be sent
             updateHandlerLock.unlock();

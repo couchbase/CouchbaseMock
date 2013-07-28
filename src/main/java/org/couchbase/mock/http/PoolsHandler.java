@@ -15,6 +15,7 @@
  */
 package org.couchbase.mock.http;
 
+import com.sun.net.httpserver.Headers;
 import org.couchbase.mock.CouchbaseMock;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -44,7 +45,7 @@ public class PoolsHandler implements HttpHandler {
 
     private List<Bucket> getAllowedBuckets(HttpExchange exchange) {
         List<Bucket> bucketList = new LinkedList<Bucket>();
-        String httpUser = exchange.getPrincipal().getName();
+        String httpUser = exchange.getPrincipal().getUsername();
         String adminUser = mock.getAuthenticator().getAdminName();
 
         for (Bucket bucket : mock.getBuckets().values()) {
@@ -70,7 +71,7 @@ public class PoolsHandler implements HttpHandler {
 
         } else if (path.matches("^/pools/" + mock.getPoolName() + "$/?")) {
             // GET /pools/:poolName
-            payload = StateGrabber.getPoolJSON(mock).getBytes();
+            payload = StateGrabber.getPoolInfoJSON(mock).getBytes();
 
         } else if (path.matches("^/pools/" + mock.getPoolName() + "/buckets/?$")) {
             // GET /pools/:poolName/buckets
@@ -90,6 +91,8 @@ public class PoolsHandler implements HttpHandler {
             if (bucket == null) {
                 throw new ResourceNotFoundException();
             }
+
+            exchange.getResponseHeaders().set("Transfer-Encoding", "chunked");
             exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, 0);
             BucketsStreamingHandler streamingHandler =
                     new BucketsStreamingHandler(mock.getMonitor(),
@@ -111,11 +114,16 @@ public class PoolsHandler implements HttpHandler {
     public void handle(HttpExchange exchange) throws IOException {
         String path = exchange.getRequestURI().getPath();
         OutputStream body = exchange.getResponseBody();
+        Headers responseHeaders = exchange.getResponseHeaders();
+
+        responseHeaders.set("Server", "CouchbaseMock/1.0");
+
         byte[] payload;
 
         try {
             payload = extractPayload(exchange, path);
             if (payload != null) {
+                responseHeaders.set("Content-Type", "application/json");
                 exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, payload.length);
                 body.write(payload);
             } else {

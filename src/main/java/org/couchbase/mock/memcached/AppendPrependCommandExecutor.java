@@ -19,33 +19,46 @@ import org.couchbase.mock.memcached.protocol.BinaryCommand;
 import org.couchbase.mock.memcached.protocol.BinaryResponse;
 import org.couchbase.mock.memcached.protocol.BinaryStoreCommand;
 import org.couchbase.mock.memcached.protocol.BinaryStoreResponse;
-import org.couchbase.mock.memcached.protocol.CommandCode;
 import org.couchbase.mock.memcached.protocol.ErrorCode;
 
 /**
- * Implementation of the prepend command
+ * Implementation of the APPEND[Q] and PREPEND[Q] commands
  *
  * @author Trond Norbye <trond.norbye@gmail.com>
  */
-class PrependCommandExecutor implements CommandExecutor {
+class AppendPrependCommandExecutor implements CommandExecutor {
 
     @Override
     public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
         BinaryStoreCommand command = (BinaryStoreCommand) cmd;
+        VBucketStore cache = server.getStorage().getCache(server, cmd.getVBucketId());
 
         ErrorCode err;
-        Item item = command.getItem();
+        Item existing = cache.get(command.getKeySpec());
 
-        Item existing = server.getDataStore().get(server, cmd.getVBucketId(), cmd.getKey());
-        if (existing == null) {
-            client.sendResponse(new BinaryResponse(cmd, ErrorCode.NOT_STORED));
-            return;
+        switch (cmd.getComCode()) {
+            case APPEND:
+            case APPENDQ:
+                err = cache.append(command.getItem());
+                break;
+            case PREPEND:
+            case PREPENDQ:
+                err = cache.prepend(command.getItem());
+                break;
+            default:
+                return;
         }
-        existing.prepend(item);
-        err = server.getDataStore().replace(server, cmd.getVBucketId(), existing);
-        if (err == ErrorCode.SUCCESS && cmd.getComCode() == CommandCode.PREPENDQ) {
-            return;
+
+        if (err == ErrorCode.SUCCESS) {
+            switch (cmd.getComCode()) {
+                case APPEND:
+                case PREPEND:
+                    client.sendResponse(new BinaryStoreResponse(command, err, existing.getCas()));
+                default:
+                    break;
+            }
+        } else {
+            client.sendResponse(new BinaryResponse(cmd, err));
         }
-        client.sendResponse(new BinaryStoreResponse(command, err, existing.getCas()));
     }
 }

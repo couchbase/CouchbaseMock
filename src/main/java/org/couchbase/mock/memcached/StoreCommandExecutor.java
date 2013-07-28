@@ -31,6 +31,7 @@ public class StoreCommandExecutor implements CommandExecutor {
     @Override
     public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
         BinaryStoreCommand command = (BinaryStoreCommand) cmd;
+        VBucketStore cache = server.getStorage().getCache(server, cmd.getVBucketId());
 
         ErrorCode err;
         Item item = command.getItem();
@@ -39,15 +40,15 @@ public class StoreCommandExecutor implements CommandExecutor {
         switch (cc) {
             case ADD:
             case ADDQ:
-                err = server.getDataStore().add(server, cmd.getVBucketId(), item);
+                err = cache.add(item);
                 break;
             case REPLACE:
             case REPLACEQ:
-                err = server.getDataStore().replace(server, cmd.getVBucketId(), item);
+                err = cache.replace(item);
                 break;
             case SET:
             case SETQ:
-                err = server.getDataStore().set(server, cmd.getVBucketId(), item);
+                err = cache.set(item);
                 break;
             default:
                 client.sendResponse(new BinaryResponse(cmd, ErrorCode.EINTERNAL));

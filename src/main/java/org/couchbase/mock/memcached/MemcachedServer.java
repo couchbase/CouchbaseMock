@@ -54,8 +54,7 @@ import org.couchbase.mock.Bucket.BucketType;
  * @author Trond Norbye
  */
 public class MemcachedServer implements Runnable, BinaryProtocolHandler {
-
-    private final DataStore dataStore;
+    private final Storage storage;
     private final long bootTime;
     private final String hostname;
     private final ServerSocketChannel server;
@@ -75,12 +74,11 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
      * @param hostname  The hostname to bind to (null == any)
      * @param port      The port this server should listen to (0 to choose an
      *                  ephemeral port)
-     * @param dataStore The store used to keep the data
      * @throws IOException If we fail to create the server socket
      */
-    public MemcachedServer(Bucket bucket, String hostname, int port, DataStore dataStore) throws IOException {
+    public MemcachedServer(Bucket bucket, String hostname, int port, VBucketInfo[] vbi) throws IOException {
         this.bucket = bucket;
-        this.dataStore = dataStore;
+        this.storage = new Storage(vbi, this);
 
         UnknownCommandExecutor unknownHandler = new UnknownCommandExecutor();
         for (int ii = 0; ii < executors.length; ++ii) {
@@ -97,10 +95,10 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         executors[CommandCode.VERBOSITY.cc()] = new VerbosityCommandExecutor();
         executors[CommandCode.ADD.cc()] = new StoreCommandExecutor();
         executors[CommandCode.ADDQ.cc()] = executors[CommandCode.ADD.cc()];
-        executors[CommandCode.APPEND.cc()] = new AppendCommandExecutor();
-        executors[CommandCode.APPENDQ.cc()] = new AppendCommandExecutor();
-        executors[CommandCode.PREPEND.cc()] = new PrependCommandExecutor();
-        executors[CommandCode.PREPENDQ.cc()] = new PrependCommandExecutor();
+        executors[CommandCode.APPEND.cc()] = new AppendPrependCommandExecutor();
+        executors[CommandCode.APPENDQ.cc()] = new AppendPrependCommandExecutor();
+        executors[CommandCode.PREPEND.cc()] = new AppendPrependCommandExecutor();
+        executors[CommandCode.PREPENDQ.cc()] = new AppendPrependCommandExecutor();
         executors[CommandCode.SET.cc()] = executors[CommandCode.ADD.cc()];
         executors[CommandCode.SETQ.cc()] = executors[CommandCode.ADD.cc()];
         executors[CommandCode.REPLACE.cc()] = executors[CommandCode.ADD.cc()];
@@ -150,8 +148,8 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         server.register(selector, SelectionKey.OP_ACCEPT);
     }
 
-    public DataStore getDataStore() {
-        return dataStore;
+    public Storage getStorage() {
+        return storage;
     }
 
     @SuppressWarnings("SpellCheckingInspection")
@@ -197,6 +195,8 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         stats.put("cas_badval", "0");
         stats.put("cas_hits", "0");
         stats.put("cas_misses", "0");
+        stats.put("mem_used", "100000000000000000000");
+        stats.put("curr_connections", "-1");
         return stats;
     }
 
@@ -372,6 +372,25 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         truncateLimit = limit;
     }
 
+    public void flushNode() {
+        storage.flush();
+    }
+
+    public void flushAll() {
+        flushNode();
+        for (MemcachedServer other : bucket.getServers()) {
+            if (other == this) {
+                continue;
+            }
+            other.flushNode();
+        }
+    }
+
+    // Handy method
+    public VBucketStore getCache(BinaryCommand cmd) {
+        return storage.getCache(this, cmd.getVBucketId());
+    }
+
     /**
      * Program entry point that runs the memcached server as a standalone
      * server just like any other memcached server...
@@ -380,10 +399,13 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
      */
     public static void main(String[] args) {
         try {
-            DataStore ds = new DataStore(1024);
-            MemcachedServer server = new MemcachedServer(null, null, 11211, ds);
-            for (int ii = 0; ii < 1024; ++ii) {
-                ds.setOwnership(ii, server);
+            VBucketInfo vbi[] = new VBucketInfo[1024];
+            for (int ii = 0; ii < vbi.length; ++ii) {
+                vbi[ii] = new VBucketInfo();
+            }
+            MemcachedServer server = new MemcachedServer(null, null, 11211, vbi);
+            for (int ii = 0; ii < vbi.length; ++ii) {
+                vbi[ii].setOwner(server);
             }
             server.run();
         } catch (IOException e) {
