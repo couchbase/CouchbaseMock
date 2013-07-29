@@ -19,7 +19,7 @@ import org.couchbase.mock.memcached.protocol.BinaryCommand;
 import org.couchbase.mock.memcached.protocol.BinaryResponse;
 import org.couchbase.mock.memcached.protocol.ErrorCode;
 
-public class UnlockCommnandExecutor implements CommandExecutor {
+public class UnlockCommandExecutor implements CommandExecutor {
     @Override
     public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
         Item item = server.getDataStore().get(server,
