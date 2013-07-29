@@ -41,7 +41,6 @@ public class PoolsHandlerTest extends TestCase {
      * Test of getPoolsJSON method, of class PoolsHandler.
      */
     public void testGetPoolsJSON() {
-        System.out.println("getPoolsJSON");
         PoolsHandler instance = new PoolsHandler(mock);
         String result = StateGrabber.getAllPoolsJSON(mock);
         JsonObject jObj = new Gson().fromJson(result, JsonObject.class);

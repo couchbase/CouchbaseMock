@@ -64,21 +64,21 @@ public class HarakiriDispatcher {
     // Instance members
     private final CouchbaseMock mock;
 
-    public HarakiriCommand getCommand(PayloadFormat fmt, String cmdstr, Object payloadObj) {
+    public HarakiriCommand getCommand(PayloadFormat fmt, String commandString, Object payloadObj) {
         HarakiriCommand obj;
 
-        if (!commandMap.containsKey(cmdstr.toUpperCase())) {
-            throw new CommandNotFoundException("Unknown command: " + cmdstr);
+        if (!commandMap.containsKey(commandString.toUpperCase())) {
+            throw new CommandNotFoundException("Unknown command: " + commandString);
         }
 
         HarakiriCommand.Command cmd;
         Class cls;
 
         try {
-            cmd = HarakiriCommand.Command.valueOf(cmdstr.toUpperCase());
+            cmd = HarakiriCommand.Command.valueOf(commandString.toUpperCase());
 
         } catch (IllegalArgumentException e) {
-            throw new CommandNotFoundException("No such command: " + cmdstr, e);
+            throw new CommandNotFoundException("No such command: " + commandString, e);
         }
 
         cls = classMap.get(cmd);

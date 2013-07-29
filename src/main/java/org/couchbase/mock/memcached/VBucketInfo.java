@@ -25,9 +25,10 @@ import java.util.List;
  * @author Trond Norbye
  */
 public class VBucketInfo {
+    @SuppressWarnings("FieldCanBeLocal")
     private final int REPLICAS_MAX = 3;
     private MemcachedServer owner;
-    private List<MemcachedServer> replicas = new ArrayList<MemcachedServer>();
+    private final List<MemcachedServer> replicas = new ArrayList<MemcachedServer>();
 
     public VBucketInfo(MemcachedServer owner) {
         this.owner = owner;

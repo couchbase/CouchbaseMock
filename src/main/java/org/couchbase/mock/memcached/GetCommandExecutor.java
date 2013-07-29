@@ -27,8 +27,8 @@ import org.couchbase.mock.memcached.protocol.BinaryGetResponse;
  * @author Trond Norbye <trond.norbye@gmail.com>
  */
 public class GetCommandExecutor implements CommandExecutor {
-    static final int DEFAULT_EXPTIME = 15;
-    static final int MAXIMUM_EXPTIME = 29;
+    static final int DEFAULT_EXPIRY_TIME = 15;
+    static final int MAXIMUM_EXPIRY_TIME = 29;
 
     @Override
     public void execute(BinaryCommand command, MemcachedServer server, MemcachedConnection client) {
@@ -60,11 +60,11 @@ public class GetCommandExecutor implements CommandExecutor {
                 return;
 
             } else {
-                int lockExptime = cmd.getExpiration();
-                if (lockExptime == 0 || lockExptime > MAXIMUM_EXPTIME) {
-                    lockExptime = DEFAULT_EXPTIME;
+                int lockExpiryTime = cmd.getExpiration();
+                if (lockExpiryTime == 0 || lockExpiryTime > MAXIMUM_EXPIRY_TIME) {
+                    lockExpiryTime = DEFAULT_EXPIRY_TIME;
                 }
-                item.setLockExpiryTime(lockExptime);
+                item.setLockExpiryTime(lockExpiryTime);
                 cache.onItemMutated.onAction(cache, item);
             }
         } else if (cc == CommandCode.TOUCH || cc == CommandCode.GAT || cc == CommandCode.GATQ) {

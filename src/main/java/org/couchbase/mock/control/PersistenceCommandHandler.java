@@ -156,9 +156,9 @@ public class PersistenceCommandHandler extends KeyCommandHandler {
         if (error == null) {
             return super.getResponse();
         }
-        Map<String,String> errinfo = new HashMap<String, String>();
-        errinfo.put("status", error);
-        return gs.toJson(errinfo);
+        Map<String,String> errInfo = new HashMap<String, String>();
+        errInfo.put("status", error);
+        return gs.toJson(errInfo);
     }
 
     public PersistenceCommandHandler(CouchbaseMock mock) {

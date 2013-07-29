@@ -33,4 +33,4 @@ public enum ObserveCode {
     public int getValue() {
         return value;
     }
-};
+}

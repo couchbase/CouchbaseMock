@@ -32,11 +32,6 @@ public class MockInfoCommandHandler extends HarakiriCommand {
     private final Map<String,Object> result = new HashMap<String, Object>();
 
     @Override
-    protected void handleJson(JsonObject payload) {
-        // Nothing to do here. We just spit out stuff
-    }
-
-    @Override
     public void execute() {
         List<String> mcCaps = new ArrayList<String>();
         for (CommandCode cc : CommandCode.values()) {

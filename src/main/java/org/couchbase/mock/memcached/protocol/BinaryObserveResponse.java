@@ -24,7 +24,7 @@ import org.couchbase.mock.memcached.ObsKeyState;
 /**
  * This contains the response for the OBSERVE command.
  * The response's key and cas field are set to 0, while the body
- * field contains 5-tuples of (vb, klen, key, status, cas)
+ * field contains 5-tuples of (vb, key length, key, status, cas)
  *
  * The status for this command is always successful.
  *
@@ -36,7 +36,7 @@ public class BinaryObserveResponse extends BinaryResponse {
     private static int calculateLength(List<ObsKeyState> states) {
         int len = 0;
         for (ObsKeyState ks : states) {
-            len += 13; // CAS + vBucket + status + keylen;
+            len += 13; // CAS + vBucket + status + key length;
             len += ks.key.length();
         }
         return len;

@@ -55,22 +55,15 @@ public class Authenticator extends BasicAuthenticator {
 
         // No credentials
         if (username == null || username.isEmpty()) {
-            if (bucket.getPassword().isEmpty()) {
-                return true;
-            }
-            return false;
+            return bucket.getPassword().isEmpty();
         }
 
         if (!currentBucketName.equals(username)) {
             return false;
         }
 
-        if (bucket.getPassword().isEmpty()) {
-            // Ignore provided password
-            return true;
-        }
+        return bucket.getPassword().isEmpty() || bucket.getPassword().equals(password);
 
-        return bucket.getPassword().equals(password);
     }
 
     @Override

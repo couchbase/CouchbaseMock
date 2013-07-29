@@ -206,7 +206,6 @@ public abstract class Bucket {
         // Let's start distribute the vbuckets across the servers
         configurationRwLock.writeLock().lock();
         try {
-            Random random = new Random();
             List<MemcachedServer> nodes = activeServers();
             for (int ii = 0; ii < numVBuckets; ++ii) {
                 Collections.shuffle(nodes);

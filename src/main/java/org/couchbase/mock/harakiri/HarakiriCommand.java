@@ -45,7 +45,7 @@ public abstract class HarakiriCommand {
 
     protected JsonObject payload;
     protected Command command;
-    protected CouchbaseMock mock;
+    protected final CouchbaseMock mock;
 
     protected void handleJson(JsonObject json) {
     }

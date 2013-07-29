@@ -406,8 +406,8 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
                 vbi[ii] = new VBucketInfo();
             }
             MemcachedServer server = new MemcachedServer(null, null, 11211, vbi);
-            for (int ii = 0; ii < vbi.length; ++ii) {
-                vbi[ii].setOwner(server);
+            for (VBucketInfo aVbi : vbi) {
+                aVbi.setOwner(server);
             }
             server.run();
         } catch (IOException e) {

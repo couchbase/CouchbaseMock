@@ -109,7 +109,7 @@ public class VBucketStore {
     }
 
     public ErrorCode delete(KeySpec ks, long cas) {
-        // I don't give a shit about atomicy right now..
+        // I don't give a shit about atomicity right now..
         Item i = lookup(ks);
         if (i == null) {
             return ErrorCode.KEY_ENOENT;
@@ -167,7 +167,7 @@ public class VBucketStore {
      *  be a relative or absolute (unix) timestamp
      * @return The converted value
      */
-    public static int convertExptime(int original) {
+    public static int convertExpiryTime(int original) {
         if (original == 0 || original > THIRTY_DAYS) {
             return original;
         }

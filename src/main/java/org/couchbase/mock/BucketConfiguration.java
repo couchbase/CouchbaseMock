@@ -31,10 +31,7 @@ public class BucketConfiguration {
         if (name ==  null) {
             return false;
         }
-        if (port < 0 || bucketStartPort < 0) {
-            return false;
-        }
-        return true;
+        return !(port < 0 || bucketStartPort < 0);
     }
 
     public BucketConfiguration() {

@@ -4,6 +4,7 @@
       <w>altoros</w>
       <w>argv</w>
       <w>avseyev</w>
+      <w>chunked</w>
       <w>codehaus</w>
       <w>couchbase</w>
       <w>creds</w>
@@ -22,7 +23,9 @@
       <w>membase</w>
       <w>memcache</w>
       <w>memcached</w>
+      <w>mock's</w>
       <w>mojo</w>
+      <w>msecs</w>
       <w>netbeans</w>
       <w>noop</w>
       <w>norbye</w>
@@ -35,6 +38,7 @@
       <w>scpexe</w>
       <w>sergey</w>
       <w>trond</w>
+      <w>tuples</w>
       <w>unkown</w>
       <w>vbucket</w>
       <w>vbuckets</w>

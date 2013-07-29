@@ -31,7 +31,6 @@ public class HarakiriMonitor extends Observable implements Runnable {
     private final boolean terminate;
     private BufferedReader input;
     private OutputStream output;
-    private Socket sock;
     private Thread thread;
     private final HarakiriDispatcher dispatcher;
     private static final Gson gs = new Gson();
@@ -39,7 +38,7 @@ public class HarakiriMonitor extends Observable implements Runnable {
     public HarakiriMonitor(String host, int port, boolean terminate, HarakiriDispatcher dispatcher) throws IOException {
         this.dispatcher = dispatcher;
         this.terminate = terminate;
-        sock = new Socket(host, port);
+        Socket sock = new Socket(host, port);
         input = new BufferedReader(new InputStreamReader(sock.getInputStream()));
         output = sock.getOutputStream();
     }
@@ -109,7 +108,7 @@ public class HarakiriMonitor extends Observable implements Runnable {
                 packet = input.readLine();
                 if (packet == null) {
                     closed = true;
-                } else if (mock != null) {
+                } else {
                     HarakiriCommand cmd = dispatchMockCommand(packet);
                     if (cmd.canRespond()) {
                         output.write((cmd.getResponse() + "\n").getBytes());

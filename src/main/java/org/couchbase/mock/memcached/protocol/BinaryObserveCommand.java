@@ -27,7 +27,7 @@ import org.couchbase.mock.memcached.KeySpec;
  *
  * The OBSERVE request contains empty
  * fields for its key, value, and vBucket, with its payload being a packed
- * sequence of (vb, nkey, key) triples.
+ * sequence of (vb, key length, key) triples.
  *
  * See:
  *  https://github.com/membase/ep-engine/blob/2.0.0/src/ep_engine.cc#L3431
@@ -56,10 +56,10 @@ public class BinaryObserveCommand extends BinaryCommand {
         while (bodyBuffer.hasRemaining()) {
             try {
                 short vb = bodyBuffer.getShort();
-                short klen = bodyBuffer.getShort();
-                byte[] kbuf = new byte[klen];
-                bodyBuffer.get(kbuf);
-                String key = new String(kbuf);
+                short keyLength = bodyBuffer.getShort();
+                byte[] keyBuffer = new byte[keyLength];
+                bodyBuffer.get(keyBuffer);
+                String key = new String(keyBuffer);
                 KeySpec ks = new KeySpec(key, vb);
                 keySpecs.add(ks);
 

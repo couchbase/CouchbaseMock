@@ -41,8 +41,8 @@ public class CouchbaseBucket extends Bucket {
         CRC32 crc32 = new CRC32();
         crc32.update(key.getBytes());
         long digest = ( crc32.getValue() >> 16 ) & 0x7fff;
-        long vbkey = digest & ( vbInfo.length - 1 );
-        return (short) vbkey;
+        long vbKey = digest & ( vbInfo.length - 1 );
+        return (short) vbKey;
     }
 
     @Override

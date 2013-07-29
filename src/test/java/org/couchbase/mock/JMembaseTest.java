@@ -298,14 +298,14 @@ public class JMembaseTest extends TestCase {
     }
 
     private static String readInput(InputStream cin) throws IOException {
-        byte[] inbuf = new byte[4096];
+        byte[] inputBuffer = new byte[4096];
         int nr;
         StringBuilder sb = new StringBuilder();
 
-        while ((nr = cin.read(inbuf)) > 0) {
-            String s = new String(inbuf, 0, nr);
+        while ((nr = cin.read(inputBuffer)) > 0) {
+            String s = new String(inputBuffer, 0, nr);
             sb.append(s);
-            if (nr < inbuf.length) {
+            if (nr < inputBuffer.length) {
                 break;
             }
         }
