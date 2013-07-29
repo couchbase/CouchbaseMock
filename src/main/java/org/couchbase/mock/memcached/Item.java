@@ -110,7 +110,7 @@ public class Item {
             lockExpiryTime = 0;
             return true;
         } else {
-            return isLocked() == false;
+            return !isLocked();
         }
     }
 
