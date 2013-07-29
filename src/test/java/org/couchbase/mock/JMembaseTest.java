@@ -80,7 +80,7 @@ public class JMembaseTest extends TestCase {
         super.setUp();
         if (System.getProperty("os.name").equals("Mac OS X")) {
             numNodes = 4;
-            numVBuckets = 10;
+            numVBuckets = 16;
         }
 
         instance = new CouchbaseMock(null, port, numNodes, numVBuckets, "default:,protected:secret");
