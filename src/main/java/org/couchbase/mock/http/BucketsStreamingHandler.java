@@ -18,7 +18,7 @@ package org.couchbase.mock.http;
 import java.io.*;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -33,16 +33,17 @@ class BucketsStreamingHandler implements Observer {
     private final OutputStream output;
     private final Bucket bucket;
     private final HarakiriMonitor monitor;
-    private final CountDownLatch completed;
-    private final Lock updateHandlerLock;
-    private static final byte[] chunkedDelimiter = { '\n', '\n', '\n', '\n' };
+    private final Lock updateHandlerLock = new ReentrantLock();
+    private final Condition condHasUpdatedConfig = updateHandlerLock.newCondition();
+    private volatile boolean hasUpdatedConfig = false;
+    private volatile boolean shouldTerminate = false;
+
+    private static final byte[] chunkedDelimiter = "\n\n\n\n".getBytes();
 
     public BucketsStreamingHandler(HarakiriMonitor monitor, Bucket bucket, OutputStream output) {
         this.output = output;
         this.bucket = bucket;
         this.monitor = monitor;
-        this.completed = new CountDownLatch(1);
-        updateHandlerLock = new ReentrantLock();
     }
 
     private byte[] getConfigBytes() {
@@ -60,13 +61,29 @@ class BucketsStreamingHandler implements Observer {
     public void update(Observable o, Object arg) {
         updateHandlerLock.lock();
         try {
-            /*
-             * getConfigBytes acquires a lock while retrieving the info
-             */
-            writeConfigBytes(getConfigBytes());
+            hasUpdatedConfig = true;
+            condHasUpdatedConfig.signalAll();
+        } finally {
+            updateHandlerLock.unlock();
         }
-        catch (IOException ex) {
-            completed.countDown();
+    }
+
+    private boolean streamNewConfig() throws IOException, InterruptedException {
+        updateHandlerLock.lock();
+        try {
+            while (shouldTerminate == false && hasUpdatedConfig == false) {
+                condHasUpdatedConfig.await();
+            }
+            if (hasUpdatedConfig) {
+                writeConfigBytes(getConfigBytes());
+                hasUpdatedConfig = false;
+                return true;
+            } else {
+                return false;
+            }
+        } catch (IOException e) {
+            shouldTerminate = false;
+            return false;
         } finally {
             updateHandlerLock.unlock();
         }
@@ -98,7 +115,10 @@ class BucketsStreamingHandler implements Observer {
             updateHandlerLock.unlock();
         }
 
-        completed.await();
+        while (streamNewConfig()) {
+            //
+        }
+
         /*
          * Error or some such
          */
