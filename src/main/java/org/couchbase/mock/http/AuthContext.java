@@ -15,7 +15,8 @@
  */
 package org.couchbase.mock.http;
 import java.io.IOException;
-import sun.misc.BASE64Decoder;
+
+import org.couchbase.mock.util.Base64;
 
 /**
  *
@@ -37,8 +38,7 @@ public class AuthContext {
 
         String b64 = parts[1];
 
-        byte[] decoded = new BASE64Decoder().decodeBuffer(b64);
-        parts = new String(decoded).split(":");
+        parts = Base64.decode(b64).split(":");
         username = parts[0];
         password = parts[1];
     }
