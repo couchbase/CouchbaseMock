@@ -19,7 +19,9 @@ import com.sun.net.httpserver.BasicAuthenticator;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpPrincipal;
 
+import java.io.IOException;
 import java.util.Map;
+
 import org.couchbase.mock.Bucket;
 
 /**
@@ -39,6 +41,7 @@ public class Authenticator extends BasicAuthenticator {
         this.buckets = buckets;
     }
 
+    @SuppressWarnings("SimplifiableIfStatement")
     @Override
     public boolean checkCredentials(String username, String password) {
         // Always allow admin
@@ -47,14 +50,13 @@ public class Authenticator extends BasicAuthenticator {
         }
 
         Bucket bucket = buckets.get(username);
-        // No such bucket
-        //noinspection SimplifiableIfStatement
         if (bucket == null) {
+            // No such bucket
             return false;
         }
 
         // No credentials
-        if (username == null || username.isEmpty()) {
+        if (username.isEmpty()) {
             return bucket.getPassword().isEmpty();
         }
 
@@ -62,8 +64,8 @@ public class Authenticator extends BasicAuthenticator {
             return false;
         }
 
-        return bucket.getPassword().isEmpty() || bucket.getPassword().equals(password);
-
+        String bucketPassword = bucket.getPassword();
+        return bucketPassword.isEmpty() || bucketPassword.equals(password);
     }
 
     @Override
@@ -79,19 +81,27 @@ public class Authenticator extends BasicAuthenticator {
             currentBucketName = components[3];
         }
 
+        AuthContext context = null;
+        String auth = exchange.getRequestHeaders().getFirst("Authorization");
+        if (auth != null) {
+            try {
+                context = new AuthContext(auth);
+            } catch (IOException e) {
+                return new Failure(400);
+            }
+        }
+
         // For now, if we don't have a bucket name, just continue
         if (currentBucketName == null) {
             return new Authenticator.Success(new HttpPrincipal("", realm));
         }
 
         Bucket bucket = buckets.get(currentBucketName);
-        if (bucket == null) {
-            return super.authenticate(exchange);
-        }
-
-        // Have a bucket
-        if (bucket.getPassword() == null || bucket.getPassword().isEmpty()) {
-            return new Authenticator.Success(new HttpPrincipal("", realm));
+        if (bucket != null) {
+            // Have a bucket
+            if ((bucket.getPassword() == null || bucket.getPassword().isEmpty()) && context == null) {
+                return new Authenticator.Success(new HttpPrincipal("", realm));
+            }
         }
 
         return super.authenticate(exchange);
