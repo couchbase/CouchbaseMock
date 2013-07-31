@@ -150,3 +150,138 @@ Parameters:
 </table>
 
 Setting the _limit_ to _0_ disables _truncate_
+
+## Key Access Commands
+
+### Concepts
+
+Starting with 0.6, the Mock introduces actual storage layers to emulate those of
+an actual cluster. Specifically, a cluster has one or more nodes, where each node
+retains a key in both its volatile memory (_Cache_) and persistent storage
+(_Disk_). While from a user perspective this process tends to be transparent, the
+distinction makes itself known when operating on things such as views (where
+indices are built from "persisted" items only) and the various `OBSERVE` and/or
+durability/persistence-requirement commands as well as get-from-replica.
+
+Note that _Cache_ and _Disk_ represent abstract concepts in the Mock. At the
+time of writing, the Mock does not actually write anything to the dist, but
+merely contains a separate storage domain for "Disk".
+
+Thus, whenever an item is stored in the mock it may go through the following
+steps:
+
+1. The item is inserted into the vBucket master's _Cache_
+2. The item is inserted into the vBucket maseter's _Disk_
+3. For each vBucket replica, the item is placed inside its _Cache_
+4. For each vBucket replica, the item is placed inside its _Disk_
+
+### Common Parameters
+
+These  out-of-band commands allow to modify or retrieve
+information on a specific _key_.
+
+They all accept a set of common parameters
+
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Meaning</th>
+        <th>Type</th>
+    </tr>
+    <tr>
+        <td>Key</td>
+        <td>The key to access</td>
+        <td>Required. String</td>
+    </tr>
+    <tr>
+        <td>OnMaster</td>
+        <td>Whether to affect the key on the vBucket master</td>
+        <td>Boolean. Required</td>
+    <tr>
+    <td>
+        <td>OnReplicas</td>
+        <td>Which replicas should be affected</td>
+        <td>Required. This can either be a number indicating <i>how many</i>
+            replicas to affect; or it can be a list of specific vBucket indices
+            to affect</td>
+    </tr>
+    <tr>
+        <td>CAS</td>
+        <td>The new CAS to use</td>
+        <td>Optional. Number. If not specified, the existing CAS (if the key
+            already exists) of each key entry in its respective storage partition
+            will be used. Otherwise a new CAS is generated</td>
+    </tr>
+    <tr>
+        <td>Bucket</td>
+        <td>The bucket in which the key resides</td>
+        <td>Optional. String. If not specified, <pre>"default"</pre> is used</td>
+    </tr>
+</table>
+
+
+Below is a list of commands which accept these common parameters
+
+
+### Commands
+
+
+#### persist
+
+This command will store an item to one or more nodes' _Disk_ storage domain.
+The nodes affected depend on the `OnMaster` and `OnReplicas` parameters
+
+#### unpersist
+
+Remove an item from the _Disk_ storage domain from the selected nodes
+
+#### cache
+
+Store an item to one or more nodes' _Cache_
+
+#### uncache
+
+Remove an item from one or more nodes' _Cache_
+
+#### endure
+
+For each affected node, store the item to its _Disk_ *and* _Cache_ stores.
+This is equivalent to calling `persist` and `cache` on the same item
+
+#### purge
+
+For each affected node, remove the item from both its _Disk_ and _Cache_
+stores. This is equivalent to calling `uncache` and `unpersist` on the same
+item
+
+#### keyinfo
+
+This special command returns a JSON object containing the per-node status
+of a given key. The base object is a JSON array (`[]`). Each element in
+the array is a JSON object containing three fields.
+
+The nodes are ordered according to the server list received in the vBucket
+configuration.
+
+If the server is neither a replica nor a master for the given key, it is
+present as `null`.
+
+* Conf:
+    Configuration information about this node in relation to the keys' vBucket.
+    This is a JSON object containing two subfields:
+
+    * Index - the server index in the vBucket map for the given vBucket. If this is
+    a master, the index will be `0`
+    * Type - Either `master` or `replica`
+
+* Cache:
+    This is a JSON object containing the status of the key as it resides in the
+    node's _Cache_. If the item is not present within the node's cache, the
+    object is empty; otherwise it contains these subfields:
+
+    * CAS The CAS value of the key as present within the storage domain
+    * Value the actual value of the key
+
+* Disk:
+    This carries the same semantics as `Cache`, only that it displays information
+    relating to the node's _Disk_ storage domain.
