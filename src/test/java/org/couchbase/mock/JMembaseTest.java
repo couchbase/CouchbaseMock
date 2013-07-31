@@ -29,9 +29,11 @@ import java.net.Socket;
 import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import junit.framework.TestCase;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -52,6 +54,7 @@ public class JMembaseTest extends TestCase {
     public JMembaseTest(String testName) {
         super(testName);
     }
+
     private CouchbaseMock instance;
     private final int port = 18091;
     private int numNodes = 100;
@@ -165,7 +168,7 @@ public class JMembaseTest extends TestCase {
             while ((line = in.readLine()) != null) {
                 sb.append(line);
             }
-            JSONArray json = (JSONArray)JSONSerializer.toJSON(sb.toString());
+            JSONArray json = (JSONArray) JSONSerializer.toJSON(sb.toString());
             assertEquals(1, json.size());
             JSONObject bucket = (JSONObject) json.get(0);
             assertEquals("default", bucket.get("name"));
@@ -328,6 +331,54 @@ public class JMembaseTest extends TestCase {
         return sb.toString();
     }
 
+    private boolean readResponse(InputStream in) throws IOException {
+        String json = readInput(in);
+        try {
+            JsonObject response = (new Gson()).fromJson(json, JsonObject.class);
+            return response.get("status").getAsString().toLowerCase().equals("ok");
+        } catch (Throwable ex) {
+            System.err.println("Invalid response received from the server: [" + json + "]");
+            return false;
+        }
+    }
+
+    private byte[] buildFailoverCommand(int index, String bucket) {
+        Map<String, Object> command = new HashMap<String, Object>();
+        Map<String, Object> payload = new HashMap<String, Object>();
+
+        payload.put("idx", index);
+        if (!bucket.isEmpty()) {
+            payload.put("bucket", bucket);
+        }
+        command.put("command", "failover");
+        command.put("payload", payload);
+        return ((new Gson()).toJson(command) + "\n").getBytes();
+    }
+
+    private byte[] buildRespawnCommand(int index, String bucket) {
+        Map<String, Object> command = new HashMap<String, Object>();
+        Map<String, Object> payload = new HashMap<String, Object>();
+
+        payload.put("idx", index);
+        if (!bucket.isEmpty()) {
+            payload.put("bucket", bucket);
+        }
+        command.put("command", "respawn");
+        command.put("payload", payload);
+        return ((new Gson()).toJson(command) + "\n").getBytes();
+    }
+
+    private byte[] buildHiccupCommand(int msecs, int offset) {
+        Map<String, Object> command = new HashMap<String, Object>();
+        Map<String, Object> payload = new HashMap<String, Object>();
+
+        payload.put("msecs", msecs);
+        payload.put("offset", offset);
+        command.put("command", "hiccup");
+        command.put("payload", payload);
+        return ((new Gson()).toJson(command) + "\n").getBytes();
+    }
+
     @SuppressWarnings("SpellCheckingInspection")
     public void testConfigStreaming() throws IOException {
         ServerSocket server = new ServerSocket(0);
@@ -351,43 +402,27 @@ public class JMembaseTest extends TestCase {
         currCfg = readConfig(stream);
         assertEquals(numNodes, bucket.activeServers().size());
 
-        cout.write("failover,1,protected\n".getBytes());
+        cout.write(buildFailoverCommand(1, "protected"));
+        assertTrue(readResponse(cin));
         nextCfg = readConfig(stream);
         assertNotSame(currCfg, nextCfg);
         assertEquals(numNodes - 1, bucket.activeServers().size());
         currCfg = nextCfg;
 
-        cout.write("respawn,1,protected\n".getBytes());
+        cout.write(buildRespawnCommand(1, "protected"));
+        assertTrue(readResponse(cin));
         nextCfg = readConfig(stream);
         assertNotSame(currCfg, nextCfg);
         assertEquals(numNodes, bucket.activeServers().size());
 
-        cout.write("hiccup,10000,20\n".getBytes());
+        cout.write(buildHiccupCommand(10000, 20));
+        assertTrue(readResponse(cin));
 
+        cout.write(buildFailoverCommand(1, ""));
+        assertTrue(readResponse(cin));
 
-        Gson gs = new Gson();
-        JsonObject response;
-        Map<String,Object> command = new HashMap<String, Object>();
-        Map<String,Object> payload = new HashMap<String, Object>();
-
-        payload.put("idx", 1);
-        command.put("command", "failover");
-        command.put("payload", payload);
-        cout.write((gs.toJson(command) + "\n").getBytes());
-
-        response = gs.fromJson(readInput(cin), JsonObject.class);
-        assertEquals(response.get("status").getAsString().toLowerCase(), "ok");
-
-
-        command.clear();
-        payload.clear();
-
-        command.put("command", "respawn");
-        payload.put("idx", 1);
-        command.put("payload", payload);
-        cout.write((gs.toJson(command) + "\n").getBytes());
-        response = gs.fromJson(readInput(cin), JsonObject.class);
-        assertEquals(response.get("status").getAsString().toLowerCase(), "ok");
+        cout.write(buildRespawnCommand(1, ""));
+        assertTrue(readResponse(cin));
 
         server.close();
         instance.getMonitor().stop();

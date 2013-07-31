@@ -26,11 +26,6 @@ public class TruncateCommandHandler extends ServersCommandHandler {
     private int truncateLimit;
 
     @Override
-    protected void handlePlain(List<String> tokens) {
-        truncateLimit = Integer.parseInt(tokens.get(0));
-    }
-
-    @Override
     protected void handleJson(JsonObject payload) {
         truncateLimit = payload.get("limit").getAsInt();
     }

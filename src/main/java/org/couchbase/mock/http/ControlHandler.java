@@ -25,7 +25,7 @@ import org.couchbase.mock.harakiri.CommandNotFoundException;
 import org.couchbase.mock.harakiri.HarakiriCommand;
 import org.couchbase.mock.harakiri.HarakiriDispatcher;
 import org.couchbase.mock.harakiri.HarakiriHelpCommand;
-import org.couchbase.mock.harakiri.HarakiriDispatcher.PayloadFormat;
+
 /**
  *
  * @author Mark Nunberg <mnunberg@haskalah.org>
@@ -122,7 +122,7 @@ public class ControlHandler implements HttpHandler {
             String cmdStr = components[1];
 
             HarakiriCommand cmd = dispatcher.getCommand(
-                    PayloadFormat.JSON, cmdStr, payload);
+                    cmdStr, payload);
 
             byte[] response = cmd.getResponse().getBytes();
 

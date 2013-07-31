@@ -17,14 +17,15 @@ package org.couchbase.mock.harakiri;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.*;
+
 import org.couchbase.mock.CouchbaseMock;
-import org.couchbase.mock.harakiri.HarakiriDispatcher.PayloadFormat;
 
 public class HarakiriMonitor extends Observable implements Runnable {
 
@@ -58,30 +59,18 @@ public class HarakiriMonitor extends Observable implements Runnable {
         ArrayList<String> compat;
         String cmdstr;
         HarakiriCommand ret;
-        PayloadFormat fmt;
 
-        if (s.startsWith("{")) {
-            // JSON
-            JsonObject o = gs.fromJson(s, JsonObject.class);
-            cmdstr = o.get("command").getAsString();
-            if (!o.has("payload")) {
-                payload = new JsonObject();
-            } else {
-                payload = o.get("payload").getAsJsonObject();
-            }
-            fmt = PayloadFormat.JSON;
-            payloadObj = payload;
-
+        // JSON
+        JsonObject o = gs.fromJson(s, JsonObject.class);
+        cmdstr = o.get("command").getAsString();
+        if (!o.has("payload")) {
+            payload = new JsonObject();
         } else {
-            compat = new ArrayList<String>();
-            compat.addAll(Arrays.asList(s.split(",")));
-            cmdstr = compat.get(0);
-            compat.remove(0);
-            fmt = PayloadFormat.PLAIN;
-            payloadObj = compat;
+            payload = o.get("payload").getAsJsonObject();
         }
+        payloadObj = payload;
 
-        ret = dispatcher.getCommand(fmt, cmdstr, payloadObj);
+        ret = dispatcher.getCommand(cmdstr, payloadObj);
 
         setChanged();
         notifyObservers();

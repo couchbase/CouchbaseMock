@@ -17,19 +17,18 @@ package org.couchbase.mock.harakiri;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+
 import org.couchbase.mock.CouchbaseMock;
 import org.couchbase.mock.control.*;
 
 /**
- *
  * @author Mark Nunberg
  */
 public class HarakiriDispatcher {
-    public enum PayloadFormat { JSON, PLAIN }
-
-    public static final Map<String,Class> commandMap = new HashMap<String, Class>();
+    public static final Map<String, Class> commandMap = new HashMap<String, Class>();
     private static final Map<HarakiriCommand.Command, Class> classMap
             = new EnumMap<HarakiriCommand.Command, Class>(HarakiriCommand.Command.class);
 
@@ -64,7 +63,7 @@ public class HarakiriDispatcher {
     // Instance members
     private final CouchbaseMock mock;
 
-    public HarakiriCommand getCommand(PayloadFormat fmt, String commandString, Object payloadObj) {
+    public HarakiriCommand getCommand(String commandString, Object payloadObj) {
         HarakiriCommand obj;
 
         if (!commandMap.containsKey(commandString.toUpperCase())) {
@@ -87,7 +86,7 @@ public class HarakiriDispatcher {
         }
 
         try {
-            obj = (HarakiriCommand)cls.getConstructor
+            obj = (HarakiriCommand) cls.getConstructor
                     (CouchbaseMock.class).newInstance(mock);
             obj.command = cmd;
 
@@ -101,15 +100,8 @@ public class HarakiriDispatcher {
             throw new RuntimeException(e);
         }
 
-        switch (fmt) {
-            case JSON:
-                obj.payload = (JsonObject)payloadObj;
-                obj.handleJson(obj.payload);
-                break;
-
-            case PLAIN:
-                obj.handlePlain((List<String>)payloadObj);
-        }
+        obj.payload = (JsonObject) payloadObj;
+        obj.handleJson(obj.payload);
 
         obj.execute();
 

@@ -37,18 +37,6 @@ abstract public class BucketCommandHandler extends HarakiriCommand {
     }
 
     @Override
-    protected void handlePlain(List<String> tokens)
-    {
-        idx = Integer.parseInt(tokens.get(0));
-
-        if (tokens.size() == 2) {
-            bucket = mock.getBuckets().get(tokens.get(1));
-        } else {
-            bucket = mock.getBuckets().get("default");
-        }
-    }
-
-    @Override
     protected void handleJson(JsonObject payload)
     {
         idx = payload.get("idx").getAsInt();

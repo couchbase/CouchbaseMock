@@ -38,12 +38,6 @@ public class HiccupCommandHandler extends ServersCommandHandler {
     }
 
     @Override
-    protected void handlePlain(List<String> tokens) {
-        milliSeconds = Integer.parseInt(tokens.get(0));
-        offset = Integer.parseInt(tokens.get(1));
-    }
-
-    @Override
     void doServerCommand(MemcachedServer server) {
         server.setHiccup(milliSeconds, offset);
     }

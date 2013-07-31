@@ -50,10 +50,6 @@ public abstract class HarakiriCommand {
     protected void handleJson(JsonObject json) {
     }
 
-    protected void handlePlain(List<String> tokens) {
-        throw new RuntimeException("This command does not support raw strings");
-    }
-
     boolean canRespond() {
         return payload != null;
     }
