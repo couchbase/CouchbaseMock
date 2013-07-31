@@ -18,9 +18,9 @@ This is a maven project and most of us use NetBeans with it.
 
 ## Basic Usage
 
-Typically the mock is spawned by passing a <_\--port_> argument as the REST port to
+Typically the mock is spawned by passing a `--port` argument as the REST port to
 listen on, and a list of _bucket specifications_ separated by commas. Passing
-_\--help_ to the CouchbaseMock should show example usage.
+`--help` to the CouchbaseMock should show example usage.
 
 Once spawned, it may be used like a normal Couchbase Server. The following commands
 are currently implemented
@@ -40,7 +40,7 @@ are currently implemented
 * GETL (From 0.6)
 * UNL (From 0.6)
 * OBSERVE (From 0.6)
-* GET_REPLICA (From 0.6)
+* GET\_REPLICA (From 0.6)
 * STATS
 * VERSION
 * VERBOSITY
@@ -59,19 +59,21 @@ The normal "handshake" sequence is as follows:
 
 Note that this can be found in [_tests/server.c_](https://github.com/couchbase/libcouchbase/blob/master/tests/server.c) in the libcouchbase distribution
 
-1. The client sets up a listening address (typically on a random port \-\- i.e. passing 0 for _sin_port)._
-2. Call the usual functions, i.e. _socket()_, _bind()_, and _listen()_. Then call _getsockname()_ to get the newly assigned port number
-3. Invoke the CouchbaseMock JAR passing the newly assigned listening port as the argument to the _\--harakiri-monitor_ option, so e.g. _\--harakiri-monitor=localhost:42464_
-4. Additionally, pass _\--port=0_ to the JAR so that it will generate a random REST port (this way we don't have port conflicts)
+1. The client sets up a listening address (typically on a random port
+-- i.e. passing 0 for `sin_port`).
+2. Call the usual functions, i.e. `socket()`, `bind()`, and `listen()`.
+Then call `getsockname()` to get the newly assigned port number
+3. Invoke the CouchbaseMock JAR passing the newly assigned listening port as the argument to the `--harakiri-monitor` option, so e.g. `--harakiri-monitor=localhost:42464`
+4. Additionally, pass `--port=0` to the JAR so that it will generate a random REST port (this way we don't have port conflicts)
 5. In the client, call _accept()_ on the harakiri port. The mock will connect to it.
 6. Read from the new connection until an ASCII NUL is encountered. The data read will be a C string containing the ASCII representation of the newly assigned REST port.
-7. Once the REST port has been received, you can use it in normal Couchbase/lcb_t operation to connect to the mock cluster.
-8. Send/Receive additional OOB commands on the new \_harakiri _connection established between client and mock
+7. Once the REST port has been received, you can use it in normal Couchbase/lcb\_t operation to connect to the mock cluster.
+8. Send/Receive additional OOB commands on the new _harakiri_ connection established between client and mock
 
 ## Command Format
 
-The new command format consists of JSON objects delimited by newlines.
-The JSON object will consist of the following keys:
+The command format consists of JSON objects delimited by newlines.
+The JSON object will consist of the following keys.
 
 * _command_: this is the name of the command
 * _payload:_ This is an object which contains the payload for the command
@@ -87,7 +89,7 @@ be a JSON object consisting of the following fields
 This is a lightweight API following the semantics of the JSON API; only that
 it uses HTTP as a transport.
 
-The format of each command is *_[http://localhost:18091/mock/]_{*}{*}_<command>?payload_param1=payload_value1&..._*
+The format of each command is `http://localhost:18091/mock/<command>?payload\_param1=payload\_value1&...`
 
 Where <command> is the value for the JSON *command* field, and the query
 parameters are expanded (URL-Encoded) fields within the *payload*.
@@ -97,22 +99,36 @@ this is to make it simple to test using a web browser.
 
 ## Command Listings
 
-The following commands are supported by the Mock. Each command will have both
-its _old-style_ (if supported) and _new-style_ arguments displayed:
+The following commands are supported by the Mock.
+The payload for each command should contain dictionary keys corresponding
+to the listed _Name_ of the parameter, and its value should conform to the
+specified _Type_.
 
 ### failover
 
 
 This command fails over a specific server with a given index (the index is
 obtained from the REST configuration). It may also be passed a bucket for
-which the failover should affect (if no bucket is passed, it will be _default_)
+which the failover should affect (if no bucket is passed, it will be _default_).
+Names in *bold* are *required*
 
 Parameters:
 
 <table>
-<tr><th>Name</th><th>Meaning</th><th>payload-field/type</th></tr>
-<tr><td>idx</td><td>The server index</td><td>_idx_, JSON Number</td></tr>
-<tr><td>bucket</td><td>The bucket to affect (_default_) if unspecified</td><td>_bucket_, JSON String</td></tr>
+    <tr>
+        <th>Name</th>
+        <th>Meaning</th>
+        <th>Type</th>
+    </tr>
+    <tr>
+        <td><b>idx</b></td>
+        <td>The server index</td>
+        <td>JSON Number</td></tr>
+    </tr>
+        <tr><td>bucket</td>
+        <td>The bucket to affect (`"default"`) if unspecified</td>
+        <td>JSON String</td>
+    </tr>
 </table>
 
 ### respawn
@@ -129,9 +145,22 @@ server hangs or stalls after sending out a partial packet.
 Parameters:
 
 <table>
-<tr><th>Name</th><th>Meaning</th><th>payload-field/type</th></tr>
-<tr><td>msecs</td><td>The duration of the delay in milliseconds</td><td>_msecs_, JSON Number</td></tr>
-<tr><td>offset</td><td>Stall after this many bytes have been sent</td><td>_bucket_, JSON String</td></tr>
+    <tr>
+        <th>Name</th>
+        <th>Meaning</th>
+        <th>Type</th>
+    </tr>
+
+    <tr>
+        <td><b>msecs</b></td>
+        <td>The duration of the delay in milliseconds</td>
+        <td>JSON Number</td>
+    </tr>
+    <tr>
+        <td><b>offset</b></td>
+        <td>Stall after this many bytes have been sent</td>
+        <td>JSON Number</td>
+    </tr>
 </table>
 
 Setting both parameters to _0_ disables _hiccup_
@@ -145,8 +174,16 @@ to simulate a node sending partial data and then disconnecting)
 Parameters:
 
 <table>
-<tr><th>Name</th><th>Meaning</th><th>payload-field/type</th></tr>
-<tr><td>limit</td><td>Limit the next write operation to this many bytes</td><td>_limit_, JSON Number</td></tr>
+    <tr>
+        <th>Name</th>
+        <th>Meaning</th>
+        <th>Type</th>
+    </tr>
+    <tr>
+        <td><b>limit</b></td>
+        <td>Limit the next write operation to this many bytes</td>
+        <td>JSON Number</td>
+    </tr>
 </table>
 
 Setting the _limit_ to _0_ disables _truncate_
@@ -189,19 +226,19 @@ They all accept a set of common parameters
         <th>Type</th>
     </tr>
     <tr>
-        <td>Key</td>
+        <td><b>Key</b></td>
         <td>The key to access</td>
-        <td>Required. String</td>
+        <td>JSON String</td>
     </tr>
     <tr>
-        <td>OnMaster</td>
+        <td><b>OnMaster</b></td>
         <td>Whether to affect the key on the vBucket master</td>
-        <td>Boolean. Required</td>
+        <td>JSON Boolean</td>
+    </tr>
     <tr>
-    <td>
-        <td>OnReplicas</td>
+        <td><b>OnReplicas</b></td>
         <td>Which replicas should be affected</td>
-        <td>Required. This can either be a number indicating <i>how many</i>
+        <td>This can either be a number indicating <i>how many</i>
             replicas to affect; or it can be a list of specific vBucket indices
             to affect</td>
     </tr>
