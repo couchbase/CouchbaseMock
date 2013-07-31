@@ -37,10 +37,15 @@ public class AuthContext {
         }
 
         String b64 = parts[1];
+        String decoded = Base64.decode(b64);
+        parts = decoded.split(":", 2);
 
-        parts = Base64.decode(b64).split(":");
-        username = parts[0];
-        password = parts[1];
+        if (parts.length == 2) {
+            username = parts[0];
+            password = parts[1];
+        } else {
+            throw new IOException("Don't know what to do with " + decoded);
+        }
     }
 
     public AuthContext () {
