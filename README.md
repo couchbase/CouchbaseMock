@@ -70,16 +70,6 @@ Note that this can be found in [_tests/server.c_](https://github.com/couchbase/l
 
 ## Command Format
 
-This will first describe the "legacy" format - which is a comma-separated
-list of strings terminated by a newline (0xa, '\n'). The first field is the
-name of the command itself, and the subsequent fields are arguments for the
-command. The old-style command protocol does not feature responses and can
-only accept commands.
-
-Due to timing issues it was necessary to implement a new protocol which can
-send back responses - at which point a client can acknowledge that
-something was "done".
-
 The new command format consists of JSON objects delimited by newlines.
 The JSON object will consist of the following keys:
 
