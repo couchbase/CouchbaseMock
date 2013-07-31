@@ -15,12 +15,14 @@
  */
 package org.couchbase.mock.control.handlers;
 
+import com.google.gson.JsonObject;
 import org.couchbase.mock.CouchbaseMock;
 
 public class FailoverCommandHandler extends BucketCommandHandler {
 
     @Override
-    public void execute() {
+    public void execute(JsonObject payload, Command command) {
+        super.execute(payload, command);
         bucket.failover(idx);
     }
 

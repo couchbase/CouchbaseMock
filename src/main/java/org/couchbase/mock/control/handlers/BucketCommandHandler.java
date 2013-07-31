@@ -28,16 +28,14 @@ import org.couchbase.mock.control.MockCommand;
  * @author M. Nunberg
  */
 abstract public class BucketCommandHandler extends MockCommand {
-    public Bucket bucket;
-    public int idx;
+    Bucket bucket;
+    int idx;
 
     public BucketCommandHandler(CouchbaseMock mock) {
         super(mock);
     }
 
-    @Override
-    protected void handleJson(JsonObject payload)
-    {
+    public void execute(JsonObject payload, Command command) {
         idx = payload.get("idx").getAsInt();
         String bucketStr = "default";
         if (payload.has("bucket")) {

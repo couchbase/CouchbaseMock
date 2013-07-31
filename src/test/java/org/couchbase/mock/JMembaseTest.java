@@ -427,4 +427,27 @@ public class JMembaseTest extends TestCase {
         server.close();
         instance.getMonitor().stop();
     }
+
+    public void testIllegalMockCommand() throws IOException {
+        ServerSocket server = new ServerSocket(0);
+        instance.setupHarakiriMonitor("localhost:" + server.getLocalPort(), false);
+        Socket client = server.accept();
+        InputStream cin = client.getInputStream();
+        OutputStream cout = client.getOutputStream();
+        readInput(cin);
+
+        cout.write("Yo, this should fail!\n".getBytes());
+        assertFalse(readResponse(cin));
+    }
+
+    public void testUnknownMockCommand() throws IOException {
+        ServerSocket server = new ServerSocket(0);
+        instance.setupHarakiriMonitor("localhost:" + server.getLocalPort(), false);
+        Socket client = server.accept();
+        InputStream cin = client.getInputStream();
+        OutputStream cout = client.getOutputStream();
+        readInput(cin);
+        cout.write("{ \"command\" : \"foo\" }\n".getBytes());
+        assertFalse(readResponse(cin));
+    }
 }

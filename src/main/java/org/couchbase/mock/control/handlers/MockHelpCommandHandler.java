@@ -15,7 +15,9 @@
  */
 package org.couchbase.mock.control.handlers;
 
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -49,7 +51,7 @@ public class MockHelpCommandHandler extends MockCommand {
     }
 
     @Override
-    public void execute() {
+    public void execute(JsonObject payload, Command command) {
 
     }
 
@@ -62,6 +64,6 @@ public class MockHelpCommandHandler extends MockCommand {
         Map<String,Object> ret = new HashMap<String, Object>();
         ret.put("commands", helpInfo);
         ret.put("status", "ERR");
-        return gs.toJson(ret);
+        return (new Gson()).toJson(ret);
     }
 }

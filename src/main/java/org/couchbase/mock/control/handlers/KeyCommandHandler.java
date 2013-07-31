@@ -29,17 +29,16 @@ import org.couchbase.mock.memcached.VBucketInfo;
  * @author Mark Nunberg <mnunberg@haskalah.org>
  */
 public abstract class KeyCommandHandler extends MockCommand {
-    protected KeySpec keySpec;
-    protected Bucket bucket;
-    protected VBucketInfo vbi;
+    KeySpec keySpec;
+    Bucket bucket;
+    VBucketInfo vbi;
 
     public KeyCommandHandler(CouchbaseMock m) {
         super(m);
     }
 
     @Override
-    protected void handleJson(JsonObject json) {
-        super.handleJson(json);
+    public void execute(JsonObject payload, Command command) {
         short vbIndex = -1;
         String key;
 
@@ -68,6 +67,5 @@ public abstract class KeyCommandHandler extends MockCommand {
 
         keySpec = new KeySpec(key, vbIndex);
         vbi = bucket.getVBucketInfo()[keySpec.vbId];
-
     }
 }

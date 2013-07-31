@@ -18,6 +18,7 @@ package org.couchbase.mock.control.handlers;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.google.gson.JsonObject;
 import org.couchbase.mock.Bucket;
 import org.couchbase.mock.CouchbaseMock;
 import org.couchbase.mock.control.MockCommand;
@@ -28,7 +29,7 @@ public abstract class ServersCommandHandler extends MockCommand {
     abstract void doServerCommand(MemcachedServer server);
 
     @Override
-    public void execute() {
+    public void execute(JsonObject payload, Command command) {
         Set<MemcachedServer> servers = new HashSet<MemcachedServer>();
         for (Bucket bucket : mock.getBuckets().values()) {
             for (MemcachedServer server : bucket.getServers()) {

@@ -19,6 +19,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import org.couchbase.mock.CouchbaseMock;
 import org.couchbase.mock.memcached.Item;
 import org.couchbase.mock.memcached.KeySpec;
@@ -76,7 +79,8 @@ public class KeyInfoCommandHandler extends KeyCommandHandler {
     }
 
     @Override
-    public void execute() {
+    public void execute(JsonObject payload, Command command) {
+        super.execute(payload, command);
         List<Object> infoList = new ArrayList<Object>();
         List<MemcachedServer> vbiServers = vbi.getAllServers();
 
@@ -90,7 +94,7 @@ public class KeyInfoCommandHandler extends KeyCommandHandler {
             infoList.add(skInfo);
         }
 
-        result = gs.toJson(infoList);
+        result = (new Gson()).toJson(infoList);
     }
 
     @Override

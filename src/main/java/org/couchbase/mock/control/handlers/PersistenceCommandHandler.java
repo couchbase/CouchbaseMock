@@ -15,12 +15,15 @@
  */
 package org.couchbase.mock.control.handlers;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import java.security.AccessControlException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.google.gson.JsonObject;
 import org.couchbase.mock.CouchbaseMock;
 import org.couchbase.mock.memcached.*;
 
@@ -32,7 +35,7 @@ public class PersistenceCommandHandler extends KeyCommandHandler {
 
     private String error = null;
 
-    private void executeReal() {
+    private void executeReal(JsonObject payload, Command command) {
         String value = "1029384756";
         long cas = 0;
         boolean onMaster;
@@ -143,9 +146,10 @@ public class PersistenceCommandHandler extends KeyCommandHandler {
     }
 
     @Override
-    public void execute() {
+    public void execute(JsonObject payload, Command command) {
+        super.execute(payload, command);
         try {
-            executeReal();
+            executeReal(payload, command);
         } catch (AccessControlException e) {
             error = e.getMessage();
         }
@@ -158,7 +162,7 @@ public class PersistenceCommandHandler extends KeyCommandHandler {
         }
         Map<String,String> errInfo = new HashMap<String, String>();
         errInfo.put("status", error);
-        return gs.toJson(errInfo);
+        return (new Gson()).toJson(errInfo);
     }
 
     public PersistenceCommandHandler(CouchbaseMock mock) {

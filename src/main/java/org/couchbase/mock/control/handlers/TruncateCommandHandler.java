@@ -25,8 +25,9 @@ public class TruncateCommandHandler extends ServersCommandHandler {
     private int truncateLimit;
 
     @Override
-    protected void handleJson(JsonObject payload) {
+    public void execute(JsonObject payload, Command command) {
         truncateLimit = payload.get("limit").getAsInt();
+        super.execute(payload, command);
     }
 
     @Override

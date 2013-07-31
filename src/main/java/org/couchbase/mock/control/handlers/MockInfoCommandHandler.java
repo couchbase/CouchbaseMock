@@ -16,6 +16,9 @@
 package org.couchbase.mock.control.handlers;
 
 import java.util.*;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import org.couchbase.mock.CouchbaseMock;
 import org.couchbase.mock.control.MockCommand;
 import org.couchbase.mock.control.MockCommandDispatcher;
@@ -31,7 +34,7 @@ public class MockInfoCommandHandler extends MockCommand {
     private final Map<String,Object> result = new HashMap<String, Object>();
 
     @Override
-    public void execute() {
+    public void execute(JsonObject payload, Command command) {
         List<String> mcCaps = new ArrayList<String>();
         for (CommandCode cc : CommandCode.values()) {
             mcCaps.add(cc.toString());
@@ -48,7 +51,7 @@ public class MockInfoCommandHandler extends MockCommand {
 
     @Override
     public String getResponse() {
-        return gs.toJson(result);
+        return (new Gson()).toJson(result);
     }
 
     public MockInfoCommandHandler(CouchbaseMock m) {

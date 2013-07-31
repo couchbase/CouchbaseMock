@@ -31,9 +31,10 @@ public class HiccupCommandHandler extends ServersCommandHandler {
     private int offset;
 
     @Override
-    protected void handleJson(JsonObject payload) {
+    public void execute(JsonObject payload, Command command) {
         milliSeconds = payload.get("msecs").getAsInt();
         offset = payload.get("offset").getAsInt();
+        super.execute(payload, command);
     }
 
     @Override

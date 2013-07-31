@@ -88,7 +88,6 @@ public class MockCommandDispatcher {
 
         try {
             obj = (MockCommand) cls.getConstructor(CouchbaseMock.class).newInstance(mock);
-            obj.command = cmd;
         } catch (InstantiationException e) {
             throw new RuntimeException(e);
         } catch (IllegalAccessException e) {
@@ -99,10 +98,7 @@ public class MockCommandDispatcher {
             throw new RuntimeException(e);
         }
 
-        obj.payload = payload;
-        obj.handleJson(obj.payload);
-
-        obj.execute();
+        obj.execute(payload, cmd);
 
         return obj;
     }
@@ -139,11 +135,12 @@ public class MockCommandDispatcher {
             payload = object.get("payload").getAsJsonObject();
         }
 
-        MockCommand cmd = getCommand(command, payload);
-        if (cmd.canRespond()) {
-            return cmd.getResponse();
-        } else {
-            return null;
+        try {
+            return getCommand(command, payload).getResponse();
+        } catch (CommandNotFoundException ex) {
+            return "{\"status\" : \"fail\", \"error\" : \"No such command\"}";
+        } catch (Throwable t) {
+            return "{\"status\" : \"fail\", \"error\" : \"An exception (" + t.getClass().getCanonicalName() + ") occurred\"}";
         }
     }
 }
