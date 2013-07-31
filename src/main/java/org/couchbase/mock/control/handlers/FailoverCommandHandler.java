@@ -13,19 +13,19 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package org.couchbase.mock.control;
-
-import java.util.List;
+package org.couchbase.mock.control.handlers;
 
 import org.couchbase.mock.CouchbaseMock;
 
-/**
- * This provides an interface for mock commands. They are all issued by providing
- * ','-delimited tokens.
- *
- * @author M. Nunberg
- */
-public interface MockControlCommandHandler {
+public class FailoverCommandHandler extends BucketCommandHandler {
 
-    abstract void execute(CouchbaseMock mock, List<String> tokens);
+    @Override
+    public void execute() {
+        bucket.failover(idx);
+    }
+
+    public FailoverCommandHandler(CouchbaseMock m) {
+        super(m);
+    }
+
 }

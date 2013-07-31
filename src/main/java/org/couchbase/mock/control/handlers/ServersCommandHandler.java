@@ -13,18 +13,17 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package org.couchbase.mock.control;
+package org.couchbase.mock.control.handlers;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.couchbase.mock.Bucket;
 import org.couchbase.mock.CouchbaseMock;
-import org.couchbase.mock.harakiri.HarakiriCommand;
+import org.couchbase.mock.control.MockCommand;
 import org.couchbase.mock.memcached.MemcachedServer;
 
-public abstract class ServersCommandHandler extends HarakiriCommand {
+public abstract class ServersCommandHandler extends MockCommand {
 
     abstract void doServerCommand(MemcachedServer server);
 

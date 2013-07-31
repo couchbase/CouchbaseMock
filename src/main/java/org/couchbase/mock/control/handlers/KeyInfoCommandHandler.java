@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.couchbase.mock.control;
+package org.couchbase.mock.control.handlers;
 
 import java.util.ArrayList;
 import java.util.HashMap;

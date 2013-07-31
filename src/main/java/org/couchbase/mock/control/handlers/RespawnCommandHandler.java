@@ -13,19 +13,18 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package org.couchbase.mock.control;
+package org.couchbase.mock.control.handlers;
 
 import org.couchbase.mock.CouchbaseMock;
 
-public class FailoverCommandHandler extends BucketCommandHandler {
+public class RespawnCommandHandler extends BucketCommandHandler {
 
     @Override
     public void execute() {
-        bucket.failover(idx);
+        bucket.respawn(idx);
     }
 
-    public FailoverCommandHandler(CouchbaseMock m) {
-        super(m);
+    public RespawnCommandHandler(CouchbaseMock mock) {
+        super(mock);
     }
-
 }

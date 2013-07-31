@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.couchbase.mock.control;
+package org.couchbase.mock.control.handlers;
 
-import org.couchbase.mock.harakiri.HarakiriCommand;
 import com.google.gson.JsonObject;
 import java.security.AccessControlException;
 import org.couchbase.mock.Bucket;
 import org.couchbase.mock.CouchbaseMock;
-import org.couchbase.mock.harakiri.MissingRequiredFieldException;
+import org.couchbase.mock.control.MissingRequiredFieldException;
+import org.couchbase.mock.control.MockCommand;
 import org.couchbase.mock.memcached.KeySpec;
 import org.couchbase.mock.memcached.VBucketInfo;
 
@@ -28,7 +28,7 @@ import org.couchbase.mock.memcached.VBucketInfo;
  *
  * @author Mark Nunberg <mnunberg@haskalah.org>
  */
-public abstract class KeyCommandHandler extends HarakiriCommand {
+public abstract class KeyCommandHandler extends MockCommand {
     protected KeySpec keySpec;
     protected Bucket bucket;
     protected VBucketInfo vbi;

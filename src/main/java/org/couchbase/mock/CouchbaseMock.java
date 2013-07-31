@@ -16,7 +16,7 @@
 package org.couchbase.mock;
 
 import com.sun.net.httpserver.HttpServer;
-import java.io.BufferedReader;
+
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.List;
@@ -32,7 +32,7 @@ import java.util.concurrent.Executors;
 
 import org.couchbase.mock.harakiri.HarakiriMonitor;
 import org.couchbase.mock.Bucket.BucketType;
-import org.couchbase.mock.harakiri.HarakiriDispatcher;
+import org.couchbase.mock.control.MockCommandDispatcher;
 import org.couchbase.mock.http.Authenticator;
 import org.couchbase.mock.http.ControlHandler;
 import org.couchbase.mock.http.PoolsHandler;
@@ -57,7 +57,7 @@ public class CouchbaseMock {
     private ArrayList<Thread> nodeThreads;
     private final CountDownLatch startupLatch = new CountDownLatch(1);
     private HarakiriMonitor harakiriMonitor;
-    private HarakiriDispatcher controlDispatcher;
+    private MockCommandDispatcher controlDispatcher;
 
     public void setupHarakiriMonitor(String host, boolean terminate) throws IOException {
         int idx = host.indexOf(':');
@@ -86,7 +86,7 @@ public class CouchbaseMock {
         return harakiriMonitor;
     }
 
-    public HarakiriDispatcher getDispatcher() {
+    public MockCommandDispatcher getDispatcher() {
         return controlDispatcher;
     }
 
@@ -160,7 +160,7 @@ public class CouchbaseMock {
             buckets.put(bucket.getName(), bucket);
         }
         authenticator = new Authenticator("Administrator", "password", buckets);
-        controlDispatcher = new HarakiriDispatcher(this);
+        controlDispatcher = new MockCommandDispatcher(this);
     }
 
     public void waitForStartup() throws InterruptedException {

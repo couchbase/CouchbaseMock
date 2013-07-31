@@ -13,36 +13,28 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package org.couchbase.mock.control;
+package org.couchbase.mock.control.handlers;
 
 import com.google.gson.JsonObject;
-import java.util.List;
 import org.couchbase.mock.CouchbaseMock;
 
 import org.couchbase.mock.memcached.MemcachedServer;
 
-/**
- * Hiccup will let all servers sleep after sending a specific amount of data.
- *
- * @author M. Nunberg
- */
-public class HiccupCommandHandler extends ServersCommandHandler {
+public class TruncateCommandHandler extends ServersCommandHandler {
 
-    private int milliSeconds;
-    private int offset;
+    private int truncateLimit;
 
     @Override
     protected void handleJson(JsonObject payload) {
-        milliSeconds = payload.get("msecs").getAsInt();
-        offset = payload.get("offset").getAsInt();
+        truncateLimit = payload.get("limit").getAsInt();
     }
 
     @Override
     void doServerCommand(MemcachedServer server) {
-        server.setHiccup(milliSeconds, offset);
+        server.setTruncateLimit(truncateLimit);
     }
 
-    public HiccupCommandHandler(CouchbaseMock m) {
+    public TruncateCommandHandler(CouchbaseMock m) {
         super(m);
     }
 }

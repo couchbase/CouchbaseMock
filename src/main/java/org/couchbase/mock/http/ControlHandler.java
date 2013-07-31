@@ -21,22 +21,23 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import java.io.*;
 import java.net.URLDecoder;
-import org.couchbase.mock.harakiri.CommandNotFoundException;
-import org.couchbase.mock.harakiri.HarakiriCommand;
-import org.couchbase.mock.harakiri.HarakiriDispatcher;
-import org.couchbase.mock.harakiri.HarakiriHelpCommand;
+
+import org.couchbase.mock.control.CommandNotFoundException;
+import org.couchbase.mock.control.MockCommandDispatcher;
+import org.couchbase.mock.control.handlers.MockHelpCommandHandler;
+import org.couchbase.mock.control.MockCommand;
 
 /**
  *
  * @author Mark Nunberg <mnunberg@haskalah.org>
  */
 public class ControlHandler implements HttpHandler {
-    private final HarakiriDispatcher dispatcher;
+    private final MockCommandDispatcher dispatcher;
 
     private static class InvalidQueryException extends Exception { }
     private class WantHelpException extends Exception { }
 
-    public ControlHandler(HarakiriDispatcher dispatcher) {
+    public ControlHandler(MockCommandDispatcher dispatcher) {
         this.dispatcher = dispatcher;
 
     }
@@ -80,7 +81,7 @@ public class ControlHandler implements HttpHandler {
      */
     private static void sendHelpText(HttpExchange exchange, int code) throws IOException {
 
-        byte[] ret = HarakiriHelpCommand.getIndentedHelp().getBytes();
+        byte[] ret = MockHelpCommandHandler.getIndentedHelp().getBytes();
         exchange.sendResponseHeaders(code, ret.length);
         exchange.getResponseBody().write(ret);
     }
@@ -121,7 +122,7 @@ public class ControlHandler implements HttpHandler {
             JsonObject payload = parseQueryParams(exchange);
             String cmdStr = components[1];
 
-            HarakiriCommand cmd = dispatcher.getCommand(
+            MockCommand cmd = dispatcher.getCommand(
                     cmdStr, payload);
 
             byte[] response = cmd.getResponse().getBytes();

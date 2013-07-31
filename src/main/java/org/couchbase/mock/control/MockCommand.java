@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.couchbase.mock.harakiri;
+package org.couchbase.mock.control;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import java.util.*;
@@ -22,7 +22,7 @@ import org.couchbase.mock.CouchbaseMock;
  *
  * @author mnunberg
  */
-public abstract class HarakiriCommand {
+public abstract class MockCommand {
     public enum Command {
         FAILOVER,
         RESPAWN,
@@ -62,7 +62,7 @@ public abstract class HarakiriCommand {
         return command;
     }
 
-    public HarakiriCommand(CouchbaseMock mock) {
+    public MockCommand(CouchbaseMock mock) {
         this.mock = mock;
     }
 

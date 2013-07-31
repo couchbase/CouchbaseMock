@@ -13,18 +13,19 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-package org.couchbase.mock.control;
+package org.couchbase.mock.control.handlers;
+
+import java.util.List;
 
 import org.couchbase.mock.CouchbaseMock;
 
-public class RespawnCommandHandler extends BucketCommandHandler {
+/**
+ * This provides an interface for mock commands. They are all issued by providing
+ * ','-delimited tokens.
+ *
+ * @author M. Nunberg
+ */
+public interface MockControlCommandHandler {
 
-    @Override
-    public void execute() {
-        bucket.respawn(idx);
-    }
-
-    public RespawnCommandHandler(CouchbaseMock mock) {
-        super(mock);
-    }
+    abstract void execute(CouchbaseMock mock, List<String> tokens);
 }

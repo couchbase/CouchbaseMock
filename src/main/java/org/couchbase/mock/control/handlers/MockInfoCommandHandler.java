@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.couchbase.mock.control;
+package org.couchbase.mock.control.handlers;
 
-import org.couchbase.mock.harakiri.HarakiriCommand;
-import com.google.gson.JsonObject;
 import java.util.*;
 import org.couchbase.mock.CouchbaseMock;
-import org.couchbase.mock.harakiri.HarakiriDispatcher;
+import org.couchbase.mock.control.MockCommand;
+import org.couchbase.mock.control.MockCommandDispatcher;
 import org.couchbase.mock.memcached.protocol.CommandCode;
 
 /**
@@ -28,7 +27,7 @@ import org.couchbase.mock.memcached.protocol.CommandCode;
  *
  * @author Mark Nunberg <mnunberg@haskalah.org>
  */
-public class MockInfoCommandHandler extends HarakiriCommand {
+public class MockInfoCommandHandler extends MockCommand {
     private final Map<String,Object> result = new HashMap<String, Object>();
 
     @Override
@@ -40,7 +39,7 @@ public class MockInfoCommandHandler extends HarakiriCommand {
         result.put("MEMCACHED", mcCaps);
 
         List<String> mockCaps = new ArrayList<String>();
-        for (String key : HarakiriDispatcher.commandMap.keySet()) {
+        for (String key : MockCommandDispatcher.commandMap.keySet()) {
             mockCaps.add(key);
         }
 

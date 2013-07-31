@@ -15,28 +15,33 @@
  */
 package org.couchbase.mock.harakiri;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.*;
+import java.util.Observable;
 
 import org.couchbase.mock.CouchbaseMock;
+import org.couchbase.mock.control.MockCommandDispatcher;
 
+/**
+ * The HarakiriMonitor started off as a class that was designed to
+ * make sure that the mock server would be detecting if the process
+ * utilizing it "died" so that it would perform a harakiri.
+ *
+ * Later on we wanted to send commands to the Mock server over this
+ * connection, which sort of made the name misleading...
+ */
 public class HarakiriMonitor extends Observable implements Runnable {
 
     private final boolean terminate;
     private BufferedReader input;
     private OutputStream output;
     private Thread thread;
-    private final HarakiriDispatcher dispatcher;
-    private static final Gson gs = new Gson();
+    private final MockCommandDispatcher dispatcher;
 
-    public HarakiriMonitor(String host, int port, boolean terminate, HarakiriDispatcher dispatcher) throws IOException {
+    public HarakiriMonitor(String host, int port, boolean terminate, MockCommandDispatcher dispatcher) throws IOException {
         this.dispatcher = dispatcher;
         this.terminate = terminate;
         Socket sock = new Socket(host, port);
@@ -51,30 +56,6 @@ public class HarakiriMonitor extends Observable implements Runnable {
 
     public void stop() {
         thread.interrupt();
-    }
-
-    private HarakiriCommand dispatchMockCommand(String s) {
-        Object payloadObj;
-        JsonObject payload;
-        ArrayList<String> compat;
-        String cmdstr;
-        HarakiriCommand ret;
-
-        // JSON
-        JsonObject o = gs.fromJson(s, JsonObject.class);
-        cmdstr = o.get("command").getAsString();
-        if (!o.has("payload")) {
-            payload = new JsonObject();
-        } else {
-            payload = o.get("payload").getAsJsonObject();
-        }
-        payloadObj = payload;
-
-        ret = dispatcher.getCommand(cmdstr, payloadObj);
-
-        setChanged();
-        notifyObservers();
-        return ret;
     }
 
     @Override
@@ -98,9 +79,12 @@ public class HarakiriMonitor extends Observable implements Runnable {
                 if (packet == null) {
                     closed = true;
                 } else {
-                    HarakiriCommand cmd = dispatchMockCommand(packet);
-                    if (cmd.canRespond()) {
-                        output.write((cmd.getResponse() + "\n").getBytes());
+                    String response = dispatcher.processInput(packet);
+                    setChanged();
+                    notifyObservers();
+
+                    if (response != null) {
+                        output.write((response + "\n").getBytes());
                         output.flush();
                     }
                 }
