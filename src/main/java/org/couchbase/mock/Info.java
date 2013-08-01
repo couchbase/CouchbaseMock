@@ -15,6 +15,8 @@
  */
 package org.couchbase.mock;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 /**
  * The Info class is used to have somewhere to store basic information
  * about the Couchbase Mock
@@ -37,6 +39,17 @@ public final class Info {
     public static String getFullVersion() {
         return "CouchbaseMock v" + VERSION;
     }
+
+    private static final AtomicLong clockOffset = new AtomicLong();
+
+    public static void timeTravel(long offset) {
+        clockOffset.addAndGet(offset);
+    }
+
+    public static long getClockOffset() {
+        return clockOffset.get();
+    }
+
 
     private Info() {
     }

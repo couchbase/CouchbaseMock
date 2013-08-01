@@ -53,6 +53,7 @@ public abstract class MockCommand {
         PURGE,
 
         KEYINFO,
+        TIME_TRAVEL,
         HELP
     }
 

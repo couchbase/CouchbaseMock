@@ -188,6 +188,27 @@ Parameters:
 
 Setting the _limit_ to _0_ disables _truncate_
 
+### Time Travel
+
+This command moves the internal clock in the server. The primary purpose
+for this is to allow the clients to test TTL without having to "sleep".
+Names in *bold* are *required*
+
+Parameters:
+
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Meaning</th>
+        <th>Type</th>
+    </tr>
+    <tr>
+        <td><b>Offset</b></td>
+        <td>The number of seconds to add to the internal clock</td>
+        <td>JSON Number</td>
+    </tr>
+</table>
+
 ## Key Access Commands
 
 ### Concepts

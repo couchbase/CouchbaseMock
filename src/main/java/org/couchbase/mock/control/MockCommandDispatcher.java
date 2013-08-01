@@ -57,6 +57,7 @@ public class MockCommandDispatcher {
         registerClass(MockCommand.Command.ENDURE, PersistenceCommandHandler.class);
         registerClass(MockCommand.Command.PURGE, PersistenceCommandHandler.class);
         registerClass(MockCommand.Command.KEYINFO, KeyInfoCommandHandler.class);
+        registerClass(MockCommand.Command.TIME_TRAVEL, TimeTravelCommandHandler.class);
         registerClass(MockCommand.Command.HELP, MockHelpCommandHandler.class);
     }
 
@@ -127,7 +128,7 @@ public class MockCommandDispatcher {
             return "{ \"status\" : \"fail\", \"error\" : \"Failed to parse input\" }";
         }
 
-        String command = object.get("command").getAsString();
+        String command = object.get("command").getAsString().replaceAll(" ", "_");
         JsonObject payload;
         if (!object.has("payload")) {
             payload = new JsonObject();

@@ -18,6 +18,9 @@ package org.couchbase.mock.memcached;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.couchbase.mock.CouchbaseMock;
+import org.couchbase.mock.Info;
 import org.couchbase.mock.memcached.protocol.ErrorCode;
 
 /**
@@ -44,10 +47,9 @@ public class VBucketStore {
             return null;
         }
 
-        long now = new Date().getTime();
+        long now = new Date().getTime() + Info.getClockOffset() * 1000L;
         if (ii.getExpiryTime() == 0 || now < ii.getExpiryTimeInMillis()) {
             return ii;
-
         }
         onItemDelete.onAction(this, ii);
         kv.remove(ks);
@@ -168,11 +170,13 @@ public class VBucketStore {
      * @return The converted value
      */
     public static int convertExpiryTime(int original) {
-        if (original == 0 || original > THIRTY_DAYS) {
+        if (original == 0) {
             return original;
+        } else if (original > THIRTY_DAYS) {
+            return original + (int)Info.getClockOffset();
         }
 
-        return (int)((new Date().getTime() / 1000) + original);
+        return (int)((new Date().getTime() / 1000) + original + Info.getClockOffset());
     }
 
 

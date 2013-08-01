@@ -111,12 +111,13 @@ public class ClientTest extends ClientBaseTest {
         String key = "ttl_key";
         OperationFuture ft = client.set(key, 1, key);
         ft.get();
-        Thread.sleep(1500);
-        assertTrue(client.get(key) == null);
-
+        harakiriOutput.write("{ \"command\" : \"time travel\", \"payload\" : { \"Offset\" : 2 }}\n".getBytes());
+        String response = harakiriInput.readLine();
+        assertEquals("{\"status\":\"ok\"}", response);
+        assertNull(client.get(key));
         ft = client.set(key, 10, key);
         ft.get();
-        assertFalse(client.get(key) == null);
+        assertNotNull(client.get(key));
     }
 
     public void testAppend() throws Exception {
@@ -126,13 +127,13 @@ public class ClientTest extends ClientBaseTest {
         String key = "append_key";
 
         assertTrue(client.set(key, baseStr).get());
-        assertEquals(client.get(key), baseStr);
+        assertEquals(baseStr, client.get(key));
 
         assertTrue(client.append(key, endStr).get());
-        assertEquals(client.get(key), baseStr + endStr);
+        assertEquals(baseStr + endStr, client.get(key));
 
         assertTrue(client.prepend(key, beginStr).get());
-        assertEquals(client.get(key), beginStr + baseStr + endStr);
+        assertEquals(beginStr + baseStr + endStr, client.get(key));
 
         assertTrue(client.delete(key).get());
         OperationFuture ft = client.append(key, "blah blah");
