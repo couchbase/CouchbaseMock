@@ -36,7 +36,7 @@ public class PersistenceCommandHandler extends KeyCommandHandler {
     private String error = null;
 
     private void executeReal(JsonObject payload, Command command) {
-        String value = "1029384756";
+        final String value;
         long cas = 0;
         boolean onMaster;
 
@@ -52,6 +52,8 @@ public class PersistenceCommandHandler extends KeyCommandHandler {
 
         if (payload.has("Value")) {
             value = payload.get("Value").getAsString();
+        } else {
+            value = "";
         }
 
         masterStore = vbi.getOwner().getStorage();

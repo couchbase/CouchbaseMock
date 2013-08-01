@@ -201,14 +201,14 @@ indices are built from "persisted" items only) and the various `OBSERVE` and/or
 durability/persistence-requirement commands as well as get-from-replica.
 
 Note that _Cache_ and _Disk_ represent abstract concepts in the Mock. At the
-time of writing, the Mock does not actually write anything to the dist, but
+time of writing, the Mock does not actually write anything to the disk, but
 merely contains a separate storage domain for "Disk".
 
 Thus, whenever an item is stored in the mock it may go through the following
 steps:
 
 1. The item is inserted into the vBucket master's _Cache_
-2. The item is inserted into the vBucket maseter's _Disk_
+2. The item is inserted into the vBucket master's _Disk_
 3. For each vBucket replica, the item is placed inside its _Cache_
 4. For each vBucket replica, the item is placed inside its _Disk_
 
@@ -248,6 +248,12 @@ They all accept a set of common parameters
         <td>Optional. Number. If not specified, the existing CAS (if the key
             already exists) of each key entry in its respective storage partition
             will be used. Otherwise a new CAS is generated</td>
+    </tr>
+    <tr>
+        <td>Value</td>
+        <td>The new value to use</td>
+        <td>Optional. String. If not specified the items value will be
+            an empty string</td>
     </tr>
     <tr>
         <td>Bucket</td>
