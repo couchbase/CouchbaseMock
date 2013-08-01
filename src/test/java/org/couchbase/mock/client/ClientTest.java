@@ -15,9 +15,6 @@
  */
 package org.couchbase.mock.client;
 
-import java.io.BufferedReader;
-import java.io.OutputStream;
-import java.net.Socket;
 import java.util.*;
 import net.spy.memcached.CASValue;
 import net.spy.memcached.MemcachedNode;
@@ -55,7 +52,7 @@ public class ClientTest extends ClientBaseTest {
         List<OperationFuture> futures = new ArrayList<OperationFuture>();
 
         for (int ii = 0; ii < 100; ii++) {
-            String s = new String("Key_" + ii);
+            String s = "Key_" + ii;
             keyList.add(s);
             futures.add(client.set(s, s));
         }
@@ -95,11 +92,11 @@ public class ClientTest extends ClientBaseTest {
         String key = "observe key";
         OperationFuture ft = client.set(key, key);
         ft.get();
-        Map<MemcachedNode, ObserveResponse> obsResps = client.observe(key, ft.getCas());
-        assertEquals(bconf.numReplicas + 1, obsResps.size());
+        Map<MemcachedNode, ObserveResponse> observeResponseMap = client.observe(key, ft.getCas());
+        assertEquals(bucketConfiguration.numReplicas + 1, observeResponseMap.size());
         boolean foundMaster = false;
         MemcachedNode master = getMasterForKey(key);
-        for (Map.Entry<MemcachedNode,ObserveResponse> kv : obsResps.entrySet()) {
+        for (Map.Entry<MemcachedNode,ObserveResponse> kv : observeResponseMap.entrySet()) {
             byte resp = kv.getValue().getResponse();
             client.observePoll(key, resp, PersistTo.ZERO, ReplicateTo.ZERO, foundMaster);
             assertEquals(ObserveResponse.FOUND_PERSISTED, ObserveResponse.valueOf(resp));
@@ -138,7 +135,7 @@ public class ClientTest extends ClientBaseTest {
         assertEquals(client.get(key), beginStr + baseStr + endStr);
 
         assertTrue(client.delete(key).get());
-        OperationFuture ft = client.append(key, "blahblah");
+        OperationFuture ft = client.append(key, "blah blah");
         ft.get();
         assertFalse(ft.getStatus().isSuccess());
     }

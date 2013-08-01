@@ -120,16 +120,16 @@ public class MockAPITest extends ClientBaseTest {
         // Try something more complicated
         cmd.clear();
         cmd.setName("endure");
-        cmd.set("Key", "helloworld");
-        cmd.set("Value", "newvalue");
+        cmd.set("Key", "hello world");
+        cmd.set("Value", "new value");
         cmd.set("OnMaster", true);
         cmd.set("OnReplicas", 2);
 
         response = sender.transact(cmd);
         assertTrue(response.has("status"));
-        Object result = client.get("helloworld");
+        Object result = client.get("hello world");
         assertNotNull(result);
-        assertEquals("newvalue", (String)result);
+        assertEquals("new value", (String)result);
     }
 
     public void testLineProtocol() throws Exception {

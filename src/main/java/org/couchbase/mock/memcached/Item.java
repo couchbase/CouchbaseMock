@@ -124,6 +124,7 @@ public class Item {
      * @param cas the cas value used to perform the operation
      * @return true if item is *not* locked.
      */
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean ensureUnlocked(long cas)
     {
         if (cas == this.cas) {

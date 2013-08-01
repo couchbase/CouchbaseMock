@@ -65,6 +65,7 @@ public class VBucketInfo {
         return owner;
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean hasAccess(MemcachedServer server) {
         if (server == owner) {
             return true;

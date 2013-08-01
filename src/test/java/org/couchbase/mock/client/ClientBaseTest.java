@@ -40,10 +40,9 @@ import java.util.logging.Logger;
  * @author Mark Nunberg <mnunberg@haskalah.org>
  */
 public abstract class ClientBaseTest extends TestCase {
-    protected final BucketConfiguration bconf = new BucketConfiguration();
+    protected final BucketConfiguration bucketConfiguration = new BucketConfiguration();
     protected BufferedReader harakiriInput;
     protected OutputStream harakiriOutput;
-    private Socket harakiriConnection;
 
     public ClientBaseTest() {}
 
@@ -54,8 +53,7 @@ public abstract class ClientBaseTest extends TestCase {
 
     protected MemcachedNode getMasterForKey(String key) {
         VBucketNodeLocator locator = (VBucketNodeLocator) client.getNodeLocator();
-        MemcachedNode master = locator.getPrimary(key);
-        return master;
+        return locator.getPrimary(key);
     }
 
 
@@ -89,7 +87,7 @@ public abstract class ClientBaseTest extends TestCase {
         mock.setupHarakiriMonitor(hostString, false);
         listenThread.start();
         listenThread.join();
-        harakiriConnection = listener.getClientSocket();
+        Socket harakiriConnection = listener.getClientSocket();
         if (harakiriConnection == null) {
             throw new IOException("Couldn't get client socket");
         }
@@ -115,17 +113,17 @@ public abstract class ClientBaseTest extends TestCase {
         Logger.getLogger("net.spy.memcached").setLevel(Level.WARNING);
         Logger.getLogger("com.couchbase.client").setLevel(Level.WARNING);
         Logger.getLogger("com.couchbase.client.vbucket").setLevel(Level.WARNING);
-    };
+    }
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        bconf.numNodes = 10;
-        bconf.numReplicas = 2;
-        bconf.name = "default";
-        bconf.type = BucketType.COUCHBASE;
+        bucketConfiguration.numNodes = 10;
+        bucketConfiguration.numReplicas = 2;
+        bucketConfiguration.name = "default";
+        bucketConfiguration.type = BucketType.COUCHBASE;
         ArrayList configList = new ArrayList<BucketConfiguration>();
-        configList.add(bconf);
+        configList.add(bucketConfiguration);
         mock = new CouchbaseMock(0, configList);
         mock.start();
         mock.waitForStartup();
@@ -133,7 +131,7 @@ public abstract class ClientBaseTest extends TestCase {
 
         List<URI> uriList = new ArrayList<URI>();
         uriList.add(new URI("http", null, "localhost", mock.getHttpPort(), "/pools", "", ""));
-        connectionFactory = cfb.buildCouchbaseConnection(uriList, bconf.name, bconf.password);
+        connectionFactory = cfb.buildCouchbaseConnection(uriList, bucketConfiguration.name, bucketConfiguration.password);
         client = new CouchbaseClient(connectionFactory);
     }
 
@@ -141,6 +139,8 @@ public abstract class ClientBaseTest extends TestCase {
     protected void tearDown() throws Exception {
         client.shutdown();
         mock.stop();
+        try { harakiriInput.close();} catch (IOException e) {}
+        try { harakiriOutput.close(); } catch (IOException e) {}
         super.tearDown();
     }
 }

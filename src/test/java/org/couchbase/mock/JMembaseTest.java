@@ -432,22 +432,22 @@ public class JMembaseTest extends TestCase {
         ServerSocket server = new ServerSocket(0);
         instance.setupHarakiriMonitor("localhost:" + server.getLocalPort(), false);
         Socket client = server.accept();
-        InputStream cin = client.getInputStream();
-        OutputStream cout = client.getOutputStream();
-        readInput(cin);
+        InputStream input = client.getInputStream();
+        OutputStream output = client.getOutputStream();
+        readInput(input);
 
-        cout.write("Yo, this should fail!\n".getBytes());
-        assertFalse(readResponse(cin));
+        output.write("Yo, this should fail!\n".getBytes());
+        assertFalse(readResponse(input));
     }
 
     public void testUnknownMockCommand() throws IOException {
         ServerSocket server = new ServerSocket(0);
         instance.setupHarakiriMonitor("localhost:" + server.getLocalPort(), false);
         Socket client = server.accept();
-        InputStream cin = client.getInputStream();
-        OutputStream cout = client.getOutputStream();
-        readInput(cin);
-        cout.write("{ \"command\" : \"foo\" }\n".getBytes());
-        assertFalse(readResponse(cin));
+        InputStream input = client.getInputStream();
+        OutputStream output = client.getOutputStream();
+        readInput(input);
+        output.write("{ \"command\" : \"foo\" }\n".getBytes());
+        assertFalse(readResponse(input));
     }
 }

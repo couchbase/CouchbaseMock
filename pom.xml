@@ -4,6 +4,7 @@
   <groupId>org.couchbase.mock</groupId>
   <artifactId>CouchbaseMock</artifactId>
   <packaging>jar</packaging>
+  <!-- Please update src/main/java/org/couchbase/mock/Info.java when you change the version number -->
   <version>0.5-SNAPSHOT</version>
   <name>CouchbaseMock</name>
   <url>http://maven.apache.org</url>

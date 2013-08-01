@@ -200,7 +200,7 @@ public class CouchbaseMock {
         int port = 8091;
         int nodes = 100;
         int vbuckets = 4096;
-        String harakirimonitor = null;
+        String harakiriMonitorAddress = null;
         String hostname = null;
         String bucketsSpec = null;
         int replicaCount = -1;
@@ -234,7 +234,7 @@ public class CouchbaseMock {
                 if (idx == -1) {
                     System.err.println("ERROR: --harakiri-monitor requires host:port");
                 }
-                harakirimonitor = e.value;
+                harakiriMonitorAddress = e.value;
             } else if (e.key.equals("-?") || e.key.equals("--help")) {
                 System.out.println("Usage: --host=hostname --buckets=bucketsSpec --port=REST-port --nodes=#nodes --vbuckets=#vbuckets --harakiri-monitor=host:port --replicas=#replicas");
                 System.out.println("  Default values: REST-port:    8091");
@@ -252,8 +252,8 @@ public class CouchbaseMock {
 
         try {
             CouchbaseMock mock = new CouchbaseMock(hostname, port, nodes, 0, vbuckets, bucketsSpec, replicaCount);
-            if (harakirimonitor != null) {
-                mock.setupHarakiriMonitor(harakirimonitor, true);
+            if (harakiriMonitorAddress != null) {
+                mock.setupHarakiriMonitor(harakiriMonitorAddress, true);
             }
             mock.start();
         } catch (Exception e) {

@@ -27,6 +27,7 @@ public class BucketConfiguration {
     public int port = 0;
     public int bucketStartPort = 0;
 
+    @SuppressWarnings("SimplifiableIfStatement")
     public boolean validate() {
         if (name ==  null) {
             return false;

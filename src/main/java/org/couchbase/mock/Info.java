@@ -13,20 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.couchbase.mock.memcached;
-
-import org.couchbase.mock.Info;
-import org.couchbase.mock.memcached.protocol.BinaryCommand;
-import org.couchbase.mock.memcached.protocol.BinaryVersionResponse;
+package org.couchbase.mock;
 
 /**
- * Implementation of version command
- *
- * @author Trond Norbye <trond.norbye@gmail.com>
+ * The Info class is used to have somewhere to store basic information
+ * about the Couchbase Mock
  */
-class VersionCommandExecutor implements CommandExecutor {
-    @Override
-    public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
-        client.sendResponse(new BinaryVersionResponse(cmd, Info.getFullVersion()));
+public final class Info {
+    private static final String VERSION = "0.5-SNAPSHOT";
+
+    /**
+     * get major version
+     * @return major version
+     */
+    public static String getVersion() {
+        return VERSION;
+    }
+
+    /**
+     * get full version (product vMajor revMinor)
+     * @return full version
+     */
+    public static String getFullVersion() {
+        return "CouchbaseMock v" + VERSION;
+    }
+
+    private Info() {
     }
 }
