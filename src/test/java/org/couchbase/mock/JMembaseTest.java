@@ -18,15 +18,11 @@ package org.couchbase.mock;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.net.HttpURLConnection;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -40,6 +36,7 @@ import java.util.Map;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
+import org.couchbase.mock.client.*;
 import org.couchbase.mock.util.Base64;
 import org.couchbase.mock.harakiri.HarakiriMonitor;
 
@@ -342,55 +339,11 @@ public class JMembaseTest extends TestCase {
         }
     }
 
-    private byte[] buildFailoverCommand(int index, String bucket) {
-        Map<String, Object> command = new HashMap<String, Object>();
-        Map<String, Object> payload = new HashMap<String, Object>();
-
-        payload.put("idx", index);
-        if (!bucket.isEmpty()) {
-            payload.put("bucket", bucket);
-        }
-        command.put("command", "failover");
-        command.put("payload", payload);
-        return ((new Gson()).toJson(command) + "\n").getBytes();
-    }
-
-    private byte[] buildRespawnCommand(int index, String bucket) {
-        Map<String, Object> command = new HashMap<String, Object>();
-        Map<String, Object> payload = new HashMap<String, Object>();
-
-        payload.put("idx", index);
-        if (!bucket.isEmpty()) {
-            payload.put("bucket", bucket);
-        }
-        command.put("command", "respawn");
-        command.put("payload", payload);
-        return ((new Gson()).toJson(command) + "\n").getBytes();
-    }
-
-    private byte[] buildHiccupCommand(int msecs, int offset) {
-        Map<String, Object> command = new HashMap<String, Object>();
-        Map<String, Object> payload = new HashMap<String, Object>();
-
-        payload.put("msecs", msecs);
-        payload.put("offset", offset);
-        command.put("command", "hiccup");
-        command.put("payload", payload);
-        return ((new Gson()).toJson(command) + "\n").getBytes();
-    }
-
     @SuppressWarnings("SpellCheckingInspection")
     public void testConfigStreaming() throws IOException {
-        ServerSocket server = new ServerSocket(0);
-        instance.setupHarakiriMonitor("localhost:" + server.getLocalPort(), false);
-        Socket client = server.accept();
-        InputStream cin = client.getInputStream();
-        OutputStream cout = client.getOutputStream();
-        String rport = readInput(cin);
-
-        // Remove NUL. Maybe a better way to do this?
-        assertEquals(rport.replace('\0', ' ').trim(), Integer.toString(port));
-
+        MockClient mock = new MockClient(new InetSocketAddress("localhost", 0));
+        instance.setupHarakiriMonitor("localhost:" + mock.getPort(), false);
+        mock.negotiate();
 
         Bucket bucket = instance.getBuckets().get("protected");
         URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/bucketsStreaming/protected");
@@ -402,29 +355,22 @@ public class JMembaseTest extends TestCase {
         currCfg = readConfig(stream);
         assertEquals(numNodes, bucket.activeServers().size());
 
-        cout.write(buildFailoverCommand(1, "protected"));
-        assertTrue(readResponse(cin));
+        assertTrue(mock.request(new FailoverRequest(1, "protected")).isOk());
         nextCfg = readConfig(stream);
         assertNotSame(currCfg, nextCfg);
         assertEquals(numNodes - 1, bucket.activeServers().size());
         currCfg = nextCfg;
 
-        cout.write(buildRespawnCommand(1, "protected"));
-        assertTrue(readResponse(cin));
+        assertTrue(mock.request(new RespawnRequest(1, "protected")).isOk());
         nextCfg = readConfig(stream);
         assertNotSame(currCfg, nextCfg);
         assertEquals(numNodes, bucket.activeServers().size());
 
-        cout.write(buildHiccupCommand(10000, 20));
-        assertTrue(readResponse(cin));
+        assertTrue(mock.request(new HiccupRequest(10000, 20)).isOk());
+        assertTrue(mock.request(new FailoverRequest(1)).isOk());
+        assertTrue(mock.request(new RespawnRequest(1)).isOk());
+        mock.shutdown();
 
-        cout.write(buildFailoverCommand(1, ""));
-        assertTrue(readResponse(cin));
-
-        cout.write(buildRespawnCommand(1, ""));
-        assertTrue(readResponse(cin));
-
-        server.close();
         instance.getMonitor().stop();
     }
 
@@ -441,13 +387,12 @@ public class JMembaseTest extends TestCase {
     }
 
     public void testUnknownMockCommand() throws IOException {
-        ServerSocket server = new ServerSocket(0);
-        instance.setupHarakiriMonitor("localhost:" + server.getLocalPort(), false);
-        Socket client = server.accept();
-        InputStream input = client.getInputStream();
-        OutputStream output = client.getOutputStream();
-        readInput(input);
-        output.write("{ \"command\" : \"foo\" }\n".getBytes());
-        assertFalse(readResponse(input));
+        MockClient mock = new MockClient(new InetSocketAddress("localhost", 0));
+        instance.setupHarakiriMonitor("localhost:" + mock.getPort(), false);
+        mock.negotiate();
+        MockRequest request = MockRequest.build("foo");
+        MockResponse resp = mock.request(request);
+        assertFalse(resp.isOk());
+        assertNotNull(resp.getErrorMessage());
     }
 }
