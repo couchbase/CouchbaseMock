@@ -65,21 +65,23 @@ public class MockCommandDispatcher {
     // Instance members
     private final CouchbaseMock mock;
 
-    public MockCommand getCommand(String commandString, JsonObject payload) {
+    public MockCommand getCommand(String command, JsonObject payload) {
         MockCommand obj;
 
-        if (!commandMap.containsKey(commandString.toUpperCase())) {
-            throw new CommandNotFoundException("Unknown command: " + commandString);
+        command = command.replaceAll(" ", "_").toUpperCase();
+
+        if (!commandMap.containsKey(command)) {
+            throw new CommandNotFoundException("Unknown command: " + command);
         }
 
         MockCommand.Command cmd;
         Class cls;
 
         try {
-            cmd = MockCommand.Command.valueOf(commandString.toUpperCase());
+            cmd = MockCommand.Command.valueOf(command.toUpperCase());
 
         } catch (IllegalArgumentException e) {
-            throw new CommandNotFoundException("No such command: " + commandString, e);
+            throw new CommandNotFoundException("No such command: " + command, e);
         }
 
         cls = classMap.get(cmd);
@@ -128,7 +130,7 @@ public class MockCommandDispatcher {
             return "{ \"status\" : \"fail\", \"error\" : \"Failed to parse input\" }";
         }
 
-        String command = object.get("command").getAsString().replaceAll(" ", "_");
+        String command = object.get("command").getAsString();
         JsonObject payload;
         if (!object.has("payload")) {
             payload = new JsonObject();

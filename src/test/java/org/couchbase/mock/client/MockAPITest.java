@@ -15,146 +15,50 @@
  */
 package org.couchbase.mock.client;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.IOException;
+import java.net.InetSocketAddress;
 
 /**
  * Tests for the "extended" Mock API.
+ *
  * @author Mark Nunberg <mnunberg@haskalah.org>
  */
 public class MockAPITest extends ClientBaseTest {
+    MockHttpClient mockHttpClient;
 
-    protected class Command {
-        Map<String,Object> commandMap = new HashMap<String, Object>();
-        Map<String,Object> payload = new HashMap<String, Object>();
-
-        void setName(String name) {
-            commandMap.put("command", name);
-        }
-
-        String getName() {
-            return (String)commandMap.get("command");
-        }
-
-        void set(String param, Object value) {
-            payload.put(param, value);
-        }
-
-        void clear() {
-            commandMap.clear();
-            payload.clear();
-            commandMap.put("payload", payload);
-        }
-
-        public Command() {
-            commandMap.put("payload", payload);
-        }
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        mockHttpClient = new MockHttpClient(new InetSocketAddress("localhost", mockClient.getRestPort()));
     }
 
-    private interface CommandSender {
-        JsonObject transact(Command cmd) throws Exception;
+    public void testEndure() throws IOException {
+        assertTrue(mockClient.request(new EndureRequest("key", "value", true, 2)).isOk());
+        assertTrue(mockHttpClient.request(new EndureRequest("key", "value", true, 2)).isOk());
     }
 
+    public void testTimeTravel() throws IOException {
+        assertTrue(mockClient.request(new TimeTravelRequest(1)).isOk());
+        assertTrue(mockClient.request(new TimeTravelRequest(-1)).isOk());
 
-    private static Gson gs = new Gson();
-
-    protected JsonObject jsonLineTxn(Command command) throws Exception {
-        harakiriOutput.write(gs.toJson(command.commandMap).getBytes());
-        harakiriOutput.write('\n');
-
-        String line = harakiriInput.readLine();
-        assertNotNull(line);
-
-        JsonObject ret = gs.fromJson(line, JsonObject.class);
-        assertNotNull(ret);
-
-        return ret;
-    }
-
-    protected JsonObject jsonHttpTxn(Command command) throws Exception {
-        StringBuilder sb = new StringBuilder();
-        sb.append("http://localhost:")
-                .append(mock.getHttpPort())
-                .append("/mock/")
-                .append(command.getName())
-                .append("?");
-
-        for (Map.Entry<String,Object> kv : command.payload.entrySet()) {
-            String jStr = gs.toJson(kv.getValue());
-            jStr = URLEncoder.encode(jStr, "UTF-8");
-            sb.append(kv.getKey()).append('=').append(jStr).append('&');
+        MockResponse res = mockHttpClient.request(new TimeTravelRequest(1));
+        if (!res.isOk()) {
+            System.err.println(res.getErrorMessage());
         }
 
-        int index = sb.lastIndexOf("&");
-        if (index > 0) {
-            sb.deleteCharAt(index);
-        }
-
-        URL url = new URL(sb.toString());
-        HttpURLConnection uc = (HttpURLConnection)url.openConnection();
-        uc.connect();
-
-        sb = new StringBuilder();
-        byte[] buf = new byte[4096];
-        int nr;
-        while ( (nr = uc.getInputStream().read(buf)) != -1) {
-            sb.append(new String(buf, 0, nr));
-        }
-
-
-        return gs.fromJson(sb.toString(), JsonElement.class).getAsJsonObject();
+        assertTrue(mockHttpClient.request(new TimeTravelRequest(1)).isOk());
+        assertTrue(mockHttpClient.request(new TimeTravelRequest(-1)).isOk());
     }
 
-    private void doTestSimpleEndure(CommandSender sender) throws Exception {
-        Command cmd = new Command();
-        cmd.setName("help");
-        JsonObject response = sender.transact(cmd);
-        assertTrue(response.has("status"));
-
-        // Try something more complicated
-        cmd.clear();
-        cmd.setName("endure");
-        cmd.set("Key", "hello world");
-        cmd.set("Value", "new value");
-        cmd.set("OnMaster", true);
-        cmd.set("OnReplicas", 2);
-
-        response = sender.transact(cmd);
-        assertTrue(response.has("status"));
-        Object result = client.get("hello world");
-        assertNotNull(result);
-        assertEquals("new value", (String)result);
+    public void testFailoverRespawn() throws IOException {
+        assertTrue(mockClient.request(new FailoverRequest(1)).isOk());
+        assertTrue(mockClient.request(new RespawnRequest(1)).isOk());
+        assertTrue(mockHttpClient.request(new FailoverRequest(1)).isOk());
+        assertTrue(mockHttpClient.request(new RespawnRequest(1)).isOk());
     }
 
-    public void testLineProtocol() throws Exception {
-        CommandSender sender = new CommandSender() {
-
-            @Override
-            public JsonObject transact(Command cmd) throws Exception {
-                return jsonLineTxn(cmd);
-            }
-        };
-
-        doTestSimpleEndure(sender);
+    public void testHiccup() throws IOException {
+        assertTrue(mockClient.request(new HiccupRequest(100, 10)).isOk());
+        assertTrue(mockHttpClient.request(new HiccupRequest(1000, 10)).isOk());
     }
-
-
-    public void testHttpProtocol() throws Exception {
-        CommandSender sender = new CommandSender() {
-
-            @Override
-            public JsonObject transact(Command cmd) throws Exception {
-                return jsonHttpTxn(cmd);
-            }
-        };
-
-        doTestSimpleEndure(sender);
-    }
-
 }

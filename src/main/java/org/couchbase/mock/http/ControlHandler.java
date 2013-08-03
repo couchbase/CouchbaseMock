@@ -120,10 +120,8 @@ public class ControlHandler implements HttpHandler {
             }
 
             JsonObject payload = parseQueryParams(exchange);
-            String cmdStr = components[1];
-
-            MockCommand cmd = dispatcher.getCommand(
-                    cmdStr, payload);
+            String cmdStr = URLDecoder.decode(components[1], "UTF-8");
+            MockCommand cmd = dispatcher.getCommand(cmdStr, payload);
 
             byte[] response = cmd.getResponse().getBytes();
 

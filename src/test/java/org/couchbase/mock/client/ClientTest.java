@@ -111,9 +111,7 @@ public class ClientTest extends ClientBaseTest {
         String key = "ttl_key";
         OperationFuture ft = client.set(key, 1, key);
         ft.get();
-        harakiriOutput.write("{ \"command\" : \"time travel\", \"payload\" : { \"Offset\" : 2 }}\n".getBytes());
-        String response = harakiriInput.readLine();
-        assertEquals("{\"status\":\"ok\"}", response);
+        assertTrue(mockClient.request(new TimeTravelRequest(2)).isOk());
         assertNull(client.get(key));
         ft = client.set(key, 10, key);
         ft.get();

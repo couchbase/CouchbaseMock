@@ -49,7 +49,7 @@ public class MockHttpClient extends AbstractMockClient {
                 .append(":")
                 .append(this.restAddress.getPort())
                 .append("/mock/")
-                .append(request.getName())
+                .append(URLEncoder.encode(request.getName(), "UTF-8"))
                 .append("?");
         appendPayload(sb, request.getPayload());
         return new URL(sb.toString());

@@ -41,70 +41,18 @@ import java.util.logging.Logger;
  */
 public abstract class ClientBaseTest extends TestCase {
     protected final BucketConfiguration bucketConfiguration = new BucketConfiguration();
-    protected BufferedReader harakiriInput;
-    protected OutputStream harakiriOutput;
-
-    public ClientBaseTest() {}
+    protected MockClient mockClient;
+    protected CouchbaseMock couchbaseMock;
 
     protected final CouchbaseConnectionFactoryBuilder cfb = new CouchbaseConnectionFactoryBuilder();
     protected CouchbaseClient client;
     protected CouchbaseConnectionFactory connectionFactory;
-    protected CouchbaseMock mock;
+
+    public ClientBaseTest() {}
 
     protected MemcachedNode getMasterForKey(String key) {
         VBucketNodeLocator locator = (VBucketNodeLocator) client.getNodeLocator();
         return locator.getPrimary(key);
-    }
-
-
-    private interface Listener extends Runnable {
-        public Socket getClientSocket();
-    }
-
-    private void setupHarakiri() throws Exception {
-        final ServerSocket sock = new ServerSocket(0);
-        final int port = sock.getLocalPort();
-
-        Listener listener = new Listener() {
-            public Socket clientSocket = null;
-
-            @Override public Socket getClientSocket() {
-                return clientSocket;
-            }
-
-            @Override public void run() {
-                try {
-                    clientSocket = sock.accept();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-
-        Thread listenThread = new Thread(listener);
-        String hostString = sock.getInetAddress().getHostAddress() + ":" + port;
-
-        mock.setupHarakiriMonitor(hostString, false);
-        listenThread.start();
-        listenThread.join();
-        Socket harakiriConnection = listener.getClientSocket();
-        if (harakiriConnection == null) {
-            throw new IOException("Couldn't get client socket");
-        }
-
-        harakiriInput = new BufferedReader(
-                new InputStreamReader(harakiriConnection.getInputStream()));
-        harakiriOutput = harakiriConnection.getOutputStream();
-
-        /**
-         * We need to negotiate the port now.
-         */
-        StringBuilder sb = new StringBuilder();
-        char c;
-        while ( (c = (char)harakiriInput.read()) != '\0' ) {
-            sb.append(c);
-        }
-        assertEquals(Integer.parseInt(sb.toString()), mock.getHttpPort());
     }
 
     // Don't make the client flood the screen with log messages..
@@ -124,13 +72,16 @@ public abstract class ClientBaseTest extends TestCase {
         bucketConfiguration.type = BucketType.COUCHBASE;
         ArrayList configList = new ArrayList<BucketConfiguration>();
         configList.add(bucketConfiguration);
-        mock = new CouchbaseMock(0, configList);
-        mock.start();
-        mock.waitForStartup();
-        setupHarakiri();
+        couchbaseMock = new CouchbaseMock(0, configList);
+        couchbaseMock.start();
+        couchbaseMock.waitForStartup();
+
+        mockClient = new MockClient(new InetSocketAddress("localhost", 0));
+        couchbaseMock.setupHarakiriMonitor("localhost:" + mockClient.getPort(), false);
+        mockClient.negotiate();
 
         List<URI> uriList = new ArrayList<URI>();
-        uriList.add(new URI("http", null, "localhost", mock.getHttpPort(), "/pools", "", ""));
+        uriList.add(new URI("http", null, "localhost", couchbaseMock.getHttpPort(), "/pools", "", ""));
         connectionFactory = cfb.buildCouchbaseConnection(uriList, bucketConfiguration.name, bucketConfiguration.password);
         client = new CouchbaseClient(connectionFactory);
     }
@@ -138,9 +89,8 @@ public abstract class ClientBaseTest extends TestCase {
     @Override
     protected void tearDown() throws Exception {
         client.shutdown();
-        mock.stop();
-        try { harakiriInput.close();} catch (IOException e) {}
-        try { harakiriOutput.close(); } catch (IOException e) {}
+        couchbaseMock.stop();
+        mockClient.shutdown();
         super.tearDown();
     }
 }
