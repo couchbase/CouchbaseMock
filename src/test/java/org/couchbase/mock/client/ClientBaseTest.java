@@ -67,7 +67,7 @@ public abstract class ClientBaseTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
         bucketConfiguration.numNodes = 10;
-        bucketConfiguration.numReplicas = 2;
+        bucketConfiguration.numReplicas = 3;
         bucketConfiguration.name = "default";
         bucketConfiguration.type = BucketType.COUCHBASE;
         ArrayList configList = new ArrayList<BucketConfiguration>();

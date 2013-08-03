@@ -15,17 +15,9 @@
  */
 package org.couchbase.mock.client;
 
-public class FailoverRequest extends MockRequest {
-    public FailoverRequest(int index) {
-        this(index, null);
-    }
-    public FailoverRequest(int index, String bucket) {
-        super();
-        payload.put("idx", index);
-        if (bucket != null && !bucket.isEmpty()) {
-            payload.put("bucket", bucket);
-        }
-        command.put("command", "failover");
-        command.put("payload", payload);
+public class KeyInfoRequest extends KeyAccessRequest {
+    public KeyInfoRequest() {
+        super("", "", false, 0, 0, "");
+        throw new RuntimeException("Not implemented yet");
     }
 }

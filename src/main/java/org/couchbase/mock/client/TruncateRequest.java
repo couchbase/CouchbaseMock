@@ -15,17 +15,12 @@
  */
 package org.couchbase.mock.client;
 
-public class FailoverRequest extends MockRequest {
-    public FailoverRequest(int index) {
-        this(index, null);
-    }
-    public FailoverRequest(int index, String bucket) {
+public class TruncateRequest extends MockRequest {
+    public TruncateRequest(int limit) {
         super();
-        payload.put("idx", index);
-        if (bucket != null && !bucket.isEmpty()) {
-            payload.put("bucket", bucket);
-        }
-        command.put("command", "failover");
+        payload.put("limit", limit);
+
+        command.put("command", "truncate");
         command.put("payload", payload);
     }
 }

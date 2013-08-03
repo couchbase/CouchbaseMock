@@ -21,12 +21,13 @@ public class RespawnRequest extends MockRequest {
     }
     public RespawnRequest(int index, String bucket) {
         super();
-        command.put("command", "respawn");
 
         payload.put("idx", index);
         if (bucket != null && !bucket.isEmpty()) {
             payload.put("bucket", bucket);
         }
+
+        command.put("command", "respawn");
         command.put("payload", payload);
     }
 }

@@ -17,6 +17,7 @@ package org.couchbase.mock.client;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 
 /**
  * Tests for the "extended" Mock API.
@@ -35,6 +36,20 @@ public class MockAPITest extends ClientBaseTest {
     public void testEndure() throws IOException {
         assertTrue(mockClient.request(new EndureRequest("key", "value", true, 2)).isOk());
         assertTrue(mockHttpClient.request(new EndureRequest("key", "value", true, 2)).isOk());
+        assertTrue(mockClient.request(new EndureRequest("key", "value", true, 2, "default")).isOk());
+        assertTrue(mockHttpClient.request(new EndureRequest("key", "value", true, 2, "default")).isOk());
+        ArrayList<Integer> replicaId = new ArrayList<Integer>();
+        for (int ii = 0; ii < bucketConfiguration.numReplicas; ++ii) {
+            replicaId.add(ii);
+        }
+        assertTrue(mockClient.request(new EndureRequest("key", "value", true, replicaId)).isOk());
+        assertTrue(mockHttpClient.request(new EndureRequest("key", "value", true, replicaId)).isOk());
+        assertTrue(mockClient.request(new EndureRequest("key", "value", true, replicaId, "default")).isOk());
+        assertTrue(mockHttpClient.request(new EndureRequest("key", "value", true, replicaId, "default")).isOk());
+        // Now verify that we can't endure over the max number..
+        replicaId.add(bucketConfiguration.numReplicas);
+        assertFalse(mockClient.request(new EndureRequest("key", "value", true, replicaId)).isOk());
+        assertFalse(mockClient.request(new EndureRequest("key", "value", true, replicaId, "default")).isOk());
     }
 
     public void testTimeTravel() throws IOException {
@@ -61,4 +76,117 @@ public class MockAPITest extends ClientBaseTest {
         assertTrue(mockClient.request(new HiccupRequest(100, 10)).isOk());
         assertTrue(mockHttpClient.request(new HiccupRequest(1000, 10)).isOk());
     }
+
+    public void testTruncate() throws IOException {
+        assertTrue(mockClient.request(new TruncateRequest(1000)).isOk());
+        assertTrue(mockHttpClient.request(new TruncateRequest(10)).isOk());
+    }
+
+    public void testPersist() throws IOException {
+        assertTrue(mockClient.request(new PersistRequest("key", "value", 0, true, 0)).isOk());
+        assertTrue(mockHttpClient.request(new PersistRequest("key", "value", 0, true, 1)).isOk());
+        assertTrue(mockClient.request(new PersistRequest("key", "value", 0, true, 2, "default")).isOk());
+        assertTrue(mockHttpClient.request(new PersistRequest("key", "value", 0, true, 2, "default")).isOk());
+        ArrayList<Integer> replicaId = new ArrayList<Integer>();
+        for (int ii = 0; ii < bucketConfiguration.numReplicas; ++ii) {
+            replicaId.add(ii);
+        }
+        assertTrue(mockClient.request(new PersistRequest("key", "value", 0, true, replicaId)).isOk());
+        assertTrue(mockHttpClient.request(new PersistRequest("key", "value", 0, true, replicaId)).isOk());
+        assertTrue(mockClient.request(new PersistRequest("key", "value", 0, true, replicaId, "default")).isOk());
+        assertTrue(mockHttpClient.request(new PersistRequest("key", "value", 0, true, replicaId, "default")).isOk());
+        // Now verify that we can't persist over the max number..
+        replicaId.add(bucketConfiguration.numReplicas);
+        assertFalse(mockClient.request(new PersistRequest("key", "value", 0, true, replicaId)).isOk());
+        assertFalse(mockClient.request(new PersistRequest("key", "value", 0, true, replicaId, "default")).isOk());
+
+        // try to set with random cas
+        assertTrue(mockClient.request(new PersistRequest("key", "value", 123, true, 0)).isOk());
+        assertTrue(mockHttpClient.request(new PersistRequest("key", "value", 456, true, 1)).isOk());
+        assertTrue(mockClient.request(new PersistRequest("key", "value", 789, true, 2, "default")).isOk());
+        assertTrue(mockHttpClient.request(new PersistRequest("key", "value", 123, true, 2, "default")).isOk());
+    }
+
+    public void testUnpersist() throws IOException {
+        assertTrue(mockClient.request(new UnpersistRequest("key", true, 0)).isOk());
+        assertTrue(mockHttpClient.request(new UnpersistRequest("key", true, 1)).isOk());
+        assertTrue(mockClient.request(new UnpersistRequest("key", true, 2, "default")).isOk());
+        assertTrue(mockHttpClient.request(new UnpersistRequest("key", true, 2, "default")).isOk());
+        ArrayList<Integer> replicaId = new ArrayList<Integer>();
+        for (int ii = 0; ii < bucketConfiguration.numReplicas; ++ii) {
+            replicaId.add(ii);
+        }
+        assertTrue(mockClient.request(new UnpersistRequest("key", true, replicaId)).isOk());
+        assertTrue(mockHttpClient.request(new UnpersistRequest("key", true, replicaId)).isOk());
+        assertTrue(mockClient.request(new UnpersistRequest("key", true, replicaId, "default")).isOk());
+        assertTrue(mockHttpClient.request(new UnpersistRequest("key", true, replicaId, "default")).isOk());
+        // Now verify that we can't unpersist over the max number..
+        replicaId.add(bucketConfiguration.numReplicas);
+        assertFalse(mockClient.request(new UnpersistRequest("key", true, replicaId)).isOk());
+        assertFalse(mockClient.request(new UnpersistRequest("key", true, replicaId, "default")).isOk());
+    }
+
+    public void testCache() throws IOException {
+        assertTrue(mockClient.request(new CacheRequest("key", "value", 0, true, 0)).isOk());
+        assertTrue(mockHttpClient.request(new CacheRequest("key", "value", 0, true, 1)).isOk());
+        assertTrue(mockClient.request(new CacheRequest("key", "value", 0, true, 2, "default")).isOk());
+        assertTrue(mockHttpClient.request(new CacheRequest("key", "value", 0, true, 2, "default")).isOk());
+        ArrayList<Integer> replicaId = new ArrayList<Integer>();
+        for (int ii = 0; ii < bucketConfiguration.numReplicas; ++ii) {
+            replicaId.add(ii);
+        }
+        assertTrue(mockClient.request(new CacheRequest("key", "value", 0, true, replicaId)).isOk());
+        assertTrue(mockHttpClient.request(new CacheRequest("key", "value", 0, true, replicaId)).isOk());
+        assertTrue(mockClient.request(new CacheRequest("key", "value", 0, true, replicaId, "default")).isOk());
+        assertTrue(mockHttpClient.request(new CacheRequest("key", "value", 0, true, replicaId, "default")).isOk());
+        // Now verify that we can't cache over the max number..
+        replicaId.add(bucketConfiguration.numReplicas);
+        assertFalse(mockClient.request(new CacheRequest("key", "value", 0, true, replicaId)).isOk());
+        assertFalse(mockClient.request(new CacheRequest("key", "value", 0, true, replicaId, "default")).isOk());
+
+        // try to set with random cas
+        assertTrue(mockClient.request(new CacheRequest("key", "value", 123, true, 0)).isOk());
+        assertTrue(mockHttpClient.request(new CacheRequest("key", "value", 456, true, 1)).isOk());
+        assertTrue(mockClient.request(new CacheRequest("key", "value", 789, true, 2, "default")).isOk());
+        assertTrue(mockHttpClient.request(new CacheRequest("key", "value", 123, true, 2, "default")).isOk());
+    }
+
+    public void testUncache() throws IOException {
+        assertTrue(mockClient.request(new UncacheRequest("key", true, 0)).isOk());
+        assertTrue(mockHttpClient.request(new UncacheRequest("key", true, 1)).isOk());
+        assertTrue(mockClient.request(new UncacheRequest("key", true, 2, "default")).isOk());
+        assertTrue(mockHttpClient.request(new UncacheRequest("key", true, 2, "default")).isOk());
+        ArrayList<Integer> replicaId = new ArrayList<Integer>();
+        for (int ii = 0; ii < bucketConfiguration.numReplicas; ++ii) {
+            replicaId.add(ii);
+        }
+        assertTrue(mockClient.request(new UncacheRequest("key", true, replicaId)).isOk());
+        assertTrue(mockHttpClient.request(new UncacheRequest("key", true, replicaId)).isOk());
+        assertTrue(mockClient.request(new UncacheRequest("key", true, replicaId, "default")).isOk());
+        assertTrue(mockHttpClient.request(new UncacheRequest("key", true, replicaId, "default")).isOk());
+        // Now verify that we can't uncache over the max number..
+        replicaId.add(bucketConfiguration.numReplicas);
+        assertFalse(mockClient.request(new UncacheRequest("key", true, replicaId)).isOk());
+        assertFalse(mockClient.request(new UncacheRequest("key", true, replicaId, "default")).isOk());
+    }
+
+    public void testPurge() throws IOException {
+        assertTrue(mockClient.request(new PurgeRequest("key", true, 0)).isOk());
+        assertTrue(mockHttpClient.request(new PurgeRequest("key", true, 1)).isOk());
+        assertTrue(mockClient.request(new PurgeRequest("key", true, 2, "default")).isOk());
+        assertTrue(mockHttpClient.request(new PurgeRequest("key", true, 2, "default")).isOk());
+        ArrayList<Integer> replicaId = new ArrayList<Integer>();
+        for (int ii = 0; ii < bucketConfiguration.numReplicas; ++ii) {
+            replicaId.add(ii);
+        }
+        assertTrue(mockClient.request(new PurgeRequest("key", true, replicaId)).isOk());
+        assertTrue(mockHttpClient.request(new PurgeRequest("key", true, replicaId)).isOk());
+        assertTrue(mockClient.request(new PurgeRequest("key", true, replicaId, "default")).isOk());
+        assertTrue(mockHttpClient.request(new PurgeRequest("key", true, replicaId, "default")).isOk());
+        // Now verify that we can't purge over the max number..
+        replicaId.add(bucketConfiguration.numReplicas);
+        assertFalse(mockClient.request(new PurgeRequest("key", true, replicaId)).isOk());
+        assertFalse(mockClient.request(new PurgeRequest("key", true, replicaId, "default")).isOk());
+    }
+
 }

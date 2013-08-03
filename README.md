@@ -260,7 +260,7 @@ They all accept a set of common parameters
         <td><b>OnReplicas</b></td>
         <td>Which replicas should be affected</td>
         <td>This can either be a number indicating <i>how many</i>
-            replicas to affect; or it can be a list of specific vBucket indices
+            replicas to affect; or it can be a list of specific replica indices
             to affect</td>
     </tr>
     <tr>

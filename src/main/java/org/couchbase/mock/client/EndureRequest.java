@@ -15,7 +15,11 @@
  */
 package org.couchbase.mock.client;
 
-public class EndureRequest extends MockRequest {
+import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
+
+public class EndureRequest extends KeyAccessRequest {
     /**
      * EndureRequest is used to fake the persistence of a key-value pair
      * on a number of nodes.
@@ -25,16 +29,21 @@ public class EndureRequest extends MockRequest {
      * @param onMaster Should it be persisted on the master?
      * @param numReplicas THe number of replicas to persist it
      */
-    public EndureRequest(String key, String value, boolean onMaster, int numReplicas) {
-        super();
-        command.put("command", "endure");
+    public EndureRequest(@NotNull String key, @NotNull String value, boolean onMaster, int numReplicas) {
+        this(key, value, onMaster, numReplicas, "");
+    }
 
-        payload.put("Key", key);
-        if (value != null && !value.isEmpty()) {
-            payload.put("Value", value);
-        }
-        payload.put("OnMaster", onMaster);
-        payload.put("OnReplicas", numReplicas);
-        command.put("payload", payload);
+    public EndureRequest(@NotNull String key, @NotNull String value, boolean onMaster, List<Integer> replicaIds) {
+        this(key, value, onMaster, replicaIds, "");
+    }
+
+    public EndureRequest(@NotNull String key, @NotNull String value, boolean onMaster, int numReplicas, @NotNull String bucket) {
+        super(key, value, onMaster, numReplicas, 0, bucket);
+        command.put("command", "endure");
+    }
+
+    public EndureRequest(@NotNull String key, @NotNull String value, boolean onMaster, List<Integer> replicaIds, @NotNull String bucket) {
+        super(key, value, onMaster, replicaIds, 0, bucket);
+        command.put("command", "endure");
     }
 }
