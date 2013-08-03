@@ -16,7 +16,7 @@
 package org.couchbase.mock.client;
 
 import com.google.gson.Gson;
-import com.sun.istack.internal.NotNull;
+import  org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.io.InputStream;
