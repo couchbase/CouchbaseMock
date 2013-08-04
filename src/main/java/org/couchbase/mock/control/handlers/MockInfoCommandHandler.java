@@ -51,7 +51,10 @@ public class MockInfoCommandHandler extends MockCommand {
 
     @Override
     public String getResponse() {
-        return (new Gson()).toJson(result);
+        Map<String, Object> ret = new HashMap<String, Object>();
+        ret.put("status", "ok");
+        ret.put("payload", result);
+        return (new Gson()).toJson(ret);
     }
 
     public MockInfoCommandHandler(CouchbaseMock m) {
