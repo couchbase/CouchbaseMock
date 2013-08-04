@@ -209,6 +209,63 @@ Parameters:
     </tr>
 </table>
 
+### keyinfo
+
+This command returns the information about a given key in the mock
+server. Names in *bold* are *required*
+
+Parameters:
+
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Meaning</th>
+        <th>Type</th>
+    </tr>
+    <tr>
+        <td><b>key</b></td>
+        <td>The key to access</td>
+        <td>JSON String</td>
+    </tr>
+    <tr>
+        <td>Bucket</td>
+        <td>The bucket in which the key resides</td>
+        <td>Optional. String. If not specified, <pre>"default"</pre> is used</td>
+    </tr>
+</table>
+
+
+The payload contains a JSON object containing the per-node status
+of a given key. The base object is a JSON array (`[]`). Each element in
+the array is a JSON object containing three fields.
+
+The nodes are ordered according to the server list received in the vBucket
+configuration.
+
+If the server is neither a replica nor a master for the given key, it is
+present as `null`.
+
+* Conf:
+    Configuration information about this node in relation to the keys' vBucket.
+    This is a JSON object containing two subfields:
+
+    * Index - the server index in the vBucket map for the given vBucket. If this is
+    a master, the index will be `0`
+    * Type - Either `master` or `replica`
+
+* Cache:
+    This is a JSON object containing the status of the key as it resides in the
+    node's _Cache_. If the item is not present within the node's cache, the
+    object is empty; otherwise it contains these subfields:
+
+    * CAS The CAS value of the key as present within the storage domain
+    * Value the actual value of the key
+
+* Disk:
+    This carries the same semantics as `Cache`, only that it displays information
+    relating to the node's _Disk_ storage domain.
+
+
 ## Key Access Commands
 
 ### Concepts
@@ -317,35 +374,3 @@ This is equivalent to calling `persist` and `cache` on the same item
 For each affected node, remove the item from both its _Disk_ and _Cache_
 stores. This is equivalent to calling `uncache` and `unpersist` on the same
 item
-
-#### keyinfo
-
-This special command returns a JSON object containing the per-node status
-of a given key. The base object is a JSON array (`[]`). Each element in
-the array is a JSON object containing three fields.
-
-The nodes are ordered according to the server list received in the vBucket
-configuration.
-
-If the server is neither a replica nor a master for the given key, it is
-present as `null`.
-
-* Conf:
-    Configuration information about this node in relation to the keys' vBucket.
-    This is a JSON object containing two subfields:
-
-    * Index - the server index in the vBucket map for the given vBucket. If this is
-    a master, the index will be `0`
-    * Type - Either `master` or `replica`
-
-* Cache:
-    This is a JSON object containing the status of the key as it resides in the
-    node's _Cache_. If the item is not present within the node's cache, the
-    object is empty; otherwise it contains these subfields:
-
-    * CAS The CAS value of the key as present within the storage domain
-    * Value the actual value of the key
-
-* Disk:
-    This carries the same semantics as `Cache`, only that it displays information
-    relating to the node's _Disk_ storage domain.

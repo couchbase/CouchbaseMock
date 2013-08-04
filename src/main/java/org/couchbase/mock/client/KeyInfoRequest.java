@@ -15,9 +15,22 @@
  */
 package org.couchbase.mock.client;
 
-public class KeyInfoRequest extends KeyAccessRequest {
-    public KeyInfoRequest() {
-        super("", "", false, 0, 0, "");
-        throw new RuntimeException("Not implemented yet");
+import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
+
+public class KeyInfoRequest extends MockRequest {
+    public KeyInfoRequest(@NotNull String key) {
+        this(key, "");
+    }
+
+    public KeyInfoRequest(@NotNull String key, @NotNull String bucket) {
+        payload.put("Key", key);
+        if (!bucket.isEmpty()) {
+            payload.put("bucket", bucket);
+        }
+
+        command.put("command", "keyinfo");
+        command.put("payload", payload);
     }
 }

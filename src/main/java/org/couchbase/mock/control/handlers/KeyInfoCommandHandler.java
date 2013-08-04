@@ -94,7 +94,11 @@ public class KeyInfoCommandHandler extends KeyCommandHandler {
             infoList.add(skInfo);
         }
 
-        result = (new Gson()).toJson(infoList);
+        Map<String, Object> ret = new HashMap<String, Object>();
+        ret.put("status", "ok");
+        ret.put("payload", infoList);
+
+        result = (new Gson()).toJson(ret);
     }
 
     @Override

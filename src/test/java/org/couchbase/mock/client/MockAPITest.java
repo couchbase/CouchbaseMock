@@ -189,4 +189,11 @@ public class MockAPITest extends ClientBaseTest {
         assertFalse(mockClient.request(new PurgeRequest("key", true, replicaId, "default")).isOk());
     }
 
+    public void testKeyInfo() throws IOException {
+        assertTrue(mockClient.request(new CacheRequest("key", "value", 123, true, 2)).isOk());
+        assertTrue(mockClient.request(new KeyInfoRequest("key")).isOk());
+        assertTrue(mockHttpClient.request(new KeyInfoRequest("key")).isOk());
+        assertTrue(mockClient.request(new KeyInfoRequest("key", "default")).isOk());
+        assertTrue(mockHttpClient.request(new KeyInfoRequest("key", "default")).isOk());
+    }
 }
