@@ -20,6 +20,7 @@
       <w>jpda</w>
       <w>junit</w>
       <w>ketama</w>
+      <w>keyinfo</w>
       <w>licensable</w>
       <w>licensor</w>
       <w>membase</w>
@@ -41,7 +42,9 @@
       <w>sergey</w>
       <w>trond</w>
       <w>tuples</w>
+      <w>uncache</w>
       <w>unkown</w>
+      <w>unpersist</w>
       <w>vbucket</w>
       <w>vbuckets</w>
       <w>vitaly</w>

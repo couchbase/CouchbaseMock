@@ -23,7 +23,7 @@ import com.google.gson.JsonObject;
  * @author mnunberg
  */
 public class MockResponse {
-    private JsonObject response;
+    private final JsonObject response;
 
     public MockResponse(String jsonString) {
         response = new Gson().fromJson(jsonString, JsonObject.class);
@@ -41,10 +41,12 @@ public class MockResponse {
         }
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public JsonElement getPayload() {
         return response.get("payload");
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public JsonObject getRawJson() {
         return response;
     }

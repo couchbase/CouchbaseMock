@@ -25,6 +25,7 @@ import java.io.IOException;
  * mock server. The Mock server provides two mechanisms to communicate
  * to the mock server (over a dedicated connection or over HTTP).
  */
+@SuppressWarnings("WeakerAccess")
 public abstract class AbstractMockClient {
     /**
      * Negotiates the connection between the client and the Mock server.

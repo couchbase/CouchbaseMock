@@ -68,8 +68,9 @@ public class MockHttpClient extends AbstractMockClient {
         }
     }
 
+    @NotNull
     @Override
-    public MockResponse request(MockRequest request) throws IOException {
+    public MockResponse request(@NotNull MockRequest request) throws IOException {
         URL url = buildRequestUri(request);
         HttpURLConnection uc = (HttpURLConnection) url.openConnection();
         uc.connect();

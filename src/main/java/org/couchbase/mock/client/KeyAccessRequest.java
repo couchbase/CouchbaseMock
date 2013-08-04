@@ -19,8 +19,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public abstract class KeyAccessRequest extends MockRequest {
-    public KeyAccessRequest(@NotNull String key, @NotNull String value, boolean onMaster, int numReplicas, long cas, @NotNull String bucket) {
+abstract class KeyAccessRequest extends MockRequest {
+    KeyAccessRequest(@NotNull String key, @NotNull String value, boolean onMaster, int numReplicas, long cas, @NotNull String bucket) {
         super();
         payload.put("Key", key);
         if (!value.isEmpty()) {
@@ -37,7 +37,7 @@ public abstract class KeyAccessRequest extends MockRequest {
         command.put("payload", payload);
     }
 
-    public KeyAccessRequest(@NotNull String key, @NotNull String value, boolean onMaster, @NotNull List<Integer> replicaIds, long cas, @NotNull String bucket) {
+    KeyAccessRequest(@NotNull String key, @NotNull String value, boolean onMaster, @NotNull List<Integer> replicaIds, long cas, @NotNull String bucket) {
         super();
         payload.put("Key", key);
         if (!value.isEmpty()) {

@@ -24,10 +24,10 @@ import java.util.Map;
  * @author mnunberg
  */
 public class MockRequest {
-    protected final Map<String, Object> command = new HashMap<String, Object>();
-    protected final Map<String, Object> payload = new HashMap<String, Object>();
+    final Map<String, Object> command = new HashMap<String, Object>();
+    final Map<String, Object> payload = new HashMap<String, Object>();
 
-    public void setName(String name) {
+    void setName(String name) {
         command.put("command", name);
     }
 
@@ -35,14 +35,9 @@ public class MockRequest {
         return (String) command.get("command");
     }
 
+    @SuppressWarnings("WeakerAccess")
     public void set(String param, Object value) {
         payload.put(param, value);
-    }
-
-    public void clear() {
-        command.clear();
-        payload.clear();
-        command.put("payload", payload);
     }
 
     Map<String, Object> getMap() {
@@ -53,12 +48,8 @@ public class MockRequest {
         return payload;
     }
 
-    public MockRequest() {
+    MockRequest() {
         command.put("payload", payload);
-    }
-
-    public String getEncodedJson() {
-        return new Gson().toJson(command);
     }
 
     public static MockRequest build(String name, Object... kv) {

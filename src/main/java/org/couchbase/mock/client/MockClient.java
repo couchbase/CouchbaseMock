@@ -44,10 +44,12 @@ public class MockClient extends AbstractMockClient {
 
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public InetSocketAddress getListeningAddress() {
         return listenAddress;
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public InetSocketAddress getRestAddress() {
         return new InetSocketAddress(restPort);
     }
