@@ -196,4 +196,9 @@ public class MockAPITest extends ClientBaseTest {
         assertTrue(mockClient.request(new KeyInfoRequest("key", "default")).isOk());
         assertTrue(mockHttpClient.request(new KeyInfoRequest("key", "default")).isOk());
     }
+
+    public void testHelp() throws IOException {
+        assertTrue(mockClient.request(new HelpRequest()).isOk());
+        assertTrue(mockHttpClient.request(new HelpRequest()).isOk());
+    }
 }

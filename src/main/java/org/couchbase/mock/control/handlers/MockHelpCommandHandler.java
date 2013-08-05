@@ -62,8 +62,11 @@ public class MockHelpCommandHandler extends MockCommand {
     @Override
     public String getResponse() {
         Map<String,Object> ret = new HashMap<String, Object>();
-        ret.put("commands", helpInfo);
-        ret.put("status", "ERR");
+        Map<String,Object> payload = new HashMap<String, Object>();
+
+        payload.put("commands", helpInfo);
+        ret.put("payload", payload);
+        ret.put("status", "ok");
         return (new Gson()).toJson(ret);
     }
 }
