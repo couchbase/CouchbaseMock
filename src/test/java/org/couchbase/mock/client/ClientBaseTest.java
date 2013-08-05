@@ -70,7 +70,7 @@ public abstract class ClientBaseTest extends TestCase {
         bucketConfiguration.numReplicas = 3;
         bucketConfiguration.name = "default";
         bucketConfiguration.type = BucketType.COUCHBASE;
-        ArrayList configList = new ArrayList<BucketConfiguration>();
+        ArrayList<BucketConfiguration> configList = new ArrayList<BucketConfiguration>();
         configList.add(bucketConfiguration);
         couchbaseMock = new CouchbaseMock(0, configList);
         couchbaseMock.start();
