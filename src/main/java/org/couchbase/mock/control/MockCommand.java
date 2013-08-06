@@ -14,26 +14,37 @@
  * limitations under the License.
  */
 package org.couchbase.mock.control;
+
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.couchbase.mock.CouchbaseMock;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The MockCommand class is the base class for all commands
  * that the client may send to the mock to instruct it to
  * do certain actions.
- *
+ * <p/>
  * All commands is sent as JSON objects with a certain form:
- *
+ * <p/>
  * { "command" : "name of the command", "payload" : {  } }
- *
+ * <p/>
  * The response for the command will be delivered at its most basic
  * level will be a JSON object consisting of the following fields:
- *
+ * <p/>
  * { "status" : "ok", "payload" : { } }
- *
+ * <p/>
  * For "non-successful" commands the object may be:
- *
+ * <p/>
  * { "status" : "fail", "error" : "error description" }
+ * <p/>
+ * To implement a new command you should subclass the MockCommand
+ * class and add implement the execute method. You must add the
+ * name of the command to the Command enum, and register the
+ * class in MockCommandDispatcher.
  *
  * @author mnunberg
  */
@@ -57,12 +68,6 @@ public abstract class MockCommand {
         HELP
     }
 
-    protected final CouchbaseMock mock;
-
-    public MockCommand(CouchbaseMock mock) {
-        this.mock = mock;
-    }
-
     /**
      * Get the response to send to the client. This <b>must</b> be a
      * valid JSON encoded object according to the protocol. The various
@@ -71,16 +76,23 @@ public abstract class MockCommand {
      *
      * @return the string representing success.
      */
-    public String getResponse() {
-        return "{\"status\":\"ok\"}";
+    @NotNull
+    protected String getResponse() {
+        Map<String, Object> ret = new HashMap<String, Object>();
+        ret.put("status", "ok");
+        ret.put("payload", new HashMap<String, Object>());
+        return (new Gson()).toJson(ret);
     }
 
     /**
      * Execute the command
      *
-     * @param payload the payload containing arguments to the command
+     * @param mock    the couchbase mock object to operate on
      * @param command the actual command being executed (in case a handler
      *                implements multiple commands
+     * @param payload the payload containing arguments to the command
      */
-    public abstract void execute(JsonObject payload, Command command);
+    public abstract
+    @NotNull
+    String execute(@NotNull CouchbaseMock mock, @NotNull Command command, @NotNull JsonObject payload);
 }

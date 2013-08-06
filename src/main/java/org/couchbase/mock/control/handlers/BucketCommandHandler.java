@@ -20,6 +20,7 @@ import com.google.gson.JsonObject;
 import org.couchbase.mock.Bucket;
 import org.couchbase.mock.CouchbaseMock;
 import org.couchbase.mock.control.MockCommand;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * This is an abstract class which operates on a specific
@@ -31,16 +32,14 @@ abstract public class BucketCommandHandler extends MockCommand {
     Bucket bucket;
     int idx;
 
-    public BucketCommandHandler(CouchbaseMock mock) {
-        super(mock);
-    }
-
-    public void execute(JsonObject payload, Command command) {
+    public @NotNull String execute(@NotNull CouchbaseMock mock, @NotNull Command command, @NotNull JsonObject payload) {
         idx = payload.get("idx").getAsInt();
         String bucketStr = "default";
         if (payload.has("bucket")) {
             bucketStr = payload.get("bucket").getAsString();
         }
         bucket = mock.getBuckets().get(bucketStr);
+        // The return from this method is not returned back to the client
+        return "{ \"status\" : \"fail\" }";
     }
 }

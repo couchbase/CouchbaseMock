@@ -23,13 +23,15 @@ import org.couchbase.mock.Bucket;
 import org.couchbase.mock.CouchbaseMock;
 import org.couchbase.mock.control.MockCommand;
 import org.couchbase.mock.memcached.MemcachedServer;
+import org.jetbrains.annotations.NotNull;
 
 public abstract class ServersCommandHandler extends MockCommand {
 
     abstract void doServerCommand(MemcachedServer server);
 
+    @NotNull
     @Override
-    public void execute(JsonObject payload, Command command) {
+    public String execute(@NotNull CouchbaseMock mock, @NotNull Command command, @NotNull JsonObject payload) {
         Set<MemcachedServer> servers = new HashSet<MemcachedServer>();
         for (Bucket bucket : mock.getBuckets().values()) {
             for (MemcachedServer server : bucket.getServers()) {
@@ -39,9 +41,8 @@ public abstract class ServersCommandHandler extends MockCommand {
                 }
             }
         }
-    }
 
-    public ServersCommandHandler(CouchbaseMock mock) {
-        super(mock);
+        // The return from this method is not returned back to the client
+        return "{ \"status\" : \"fail\" }";
     }
 }

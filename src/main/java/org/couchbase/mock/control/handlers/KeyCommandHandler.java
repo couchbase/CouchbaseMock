@@ -23,6 +23,7 @@ import org.couchbase.mock.control.MissingRequiredFieldException;
 import org.couchbase.mock.control.MockCommand;
 import org.couchbase.mock.memcached.KeySpec;
 import org.couchbase.mock.memcached.VBucketInfo;
+import org.jetbrains.annotations.NotNull;
 
 /**
  *
@@ -33,12 +34,9 @@ public abstract class KeyCommandHandler extends MockCommand {
     Bucket bucket;
     VBucketInfo vbi;
 
-    public KeyCommandHandler(CouchbaseMock m) {
-        super(m);
-    }
-
+    @NotNull
     @Override
-    public void execute(JsonObject payload, Command command) {
+    public String execute(@NotNull CouchbaseMock mock, @NotNull Command command, @NotNull JsonObject payload) {
         short vbIndex = -1;
         String key;
 
@@ -67,5 +65,7 @@ public abstract class KeyCommandHandler extends MockCommand {
 
         keySpec = new KeySpec(key, vbIndex);
         vbi = bucket.getVBucketInfo()[keySpec.vbId];
+        // The return from this method is not returned back to the client
+        return "{ \"status\" : \"fail\" }";
     }
 }

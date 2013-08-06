@@ -26,12 +26,13 @@ import java.util.List;
 import java.util.Map;
 import org.couchbase.mock.CouchbaseMock;
 import org.couchbase.mock.control.MockCommand;
+import org.jetbrains.annotations.NotNull;
 
 /**
  *
  * @author mnunberg
  */
-public class MockHelpCommandHandler extends MockCommand {
+public final class MockHelpCommandHandler extends MockCommand {
     private static final Map<String,Object> helpInfo = new HashMap<String, Object>();
     static {
         List<Object> helpList = new ArrayList<Object>();
@@ -50,22 +51,14 @@ public class MockHelpCommandHandler extends MockCommand {
         return gsB.setPrettyPrinting().create().toJson(helpInfo);
     }
 
+    @NotNull
     @Override
-    public void execute(JsonObject payload, Command command) {
-
-    }
-
-    public MockHelpCommandHandler(CouchbaseMock m) {
-        super(m);
-    }
-
-    @Override
-    public String getResponse() {
+    public String execute(@NotNull CouchbaseMock mock, @NotNull Command command, @NotNull JsonObject payload) {
         Map<String,Object> ret = new HashMap<String, Object>();
-        Map<String,Object> payload = new HashMap<String, Object>();
+        Map<String,Object> body = new HashMap<String, Object>();
 
-        payload.put("commands", helpInfo);
-        ret.put("payload", payload);
+        body.put("commands", helpInfo);
+        ret.put("payload", body);
         ret.put("status", "ok");
         return (new Gson()).toJson(ret);
     }

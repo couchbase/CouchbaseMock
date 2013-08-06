@@ -26,12 +26,13 @@ import java.util.Map;
 import com.google.gson.JsonObject;
 import org.couchbase.mock.CouchbaseMock;
 import org.couchbase.mock.memcached.*;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Handler for various out-of-band key manipulations
  * @author Mark Nunberg <mnunberg@haskalah.org>
  */
-public class PersistenceCommandHandler extends KeyCommandHandler {
+public final class PersistenceCommandHandler extends KeyCommandHandler {
 
     private String error = null;
 
@@ -147,27 +148,27 @@ public class PersistenceCommandHandler extends KeyCommandHandler {
         }
     }
 
+    @NotNull
     @Override
-    public void execute(JsonObject payload, Command command) {
-        super.execute(payload, command);
+    public String execute(@NotNull CouchbaseMock mock, @NotNull Command command, @NotNull JsonObject payload) {
+        super.execute(mock, command, payload);
         try {
             executeReal(payload, command);
         } catch (AccessControlException e) {
             error = e.getMessage();
         }
+
+        return getResponse();
     }
 
+    @NotNull
     @Override
-    public String getResponse() {
+    protected String getResponse() {
         if (error == null) {
             return super.getResponse();
         }
         Map<String,String> errInfo = new HashMap<String, String>();
         errInfo.put("status", error);
         return (new Gson()).toJson(errInfo);
-    }
-
-    public PersistenceCommandHandler(CouchbaseMock mock) {
-        super(mock);
     }
 }

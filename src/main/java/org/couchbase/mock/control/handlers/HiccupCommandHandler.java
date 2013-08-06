@@ -19,30 +19,29 @@ import com.google.gson.JsonObject;
 import org.couchbase.mock.CouchbaseMock;
 
 import org.couchbase.mock.memcached.MemcachedServer;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Hiccup will let all servers sleep after sending a specific amount of data.
  *
  * @author M. Nunberg
  */
-public class HiccupCommandHandler extends ServersCommandHandler {
+public final class HiccupCommandHandler extends ServersCommandHandler {
 
     private int milliSeconds;
     private int offset;
 
+    @NotNull
     @Override
-    public void execute(JsonObject payload, Command command) {
+    public String execute(@NotNull CouchbaseMock mock, @NotNull Command command, @NotNull JsonObject payload) {
         milliSeconds = payload.get("msecs").getAsInt();
         offset = payload.get("offset").getAsInt();
-        super.execute(payload, command);
+        super.execute(mock, command, payload);
+        return getResponse();
     }
 
     @Override
     void doServerCommand(MemcachedServer server) {
         server.setHiccup(milliSeconds, offset);
-    }
-
-    public HiccupCommandHandler(CouchbaseMock m) {
-        super(m);
     }
 }

@@ -23,6 +23,7 @@ import org.couchbase.mock.CouchbaseMock;
 import org.couchbase.mock.control.MockCommand;
 import org.couchbase.mock.control.MockCommandDispatcher;
 import org.couchbase.mock.memcached.protocol.CommandCode;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * This returns information about the current mock's supported
@@ -30,11 +31,11 @@ import org.couchbase.mock.memcached.protocol.CommandCode;
  *
  * @author Mark Nunberg <mnunberg@haskalah.org>
  */
-public class MockInfoCommandHandler extends MockCommand {
-    private final Map<String,Object> result = new HashMap<String, Object>();
-
+public final class MockInfoCommandHandler extends MockCommand {
+    @NotNull
     @Override
-    public void execute(JsonObject payload, Command command) {
+    public String execute(@NotNull CouchbaseMock mock, @NotNull Command command, @NotNull JsonObject payload) {
+        Map<String,Object> result = new HashMap<String, Object>();
         List<String> mcCaps = new ArrayList<String>();
         for (CommandCode cc : CommandCode.values()) {
             mcCaps.add(cc.toString());
@@ -47,17 +48,10 @@ public class MockInfoCommandHandler extends MockCommand {
         }
 
         result.put("MOCK", mockCaps);
-    }
 
-    @Override
-    public String getResponse() {
         Map<String, Object> ret = new HashMap<String, Object>();
         ret.put("status", "ok");
         ret.put("payload", result);
         return (new Gson()).toJson(ret);
-    }
-
-    public MockInfoCommandHandler(CouchbaseMock m) {
-        super(m);
     }
 }

@@ -27,18 +27,14 @@ import org.couchbase.mock.memcached.Item;
 import org.couchbase.mock.memcached.KeySpec;
 import org.couchbase.mock.memcached.MemcachedServer;
 import org.couchbase.mock.memcached.VBucketInfo;
+import org.jetbrains.annotations.NotNull;
 
 /**
  *
  * @author Mark Nunberg <mnunberg@haskalah.org>
  */
-public class KeyInfoCommandHandler extends KeyCommandHandler {
+public final class KeyInfoCommandHandler extends KeyCommandHandler {
     private String result;
-
-    public KeyInfoCommandHandler(CouchbaseMock m) {
-        super(m);
-    }
-
 
     private static Map<String,Object> itemToString(Item itm) {
         Map<String,Object> ret = new HashMap<String, Object>();
@@ -78,9 +74,10 @@ public class KeyInfoCommandHandler extends KeyCommandHandler {
         return ret;
     }
 
+    @NotNull
     @Override
-    public void execute(JsonObject payload, Command command) {
-        super.execute(payload, command);
+    public String execute(@NotNull CouchbaseMock mock, @NotNull Command command, @NotNull JsonObject payload) {
+        super.execute(mock, command, payload);
         List<Object> infoList = new ArrayList<Object>();
         List<MemcachedServer> vbiServers = vbi.getAllServers();
 
@@ -98,11 +95,6 @@ public class KeyInfoCommandHandler extends KeyCommandHandler {
         ret.put("status", "ok");
         ret.put("payload", infoList);
 
-        result = (new Gson()).toJson(ret);
-    }
-
-    @Override
-    public String getResponse() {
-        return result;
+        return (new Gson()).toJson(ret);
     }
 }

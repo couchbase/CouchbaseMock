@@ -17,16 +17,15 @@ package org.couchbase.mock.control.handlers;
 
 import com.google.gson.JsonObject;
 import org.couchbase.mock.CouchbaseMock;
+import org.jetbrains.annotations.NotNull;
 
-public class RespawnCommandHandler extends BucketCommandHandler {
+public final class RespawnCommandHandler extends BucketCommandHandler {
 
+    @NotNull
     @Override
-    public void execute(JsonObject payload, Command command) {
-        super.execute(payload, command);
+    public String execute(@NotNull CouchbaseMock mock, @NotNull Command command, @NotNull JsonObject payload) {
+        super.execute(mock, command, payload);
         bucket.respawn(idx);
-    }
-
-    public RespawnCommandHandler(CouchbaseMock mock) {
-        super(mock);
+        return getResponse();
     }
 }

@@ -18,11 +18,11 @@ package org.couchbase.mock.control;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 import org.couchbase.mock.CouchbaseMock;
 import org.couchbase.mock.control.handlers.*;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * @author Mark Nunberg
@@ -65,7 +65,7 @@ public class MockCommandDispatcher {
     // Instance members
     private final CouchbaseMock mock;
 
-    public MockCommand getCommand(String command, JsonObject payload) {
+    public @NotNull String dispatch(String command, JsonObject payload) {
         MockCommand obj;
 
         command = command.replaceAll(" ", "_").toUpperCase();
@@ -90,20 +90,14 @@ public class MockCommandDispatcher {
         }
 
         try {
-            obj = (MockCommand) cls.getConstructor(CouchbaseMock.class).newInstance(mock);
+            obj = (MockCommand) cls.newInstance();
         } catch (InstantiationException e) {
             throw new RuntimeException(e);
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        } catch (InvocationTargetException e) {
-            throw new RuntimeException(e);
         }
 
-        obj.execute(payload, cmd);
-
-        return obj;
+        return obj.execute(mock, cmd, payload);
     }
 
     public MockCommandDispatcher(CouchbaseMock mock) {
@@ -139,7 +133,7 @@ public class MockCommandDispatcher {
         }
 
         try {
-            return getCommand(command, payload).getResponse();
+            return dispatch(command, payload);
         } catch (CommandNotFoundException ex) {
             return "{\"status\" : \"fail\", \"error\" : \"No such command\"}";
         } catch (Throwable t) {
