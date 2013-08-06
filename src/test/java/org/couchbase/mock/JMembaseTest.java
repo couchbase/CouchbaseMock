@@ -78,7 +78,8 @@ public class JMembaseTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        if (System.getProperty("os.name").equals("Mac OS X")) {
+        final String platform = System.getProperty("os.name");
+        if (platform.equals("Mac OS X") || platform.equals("Linux")) {
             numNodes = 4;
             numVBuckets = 16;
         }
