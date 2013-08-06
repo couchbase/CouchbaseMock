@@ -71,7 +71,7 @@ class BucketsStreamingHandler implements Observer {
     private boolean streamNewConfig() throws InterruptedException {
         updateHandlerLock.lock();
         try {
-            while (shouldTerminate == false && hasUpdatedConfig == false) {
+            while (!shouldTerminate && !hasUpdatedConfig) {
                 condHasUpdatedConfig.await();
             }
             if (hasUpdatedConfig) {
