@@ -206,18 +206,17 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         return hostname + ":" + port;
     }
 
-    private void writeResponse(SocketChannel channel, ByteBuffer buf)
-            throws IOException {
-        int wv;
-        int nw = 0;
-
-        do {
-            wv = channel.write(buf);
-            nw += wv;
-        } while (wv > 0);
-        if (wv == -1) {
-            channel.close();
-            throw new ClosedChannelException();
+    private void writeResponse(SocketChannel channel, OutputContext ctx) throws IOException {
+        while (ctx.hasRemaining()) {
+            ByteBuffer[] bufs = ctx.getIov();
+            long nw = channel.write(bufs);
+            if (nw < 0) {
+                channel.close();
+                throw new ClosedChannelException();
+            } else if (nw == 0) {
+                return;
+            }
+            ctx.updateBytesSent(nw);
         }
     }
 
@@ -245,10 +244,10 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
                     while (iterator.hasNext()) {
                         SelectionKey key = iterator.next();
                         iterator.remove();
-
                         handleClient(key);
                     }
                 } catch (IOException e) {
+
                     Logger.getLogger(MemcachedServer.class.getName()).log(Level.SEVERE, null, e);
                 }
             }
@@ -262,66 +261,95 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         }
     }
 
+    private void handleClientWrite(SocketChannel channel, OutputContext ctx) throws IOException {
+        OutputContext effectiveCtx = ctx;
+        if (truncateLimit > 0) {
+            effectiveCtx = ctx.getSlice(truncateLimit);
+        } else if (hiccupOffset > 0) {
+            effectiveCtx = ctx.getSlice(hiccupOffset);
+        }
+
+        writeResponse(channel, effectiveCtx);
+        if (hiccupOffset > 0) {
+            try {
+                Thread.sleep(hiccupTime);
+            } catch (InterruptedException ex) {
+            }
+            writeResponse(channel, ctx);
+        }
+    }
+
+
+    private void handleClientRead(SocketChannel channel, MemcachedConnection client) throws IOException {
+        if (channel.read(client.getInputBuffer()) == -1) {
+            channel.close();
+            throw new ClosedChannelException();
+        } else {
+            client.step();
+        }
+    }
+
+    private void handleNewClient() throws IOException {
+        SocketChannel cc = server.accept();
+        cc.configureBlocking(false);
+        cc.socket().setTcpNoDelay(false);
+        cc.socket().setSendBufferSize(1<<20);
+        cc.socket().setReceiveBufferSize(1<<20);
+        cc.register(selector, SelectionKey.OP_READ, new MemcachedConnection(this));
+    }
+
     private void handleClient(SelectionKey key) throws IOException {
         MemcachedConnection client = (MemcachedConnection) key.attachment();
-
-        if (client != null) {
-            try {
-
-                int ioEvents = SelectionKey.OP_READ;
-                SocketChannel channel = (SocketChannel) key.channel();
-
-                if (key.isReadable()) {
-                    if (channel.read(client.getInputBuffer()) == -1) {
-                        channel.close();
-                        throw new ClosedChannelException();
-                    } else {
-                        client.step();
-                    }
-                }
-
-                if (key.isWritable()) {
-                    ByteBuffer buf;
-                    while ((buf = client.getOutputBuffer()) != null) {
-                        if (truncateLimit > 0 && buf.limit() > truncateLimit) {
-                            buf.limit(truncateLimit);
-                        }
-
-                        if (hiccupOffset > 0 && buf.limit() > hiccupOffset) {
-                            ByteBuffer immediateBuf = buf.slice();
-                            buf.position(hiccupOffset);
-                            immediateBuf.limit(hiccupOffset);
-                            writeResponse(channel, immediateBuf);
-
-                            // Wait hiccupTime to write the rest of the buffer
-                            //noinspection EmptyCatchBlock
-                            try {
-                                Thread.sleep(hiccupTime);
-                            } catch (InterruptedException ex) {
-                            }
-                        }
-                        writeResponse(channel, buf);
-                    }
-                }
-
-                if (client.hasOutput()) {
-                    ioEvents |= SelectionKey.OP_WRITE;
-                }
-
-                channel.register(selector, ioEvents, client);
-            } catch (ClosedChannelException exp) {
-                // just ditch this client..
-            } catch (IOException ex) {
-                // hmm.. should this really be silently ignored?
-            }
-
-        } else {
-            if (key.isAcceptable()) {
-                SocketChannel cc = server.accept();
-                cc.configureBlocking(false);
-                cc.register(selector, SelectionKey.OP_READ, new MemcachedConnection(this));
-            }
+        if (client == null) {
+            handleNewClient();
+            return;
         }
+
+        SocketChannel channel = (SocketChannel) key.channel();
+        try {
+            if (key.isReadable()) {
+                handleClientRead(channel, client);
+            }
+
+            if (key.isWritable()) {
+                OutputContext ctx = client.borrowOutputContext();
+
+                if (ctx != null) {
+                    try {
+                        handleClientWrite(channel, ctx);
+                    } finally {
+                        client.returnOutputContext(ctx);
+                    }
+                }
+            }
+
+
+        } catch (IOException ex) {
+            try {
+                channel.close();
+            } finally {
+                key.cancel();
+            }
+
+            try {
+                // Windows doesnt' seem to want to propagate a proper
+                // ConnectionResetException..
+                String message = ex.getMessage();
+                if (message == null) {
+                    throw ex;
+                } else if (!(message.contains("reset") || message.contains("forcibly"))) {
+                    throw ex;
+                }
+            } catch (ClosedChannelException exClosed) {
+            }
+            return;
+        }
+
+        int ioEvents = SelectionKey.OP_READ;
+        if (client.hasOutput()) {
+            ioEvents |= SelectionKey.OP_WRITE;
+        }
+        channel.register(selector, ioEvents, client);
     }
 
     public Bucket getBucket() {

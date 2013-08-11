@@ -21,8 +21,8 @@ import org.couchbase.mock.memcached.protocol.BinaryCommand;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
+import java.util.List;
 import java.util.LinkedList;
-import java.util.Queue;
 
 import org.couchbase.mock.memcached.protocol.CommandFactory;
 
@@ -35,7 +35,7 @@ class MemcachedConnection {
     private final byte header[];
     private BinaryCommand command;
     private final ByteBuffer input;
-    private final Queue<ByteBuffer> output;
+    private List<ByteBuffer> pending = new LinkedList<ByteBuffer>();
     private boolean authenticated;
     private boolean closed;
 
@@ -45,7 +45,6 @@ class MemcachedConnection {
         header = new byte[24];
         input = ByteBuffer.wrap(header);
         protocolHandler = server.getProtocolHandler();
-        output = new LinkedList<ByteBuffer>();
     }
 
     public void step() throws IOException {
@@ -66,12 +65,26 @@ class MemcachedConnection {
         }
     }
 
-    public void sendResponse(BinaryResponse response) {
-        output.add(response.getBuffer());
+    public synchronized void sendResponse(BinaryResponse response) {
+        if (pending == null) {
+            pending = new LinkedList<ByteBuffer>();
+        }
+        pending.add(response.getBuffer());
     }
 
     boolean hasOutput() {
-        return !output.isEmpty();
+        if (pending == null) {
+            return false;
+        }
+
+        if (pending.isEmpty()) {
+            return false;
+        }
+
+        if (pending.get(0).hasRemaining() == false) {
+            return false;
+        }
+        return true;
     }
 
     public ByteBuffer getInputBuffer() {
@@ -80,16 +93,29 @@ class MemcachedConnection {
         } else {
             return command.getInputBuffer();
         }
-
     }
 
-    public ByteBuffer getOutputBuffer() {
-        if (output.isEmpty()) {
+    public OutputContext borrowOutputContext() {
+        if (!hasOutput()) {
             return null;
+        }
+
+        OutputContext ctx = new OutputContext(pending);
+        pending = null;
+        return ctx;
+    }
+
+    public void returnOutputContext(OutputContext ctx) {
+        List<ByteBuffer> remaining = ctx.releaseRemaining();
+        if (pending == null) {
+            pending = remaining;
         } else {
-            return output.remove();
+            List<ByteBuffer> tmp = pending;
+            pending = remaining;
+            pending.addAll(tmp);
         }
     }
+
 
     void shutdown() {
         closed = true;
