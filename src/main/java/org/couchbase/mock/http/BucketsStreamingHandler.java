@@ -70,10 +70,15 @@ class BucketsStreamingHandler implements Observer {
 
     private boolean streamNewConfig() throws InterruptedException {
         updateHandlerLock.lock();
+        boolean isUnlocked = false;
         try {
             while (!shouldTerminate && !hasUpdatedConfig) {
                 condHasUpdatedConfig.await();
             }
+
+            isUnlocked = true;
+            updateHandlerLock.unlock();
+
             if (hasUpdatedConfig) {
                 writeConfigBytes(getConfigBytes());
                 hasUpdatedConfig = false;
@@ -85,7 +90,9 @@ class BucketsStreamingHandler implements Observer {
             shouldTerminate = false;
             return false;
         } finally {
-            updateHandlerLock.unlock();
+            if (!isUnlocked) {
+                updateHandlerLock.unlock();
+            }
         }
     }
 
