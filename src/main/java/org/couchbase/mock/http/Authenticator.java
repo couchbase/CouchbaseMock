@@ -97,8 +97,9 @@ public class Authenticator extends BasicAuthenticator {
         }
 
         Bucket bucket = buckets.get(currentBucketName);
-        if (bucket != null) {
-            // Have a bucket
+        if (bucket == null) {
+            return new Failure(404);
+        } else {
             if ((bucket.getPassword() == null || bucket.getPassword().isEmpty()) && context == null) {
                 return new Authenticator.Success(new HttpPrincipal("", realm));
             }
