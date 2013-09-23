@@ -396,4 +396,19 @@ public class JMembaseTest extends TestCase {
         assertFalse(resp.isOk());
         assertNotNull(resp.getErrorMessage());
     }
+
+    public void testRestFlush() throws IOException {
+        URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/default/controller/doFlush");
+        HttpURLConnection conn;
+
+        try {
+            conn = (HttpURLConnection) url.openConnection();
+            assertNotNull(conn);
+            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
+        } catch (Exception ex) {
+            fail(ex.getMessage());
+        }
+    }
+
+
 }

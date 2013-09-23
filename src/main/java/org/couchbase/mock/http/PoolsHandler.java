@@ -28,6 +28,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.couchbase.mock.Bucket;
+import org.couchbase.mock.memcached.MemcachedServer;
 
 /**
  * @author Sergey Avseyev
@@ -102,6 +103,17 @@ public class PoolsHandler implements HttpHandler {
             } catch (InterruptedException ex) {
                 Logger.getLogger(PoolsHandler.class.getName()).log(Level.SEVERE, null, ex);
             }
+        } else if (path.matches("^/pools/" + mock.getPoolName() + "/buckets/[\\w]+/controller/doFlush$")) {
+            String[] tokens = path.split("/");
+            Bucket bucket = mock.getBuckets().get(tokens[4]);
+            if (bucket == null) {
+                throw new ResourceNotFoundException();
+            }
+            for (MemcachedServer server : bucket.getServers()) {
+                server.flushAll();
+            }
+
+            return new byte[0];
         } else {
 
             throw new ResourceNotFoundException();
