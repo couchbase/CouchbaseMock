@@ -67,6 +67,29 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
     private int hiccupOffset = 0;
     private int truncateLimit = 0;
 
+
+    public class FailMaker {
+        private ErrorCode code = ErrorCode.SUCCESS;
+        private int remaining = 0;
+
+        public void update(ErrorCode code, int count) {
+            this.code = code;
+            this.remaining = count;
+        }
+
+        public ErrorCode getFailCode() {
+            if (this.remaining == 0) {
+                return ErrorCode.SUCCESS;
+            }
+            if (this.remaining > 0) {
+                this.remaining--;
+            }
+            return code;
+        }
+    }
+
+    private FailMaker failmaker = new FailMaker();
+
     /**
      * Create a new new memcached server.
      *
@@ -153,6 +176,10 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
 
     public Storage getStorage() {
         return storage;
+    }
+
+    public void updateFailMakerContext(ErrorCode code, int count) {
+        failmaker.update(code, count);
     }
 
     @SuppressWarnings("SpellCheckingInspection")
@@ -357,14 +384,31 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         return bucket;
     }
 
+    private boolean authOk(BinaryCommand cmd, MemcachedConnection client) {
+        if (client.isAuthenticated()) {
+            return true;
+        }
+
+        switch (cmd.getComCode()) {
+            case SASL_AUTH:
+            case SASL_LIST_MECHS:
+            case SASL_STEP:
+                return true;
+
+            default:
+                return false;
+        }
+    }
+
     @Override
     public void execute(BinaryCommand cmd, MemcachedConnection client)
             throws IOException {
         try {
-            if (client.isAuthenticated()
-                    || cmd.getComCode() == CommandCode.SASL_AUTH
-                    || cmd.getComCode() == CommandCode.SASL_LIST_MECHS
-                    || cmd.getComCode() == CommandCode.SASL_STEP) {
+
+            ErrorCode failcode = failmaker.getFailCode();
+            if (failcode != ErrorCode.SUCCESS) {
+                client.sendResponse(new BinaryResponse(cmd, failcode));
+            } else if (authOk(cmd, client)) {
                 executors[cmd.getComCode().cc()].execute(cmd, this, client);
             } else {
                 client.sendResponse(new BinaryResponse(cmd, ErrorCode.AUTH_ERROR));

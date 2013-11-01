@@ -18,6 +18,8 @@ package org.couchbase.mock.client;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import net.spy.memcached.internal.OperationFuture;
+import org.couchbase.mock.memcached.protocol.ErrorCode;
 
 /**
  * Tests for the "extended" Mock API.
@@ -199,5 +201,25 @@ public class MockAPITest extends ClientBaseTest {
 
     public void testHelp() throws IOException {
         assertTrue(mockClient.request(new HelpRequest()).isOk());
+    }
+
+    public void testOpfail() throws Exception {
+        OperationFuture ft = client.set("foo", "bar");
+        ft.get();
+        assertTrue(ft.getStatus().isSuccess());
+        assertTrue(mockClient.request(new OpfailRequest(ErrorCode.KEY_ENOENT, 100)).isOk());
+
+        ft = client.asyncGets("foo");
+        ft.get();
+        assertFalse(ft.getStatus().isSuccess());
+
+        assertTrue(mockClient.request(new OpfailRequest(ErrorCode.SUCCESS, 0)).isOk());
+        ft = client.asyncGets("foo");
+        ft.get();
+        assertTrue(ft.getStatus().isSuccess());
+
+
+        assertTrue(mockHttpClient.request(new OpfailRequest(ErrorCode.KEY_ENOENT, 100)).isOk());
+        assertTrue(mockHttpClient.request(new OpfailRequest(ErrorCode.SUCCESS, 0)).isOk());
     }
 }

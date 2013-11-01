@@ -188,6 +188,44 @@ Parameters:
 
 Setting the _limit_ to _0_ disables _truncate_
 
+### OpFail
+
+Causes a number of memcached operations to unconditionally fail with a
+specific error code. This may be used to simulate simple 'OOM' or
+`NOT_MY_VBUCKET` errors.
+
+Paramters:
+
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Meaning</th>
+        <th>Type</th>
+    </tr>
+    <tr>
+        <td><b>code<b></td>
+        <td>The Memcached protocol code to force</td>
+        <td>JSON Number; Must also be recognized by the Mock</td>
+    </tr>
+    <tr>
+        <td><b>count</b></td>
+        <td>The number of times this error code should be sent
+            before normal operation is restored. This can be either
+            a positive number (which indicates that this many operations
+            should fail before restoring to normal operation), 0 (which
+            means that normal behavior be restored immediately) or a
+            negative number, in which case commands will fail indefinitely
+            until a 0 is sent again with this command</td>
+        <td>JSON Number</td>
+    </tr>
+    <tr>
+        <td>servers</td>
+        <td>A list of servers to apply this setting to. Servers are specified
+        as indices into the server array. By default, all servers are used</td>
+        <td>JSON Number</td>
+    </tr>
+</table>
+
 ### Time Travel
 
 This command moves the internal clock in the server. The primary purpose

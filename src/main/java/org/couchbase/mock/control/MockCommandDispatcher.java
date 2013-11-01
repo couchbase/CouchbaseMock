@@ -59,6 +59,7 @@ public class MockCommandDispatcher {
         registerClass(MockCommand.Command.KEYINFO, KeyInfoCommandHandler.class);
         registerClass(MockCommand.Command.TIME_TRAVEL, TimeTravelCommandHandler.class);
         registerClass(MockCommand.Command.HELP, MockHelpCommandHandler.class);
+        registerClass(MockCommand.Command.OPFAIL, OpfailCommandHandler.class);
     }
 
 

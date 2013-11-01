@@ -65,7 +65,8 @@ public abstract class MockCommand {
 
         KEYINFO,
         TIME_TRAVEL,
-        HELP
+        HELP,
+        OPFAIL
     }
 
     /**

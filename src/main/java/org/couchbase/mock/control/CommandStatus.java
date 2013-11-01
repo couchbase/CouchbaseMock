@@ -62,7 +62,9 @@ public class CommandStatus {
             header.put("error", failMsg);
         } else if (t != null) {
             StringWriter sw = new StringWriter();
+            sw.write("BEGIN CAUGHT EXCEPTION >>>\n");
             t.printStackTrace(new PrintWriter(sw));
+            sw.write("<<< END CAUGHT EXCEPTION");
             header.put("error", sw.toString());
         }
 
