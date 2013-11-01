@@ -17,9 +17,9 @@ package org.couchbase.mock.control.handlers;
 
 import java.util.*;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.couchbase.mock.CouchbaseMock;
+import org.couchbase.mock.control.CommandStatus;
 import org.couchbase.mock.control.MockCommand;
 import org.couchbase.mock.control.MockCommandDispatcher;
 import org.couchbase.mock.memcached.protocol.CommandCode;
@@ -34,7 +34,7 @@ import org.jetbrains.annotations.NotNull;
 public final class MockInfoCommandHandler extends MockCommand {
     @NotNull
     @Override
-    public String execute(@NotNull CouchbaseMock mock, @NotNull Command command, @NotNull JsonObject payload) {
+    public CommandStatus execute(@NotNull CouchbaseMock mock, @NotNull Command command, @NotNull JsonObject payload) {
         Map<String,Object> result = new HashMap<String, Object>();
         List<String> mcCaps = new ArrayList<String>();
         for (CommandCode cc : CommandCode.values()) {
@@ -49,9 +49,8 @@ public final class MockInfoCommandHandler extends MockCommand {
 
         result.put("MOCK", mockCaps);
 
-        Map<String, Object> ret = new HashMap<String, Object>();
-        ret.put("status", "ok");
-        ret.put("payload", result);
-        return (new Gson()).toJson(ret);
+        CommandStatus ret = new CommandStatus();
+        ret.setPayload(result);
+        return ret;
     }
 }

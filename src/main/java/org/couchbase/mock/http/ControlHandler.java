@@ -121,7 +121,7 @@ public class ControlHandler implements HttpHandler {
 
             JsonObject payload = parseQueryParams(exchange);
             String cmdStr = URLDecoder.decode(components[1], "UTF-8");
-            byte[] response = dispatcher.dispatch(cmdStr, payload).getBytes();
+            byte[] response = dispatcher.dispatch(cmdStr, payload).toString().getBytes();
 
             exchange.sendResponseHeaders(200, response.length);
             body.write(response);

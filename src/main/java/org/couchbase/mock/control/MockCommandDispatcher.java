@@ -65,7 +65,7 @@ public class MockCommandDispatcher {
     // Instance members
     private final CouchbaseMock mock;
 
-    public @NotNull String dispatch(String command, JsonObject payload) {
+    public @NotNull CommandStatus dispatch(String command, JsonObject payload) {
         MockCommand obj;
 
         command = command.replaceAll(" ", "_").toUpperCase();
@@ -132,12 +132,18 @@ public class MockCommandDispatcher {
             payload = object.get("payload").getAsJsonObject();
         }
 
+        CommandStatus status;
+
         try {
-            return dispatch(command, payload);
+            status = dispatch(command, payload);
         } catch (CommandNotFoundException ex) {
-            return "{\"status\" : \"fail\", \"error\" : \"No such command\"}";
+            status = new CommandStatus();
+            status.fail("No such command");
         } catch (Throwable t) {
-            return "{\"status\" : \"fail\", \"error\" : \"An exception (" + t.getClass().getCanonicalName() + ") occurred\"}";
+            status = new CommandStatus();
+            status.fail(t);
         }
+
+        return status.toString();
     }
 }

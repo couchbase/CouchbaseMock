@@ -19,6 +19,7 @@ import com.google.gson.JsonObject;
 
 import org.couchbase.mock.Bucket;
 import org.couchbase.mock.CouchbaseMock;
+import org.couchbase.mock.control.CommandStatus;
 import org.couchbase.mock.control.MockCommand;
 import org.jetbrains.annotations.NotNull;
 
@@ -32,7 +33,7 @@ abstract public class BucketCommandHandler extends MockCommand {
     Bucket bucket;
     int idx;
 
-    public @NotNull String execute(@NotNull CouchbaseMock mock, @NotNull Command command, @NotNull JsonObject payload) {
+    public @NotNull CommandStatus execute(@NotNull CouchbaseMock mock, @NotNull Command command, @NotNull JsonObject payload) {
         idx = payload.get("idx").getAsInt();
         String bucketStr = "default";
         if (payload.has("bucket")) {
@@ -40,6 +41,6 @@ abstract public class BucketCommandHandler extends MockCommand {
         }
         bucket = mock.getBuckets().get(bucketStr);
         // The return from this method is not returned back to the client
-        return "{ \"status\" : \"fail\" }";
+        return new CommandStatus().fail();
     }
 }

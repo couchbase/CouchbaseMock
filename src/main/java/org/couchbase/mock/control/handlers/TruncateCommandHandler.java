@@ -17,6 +17,7 @@ package org.couchbase.mock.control.handlers;
 
 import com.google.gson.JsonObject;
 import org.couchbase.mock.CouchbaseMock;
+import org.couchbase.mock.control.CommandStatus;
 
 import org.couchbase.mock.memcached.MemcachedServer;
 import org.jetbrains.annotations.NotNull;
@@ -27,7 +28,7 @@ public final class TruncateCommandHandler extends ServersCommandHandler {
 
     @NotNull
     @Override
-    public String execute(@NotNull CouchbaseMock mock, @NotNull Command command, @NotNull JsonObject payload) {
+    public CommandStatus execute(@NotNull CouchbaseMock mock, @NotNull Command command, @NotNull JsonObject payload) {
         truncateLimit = payload.get("limit").getAsInt();
         super.execute(mock, command, payload);
         return getResponse();

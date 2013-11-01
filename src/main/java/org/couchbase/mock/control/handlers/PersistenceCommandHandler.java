@@ -25,6 +25,7 @@ import java.util.Map;
 
 import com.google.gson.JsonObject;
 import org.couchbase.mock.CouchbaseMock;
+import org.couchbase.mock.control.CommandStatus;
 import org.couchbase.mock.memcached.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -150,7 +151,7 @@ public final class PersistenceCommandHandler extends KeyCommandHandler {
 
     @NotNull
     @Override
-    public String execute(@NotNull CouchbaseMock mock, @NotNull Command command, @NotNull JsonObject payload) {
+    public CommandStatus execute(@NotNull CouchbaseMock mock, @NotNull Command command, @NotNull JsonObject payload) {
         super.execute(mock, command, payload);
         try {
             executeReal(payload, command);
@@ -163,12 +164,10 @@ public final class PersistenceCommandHandler extends KeyCommandHandler {
 
     @NotNull
     @Override
-    protected String getResponse() {
+    protected CommandStatus getResponse() {
         if (error == null) {
             return super.getResponse();
         }
-        Map<String,String> errInfo = new HashMap<String, String>();
-        errInfo.put("status", error);
-        return (new Gson()).toJson(errInfo);
+        return new CommandStatus().fail(error);
     }
 }

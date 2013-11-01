@@ -69,19 +69,12 @@ public abstract class MockCommand {
     }
 
     /**
-     * Get the response to send to the client. This <b>must</b> be a
-     * valid JSON encoded object according to the protocol. The various
-     * implementations may override this method if they want to return
-     * anything else than a simple success.
-     *
-     * @return the string representing success.
+     * Get the response to send to the client.
+     * @return a CommandStatus object indicating the status
      */
     @NotNull
-    protected String getResponse() {
-        Map<String, Object> ret = new HashMap<String, Object>();
-        ret.put("status", "ok");
-        ret.put("payload", new HashMap<String, Object>());
-        return (new Gson()).toJson(ret);
+    protected CommandStatus getResponse() {
+        return new CommandStatus();
     }
 
     /**
@@ -94,5 +87,5 @@ public abstract class MockCommand {
      */
     public abstract
     @NotNull
-    String execute(@NotNull CouchbaseMock mock, @NotNull Command command, @NotNull JsonObject payload);
+    CommandStatus execute(@NotNull CouchbaseMock mock, @NotNull Command command, @NotNull JsonObject payload);
 }

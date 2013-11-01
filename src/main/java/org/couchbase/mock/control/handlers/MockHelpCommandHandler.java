@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.couchbase.mock.CouchbaseMock;
+import org.couchbase.mock.control.CommandStatus;
 import org.couchbase.mock.control.MockCommand;
 import org.jetbrains.annotations.NotNull;
 
@@ -53,13 +54,12 @@ public final class MockHelpCommandHandler extends MockCommand {
 
     @NotNull
     @Override
-    public String execute(@NotNull CouchbaseMock mock, @NotNull Command command, @NotNull JsonObject payload) {
-        Map<String,Object> ret = new HashMap<String, Object>();
+    public CommandStatus execute(@NotNull CouchbaseMock mock, @NotNull Command command, @NotNull JsonObject payload) {
         Map<String,Object> body = new HashMap<String, Object>();
 
+        CommandStatus ret = new CommandStatus();
         body.put("commands", helpInfo);
-        ret.put("payload", body);
-        ret.put("status", "ok");
-        return (new Gson()).toJson(ret);
+        ret.setPayload(body);
+        return ret;
     }
 }

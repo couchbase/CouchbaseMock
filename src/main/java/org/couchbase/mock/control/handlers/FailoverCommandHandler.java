@@ -17,13 +17,14 @@ package org.couchbase.mock.control.handlers;
 
 import com.google.gson.JsonObject;
 import org.couchbase.mock.CouchbaseMock;
+import org.couchbase.mock.control.CommandStatus;
 import org.jetbrains.annotations.NotNull;
 
 public final class FailoverCommandHandler extends BucketCommandHandler {
 
     @NotNull
     @Override
-    public String execute(@NotNull CouchbaseMock mock, @NotNull Command command, @NotNull JsonObject payload) {
+    public CommandStatus execute(@NotNull CouchbaseMock mock, @NotNull Command command, @NotNull JsonObject payload) {
         super.execute(mock, command, payload);
         bucket.failover(idx);
         return getResponse();
