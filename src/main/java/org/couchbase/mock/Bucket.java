@@ -15,16 +15,16 @@
  */
 package org.couchbase.mock;
 
+import org.couchbase.mock.memcached.MemcachedServer;
+import org.couchbase.mock.memcached.VBucketInfo;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import org.couchbase.mock.memcached.MemcachedServer;
-import org.couchbase.mock.memcached.VBucketInfo;
 
 /**
  * Representation of the bucket in the membase concept.
@@ -234,5 +234,9 @@ public abstract class Bucket {
 
     public String getUUID() {
         return uuid.toString();
+    }
+
+    public CouchbaseMock getCluster() {
+        return cluster;
     }
 }

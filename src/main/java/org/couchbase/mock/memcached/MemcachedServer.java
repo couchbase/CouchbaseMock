@@ -15,37 +15,32 @@
  */
 package org.couchbase.mock.memcached;
 
-import java.nio.ByteBuffer;
-
+import net.sf.json.JSONObject;
+import org.couchbase.mock.Bucket;
+import org.couchbase.mock.Bucket.BucketType;
+import org.couchbase.mock.CouchbaseMock;
+import org.couchbase.mock.memcached.protocol.BinaryCommand;
 import org.couchbase.mock.memcached.protocol.BinaryResponse;
 import org.couchbase.mock.memcached.protocol.CommandCode;
 import org.couchbase.mock.memcached.protocol.ErrorCode;
-import org.couchbase.mock.memcached.protocol.BinaryCommand;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import java.io.IOException;
-
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-
 import java.security.AccessControlException;
-
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
-import net.sf.json.JSONObject;
-import org.couchbase.mock.Bucket;
-import org.couchbase.mock.Bucket.BucketType;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * This is a small implementation of a Memcached server. It listens
@@ -188,11 +183,12 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         Map<String, Object> map = new HashMap<String, Object>();
         long now = System.currentTimeMillis() / 1000;
         long uptime = now - bootTime;
+        CouchbaseMock mock = bucket.getCluster();
         map.put("uptime", uptime);
         map.put("replication", 1);
         map.put("clusterMembership", "active");
         map.put("status", "healthy");
-        map.put("hostname", getSocketName());
+        map.put("hostname", hostname + ":" + (mock == null ? "0" : mock.getHttpPort()));
         map.put("clusterCompatibility", 1);
         map.put("version", "9.9.9");
         StringBuilder sb = new StringBuilder(System.getProperty("os.arch"));
