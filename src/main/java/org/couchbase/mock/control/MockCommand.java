@@ -15,13 +15,9 @@
  */
 package org.couchbase.mock.control;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.couchbase.mock.CouchbaseMock;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * The MockCommand class is the base class for all commands
@@ -66,7 +62,8 @@ public abstract class MockCommand {
         KEYINFO,
         TIME_TRAVEL,
         HELP,
-        OPFAIL
+        OPFAIL,
+        SET_CCCP
     }
 
     /**

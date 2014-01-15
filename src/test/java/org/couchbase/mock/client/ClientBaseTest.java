@@ -19,19 +19,22 @@ import com.couchbase.client.CouchbaseClient;
 import com.couchbase.client.CouchbaseConnectionFactory;
 import com.couchbase.client.CouchbaseConnectionFactoryBuilder;
 import com.couchbase.client.vbucket.VBucketNodeLocator;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Level;
 import junit.framework.TestCase;
 import net.spy.memcached.MemcachedNode;
+import org.couchbase.mock.Bucket;
 import org.couchbase.mock.Bucket.BucketType;
 import org.couchbase.mock.BucketConfiguration;
 import org.couchbase.mock.CouchbaseMock;
+import org.couchbase.mock.memcached.MemcachedServer;
+import org.couchbase.mock.memcached.client.MemcachedClient;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -92,5 +95,20 @@ public abstract class ClientBaseTest extends TestCase {
         couchbaseMock.stop();
         mockClient.shutdown();
         super.tearDown();
+    }
+
+
+    protected MemcachedClient getBinClient(int index) throws IOException {
+        Bucket bucket = couchbaseMock.getBuckets().get(bucketConfiguration.name);
+        // Get the port..
+        MemcachedServer server = bucket.getServers()[index];
+
+        Socket sock = new Socket();
+        sock.connect(new InetSocketAddress(server.getHostname(), server.getPort()));
+        return new MemcachedClient(sock);
+    }
+
+    protected MemcachedClient getBinClient() throws IOException {
+        return getBinClient(0);
     }
 }

@@ -17,12 +17,13 @@ package org.couchbase.mock.control;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-
-import java.util.*;
-
 import org.couchbase.mock.CouchbaseMock;
 import org.couchbase.mock.control.handlers.*;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Mark Nunberg
@@ -60,6 +61,7 @@ public class MockCommandDispatcher {
         registerClass(MockCommand.Command.TIME_TRAVEL, TimeTravelCommandHandler.class);
         registerClass(MockCommand.Command.HELP, MockHelpCommandHandler.class);
         registerClass(MockCommand.Command.OPFAIL, OpfailCommandHandler.class);
+        registerClass(MockCommand.Command.SET_CCCP, CCCPCommandHandler.class);
     }
 
 

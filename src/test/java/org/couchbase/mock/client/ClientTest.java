@@ -15,13 +15,19 @@
  */
 package org.couchbase.mock.client;
 
-import java.util.*;
 import net.spy.memcached.CASValue;
 import net.spy.memcached.MemcachedNode;
 import net.spy.memcached.ObserveResponse;
 import net.spy.memcached.PersistTo;
 import net.spy.memcached.ReplicateTo;
 import net.spy.memcached.internal.OperationFuture;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -138,4 +144,6 @@ public class ClientTest extends ClientBaseTest {
         ft.get();
         assertFalse(ft.getStatus().isSuccess());
     }
+
+
 }

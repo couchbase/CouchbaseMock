@@ -35,4 +35,13 @@ public enum ErrorCode {
     public short value() {
         return value;
     }
+
+    public static ErrorCode valueOf(short value) {
+        for (ErrorCode code : ErrorCode.values()) {
+            if (code.value == value) {
+                return code;
+            }
+        }
+        throw new IllegalArgumentException("Unknown status code " + value);
+    }
 }

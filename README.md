@@ -247,6 +247,39 @@ Parameters:
     </tr>
 </table>
 
+
+### CCCP Mode
+
+This command enables or disables *CCCP* protocol semantics for a group of
+servers
+
+Parameters:
+
+<table>
+    <tr>
+       <th>Name</th>
+       <th>Meaning</th>
+       <th>Type</th>
+    </tr>
+    <tr>
+        <td><b>enabled</b></td>
+        <td>Whether to enable or disabled CCCP on the selection criteria</td>
+        <td>JSON Boolean</td>
+    </tr>
+    <tr>
+        <td>bucket</td>
+        <td>Bucket for which CCCP should be enabled/disabled.
+        If this is empty, then this command affects all buckets</td>
+        <td>String</td>
+    </tr>
+    <tr>
+        <td>servers</td>
+        <td>An array of server indices for which the enable/disable setting should
+        apply to. If this is not set, then all servers are modified</td>
+        <td>Array of numbers</td>
+    </tr>
+ </table>
+
 ### keyinfo
 
 This command returns the information about a given key in the mock

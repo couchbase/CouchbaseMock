@@ -20,6 +20,7 @@ import org.couchbase.mock.Bucket;
 import org.couchbase.mock.Bucket.BucketType;
 import org.couchbase.mock.CouchbaseMock;
 import org.couchbase.mock.memcached.protocol.BinaryCommand;
+import org.couchbase.mock.memcached.protocol.BinaryConfigResponse;
 import org.couchbase.mock.memcached.protocol.BinaryResponse;
 import org.couchbase.mock.memcached.protocol.CommandCode;
 import org.couchbase.mock.memcached.protocol.ErrorCode;
@@ -61,6 +62,7 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
     private int hiccupTime = 0;
     private int hiccupOffset = 0;
     private int truncateLimit = 0;
+    private boolean cccpEnabled = false;
 
 
     public class FailMaker {
@@ -142,6 +144,7 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         executors[CommandCode.SASL_STEP.cc()] = executors[CommandCode.SASL_LIST_MECHS.cc()];
         executors[CommandCode.OBSERVE.cc()] = new ObserveCommandExecutor();
         executors[CommandCode.EVICT.cc()] = new EvictCommandExecutor();
+        executors[CommandCode.GET_CLUSTER_CONFIG.cc()] = new ConfigCommandExecutor();
 
         bootTime = System.currentTimeMillis() / 1000;
         selector = Selector.open();
@@ -228,6 +231,14 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
 
     public String getSocketName() {
         return hostname + ":" + port;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public String getHostname() {
+        return hostname;
     }
 
     private void writeResponse(SocketChannel channel, OutputContext ctx) throws IOException {
@@ -410,7 +421,7 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
                 client.sendResponse(new BinaryResponse(cmd, ErrorCode.AUTH_ERROR));
             }
         } catch (AccessControlException ex) {
-            client.sendResponse(new BinaryResponse(cmd, ErrorCode.NOT_MY_VBUCKET));
+            client.sendResponse(BinaryConfigResponse.createNotMyVbucket(cmd, this));
         }
     }
 
@@ -489,6 +500,14 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
      */
     public boolean isActive() {
         return active;
+    }
+
+    public boolean isCccpEnabled() {
+        return cccpEnabled && bucket.getType() != BucketType.MEMCACHED;
+    }
+
+    public void setCccpEnabled(boolean enabled) {
+        cccpEnabled = enabled;
     }
 
     /**

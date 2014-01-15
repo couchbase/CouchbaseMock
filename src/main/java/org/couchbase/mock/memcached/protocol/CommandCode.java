@@ -37,7 +37,8 @@ public enum CommandCode {
     TAP_DELETE(0x42), TAP_FLUSH(0x43), TAP_OPAQUE(0x44), TAP_VBUCKET_SET(0x45),
     LAST_RESERVED(0xef), SCRUB(0xf0),
     GET_REPLICA(0x83), OBSERVE(0x92), EVICT(0x93),
-    GETL(0x94), UNL(0x95), ILLEGAL(0xff);
+    GETL(0x94), UNL(0x95),
+    GET_CLUSTER_CONFIG(0xb5), ILLEGAL(0xff);
 
 
 
@@ -51,7 +52,7 @@ public enum CommandCode {
         return value;
     }
 
-    static CommandCode valueOf(int cc) {
+    public static CommandCode valueOf(int cc) {
         switch (cc) {
             case 0x00:
                 return GET;
@@ -131,6 +132,8 @@ public enum CommandCode {
                 return GET_REPLICA;
             case (byte)0x92:
                 return OBSERVE;
+            case (byte)0xb5:
+                return GET_CLUSTER_CONFIG;
             default:
                 return ILLEGAL;
         }
@@ -218,6 +221,8 @@ public enum CommandCode {
                 return "get_replica";
             case OBSERVE:
                 return "observe";
+            case GET_CLUSTER_CONFIG:
+                return "get_cluster_config";
             default:
                 return "unknown";
 

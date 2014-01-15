@@ -15,11 +15,20 @@
  */
 package org.couchbase.mock.client;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import net.spy.memcached.internal.OperationFuture;
+import org.couchbase.mock.Bucket;
+import org.couchbase.mock.memcached.MemcachedServer;
+import org.couchbase.mock.memcached.client.ClientResponse;
+import org.couchbase.mock.memcached.client.CommandBuilder;
+import org.couchbase.mock.memcached.client.MemcachedClient;
+import org.couchbase.mock.memcached.protocol.CommandCode;
+import org.couchbase.mock.memcached.protocol.ErrorCode;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
-import net.spy.memcached.internal.OperationFuture;
-import org.couchbase.mock.memcached.protocol.ErrorCode;
 
 /**
  * Tests for the "extended" Mock API.
@@ -221,5 +230,78 @@ public class MockAPITest extends ClientBaseTest {
 
         assertTrue(mockHttpClient.request(new OpfailRequest(ErrorCode.KEY_ENOENT, 100)).isOk());
         assertTrue(mockHttpClient.request(new OpfailRequest(ErrorCode.SUCCESS, 0)).isOk());
+    }
+
+
+
+    private void checkCCCPEnabled(int index, boolean enabledExpected) throws Exception {
+        MemcachedClient mcClient = getBinClient(index);
+
+        try {
+            CommandBuilder cBuilder;
+            ClientResponse resp;
+            cBuilder = new CommandBuilder(CommandCode.GET_CLUSTER_CONFIG);
+            resp = mcClient.sendRequest(cBuilder.build());
+            if (enabledExpected) {
+                assertEquals(ErrorCode.SUCCESS, resp.getStatus());
+                assertTrue(resp.getValue().length() > 0);
+                new Gson().fromJson(resp.getValue(), JsonObject.class);
+
+            } else {
+                assertEquals(ErrorCode.NOT_SUPPORTED, resp.getStatus());
+                assertEquals(0, resp.getValue().length());
+            }
+
+            cBuilder = new CommandBuilder(CommandCode.GET);
+            cBuilder.key("foo", Short.MAX_VALUE);
+            resp = mcClient.sendRequest(cBuilder.build());
+            assertEquals(ErrorCode.NOT_MY_VBUCKET, resp.getStatus());
+            if (enabledExpected) {
+                assertTrue(resp.getValue().length() > 0);
+                new Gson().fromJson(resp.getValue(), JsonObject.class);
+            } else {
+                assertEquals(0, resp.getValue().length());
+            }
+
+        } finally {
+            mcClient.close();
+        }
+    }
+
+    public void testBasicCCCP() throws Exception {
+        // Open a connection to a mock server
+        // CCCP is disabled by default
+        checkCCCPEnabled(0, false);
+
+        // Enable CCCP
+        SetCCCPRequest req = new SetCCCPRequest(true);
+        assertTrue(mockClient.request(req).isOk());
+        checkCCCPEnabled(0, true);
+    }
+
+    public void testDetailedCCCP() throws Exception {
+        ArrayList<Integer> enabledServers = new ArrayList<Integer>();
+        enabledServers.add(0);
+        enabledServers.add(3);
+
+        for (int index : enabledServers) {
+            checkCCCPEnabled(index, false);
+        }
+
+        SetCCCPRequest req = new SetCCCPRequest(true, bucketConfiguration.name, enabledServers);
+        assertTrue(mockClient.request(req).isOk());
+
+        for (int index : enabledServers) {
+            checkCCCPEnabled(index, true);
+        }
+
+        Bucket deflBucket = couchbaseMock.getBuckets().get(bucketConfiguration.name);
+        MemcachedServer[] servers = deflBucket.getServers();
+        for (int index = 0; index < servers.length; index++) {
+            if (enabledServers.contains(index)) {
+                continue;
+            }
+            checkCCCPEnabled(index, false);
+        }
     }
 }
