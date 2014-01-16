@@ -63,7 +63,8 @@ public abstract class MockCommand {
         TIME_TRAVEL,
         HELP,
         OPFAIL,
-        SET_CCCP
+        SET_CCCP,
+        GET_MCPORTS
     }
 
     /**

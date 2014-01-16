@@ -62,6 +62,7 @@ public class MockCommandDispatcher {
         registerClass(MockCommand.Command.HELP, MockHelpCommandHandler.class);
         registerClass(MockCommand.Command.OPFAIL, OpfailCommandHandler.class);
         registerClass(MockCommand.Command.SET_CCCP, CCCPCommandHandler.class);
+        registerClass(MockCommand.Command.GET_MCPORTS, GetMCPortsHandler.class);
     }
 
 

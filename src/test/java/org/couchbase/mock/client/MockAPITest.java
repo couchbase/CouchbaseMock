@@ -16,6 +16,7 @@
 package org.couchbase.mock.client;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.spy.memcached.internal.OperationFuture;
 import org.couchbase.mock.Bucket;
@@ -28,6 +29,7 @@ import org.couchbase.mock.memcached.protocol.ErrorCode;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.ArrayList;
 
 /**
@@ -302,6 +304,19 @@ public class MockAPITest extends ClientBaseTest {
                 continue;
             }
             checkCCCPEnabled(index, false);
+        }
+    }
+
+    public void testMCPorts() throws Exception {
+        GetMCPortsRequest mreq = new GetMCPortsRequest(bucketConfiguration.name);
+        MockResponse mres = mockClient.request(mreq);
+        assertTrue(mres.isOk());
+        assertTrue(mres.getPayload().isJsonArray());
+        for (JsonElement elem : mres.getPayload().getAsJsonArray()) {
+            int port = elem.getAsInt();
+            Socket socket = new Socket();
+            socket.connect(new InetSocketAddress("localhost", port));
+            socket.close();
         }
     }
 }

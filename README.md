@@ -248,10 +248,11 @@ Parameters:
 </table>
 
 
-### CCCP Mode
+### SET_CCCP
 
 This command enables or disables *CCCP* protocol semantics for a group of
-servers
+servers.
+
 
 Parameters:
 
@@ -279,6 +280,31 @@ Parameters:
         <td>Array of numbers</td>
     </tr>
  </table>
+
+### GET_MCPORTS
+
+This is a more convenient way to get the memcached ports without parsing the
+entire vBucket config. This is particularly useful for `libcouchbase`' tests
+which at the time of writing don't have access to a simple HTTP implementation
+
+Parameters:
+
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Meaning</th>
+        <th>Type</th>
+    </tr>
+    <tr>
+        <td>bucket</td>
+        <td>Which bucket to use. If unspecified, <i>default</i> is used</td>
+        <td>string</td>
+    </tr>
+</table>
+
+The response shall contain in the `payload` field a JSON array of integers
+containing port numbers (relative to the Mock's listening addresses) which may
+be used as memcached ports.
 
 ### keyinfo
 
