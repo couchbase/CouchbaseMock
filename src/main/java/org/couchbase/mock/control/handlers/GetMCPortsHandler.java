@@ -29,6 +29,9 @@ public class GetMCPortsHandler extends MockCommand {
 
         JsonArray arr = new JsonArray();
         Bucket bucket = mock.getBuckets().get(name);
+        if (bucket == null) {
+            return new CommandStatus().fail("No such bucket: " + name);
+        }
         for (MemcachedServer server : bucket.getServers()) {
             int port = server.getPort();
             arr.add(new JsonPrimitive(port));
