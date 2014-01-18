@@ -27,6 +27,7 @@ import org.couchbase.mock.BucketConfiguration;
 import org.couchbase.mock.CouchbaseMock;
 import org.couchbase.mock.memcached.MemcachedServer;
 import org.couchbase.mock.memcached.client.MemcachedClient;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -66,19 +67,21 @@ public abstract class ClientBaseTest extends TestCase {
         Logger.getLogger("com.couchbase.client.vbucket").setLevel(Level.WARNING);
     }
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    protected void createMock(@NotNull String name, @NotNull String password) throws Exception {
         bucketConfiguration.numNodes = 10;
         bucketConfiguration.numReplicas = 3;
-        bucketConfiguration.name = "default";
+        bucketConfiguration.name = name;
         bucketConfiguration.type = BucketType.COUCHBASE;
+        bucketConfiguration.password = password;
         ArrayList<BucketConfiguration> configList = new ArrayList<BucketConfiguration>();
         configList.add(bucketConfiguration);
         couchbaseMock = new CouchbaseMock(0, configList);
         couchbaseMock.start();
         couchbaseMock.waitForStartup();
 
+    }
+
+    protected void createClients() throws Exception {
         mockClient = new MockClient(new InetSocketAddress("localhost", 0));
         couchbaseMock.setupHarakiriMonitor("localhost:" + mockClient.getPort(), false);
         mockClient.negotiate();
@@ -90,10 +93,23 @@ public abstract class ClientBaseTest extends TestCase {
     }
 
     @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        createMock("default", "");
+        createClients();
+    }
+
+    @Override
     protected void tearDown() throws Exception {
-        client.shutdown();
-        couchbaseMock.stop();
-        mockClient.shutdown();
+        if (client != null) {
+            client.shutdown();
+        }
+        if (couchbaseMock != null) {
+            couchbaseMock.stop();
+        }
+        if (mockClient != null) {
+            mockClient.shutdown();
+        }
         super.tearDown();
     }
 

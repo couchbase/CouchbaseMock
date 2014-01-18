@@ -32,6 +32,11 @@ public class CommandBuilder {
         return this;
     }
 
+    public CommandBuilder value(byte[] value) {
+        this.value = value;
+        return this;
+    }
+
     public CommandBuilder cas(long cas) {
         this.cas = cas;
         return this;

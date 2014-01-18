@@ -32,6 +32,10 @@ public class MemcachedClient {
         return readResponse();
     }
 
+    public ClientResponse sendRequest(CommandBuilder builder) throws IOException {
+        return sendRequest(builder.build());
+    }
+
     public void close() throws IOException  {
         socket.close();
         input.close();

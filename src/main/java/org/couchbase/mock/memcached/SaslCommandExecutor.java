@@ -24,6 +24,7 @@ import org.couchbase.mock.memcached.protocol.CommandCode;
  * @author Sergey Avseyev <sergey.avseyev@gmail.com>
  */
 public class SaslCommandExecutor implements CommandExecutor {
+    // http://www.ietf.org/rfc/rfc4616.txt
 
     @Override
     public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
@@ -34,14 +35,37 @@ public class SaslCommandExecutor implements CommandExecutor {
                 client.sendResponse(new BinarySaslResponse(cmd, "PLAIN"));
                 break;
             case SASL_AUTH:
-                String[] clientIn = new String(cmd.getValue()).split("\0");
+                byte[] raw = cmd.getValue();
+                String[] strs = new String[3];
+
+                int offset = 0;
+                int oix = 0;
+
+                for (int ii = 0; ii < raw.length; ii++) {
+                    if (raw[ii] == 0x0) {
+                        strs[oix++] = new String(raw, offset, ii-offset);
+                        offset = ii+1;
+                    }
+                }
+                strs[oix] = new String(raw, offset, raw.length - offset);
+
+                String user = strs[1];
+                String pass = strs[2];
+
                 Bucket bucket = server.getBucket();
-                if (bucket.getName().equals(clientIn[1]) && bucket.getPassword().equals(clientIn[2])) {
+                if (!bucket.getName().equals(user)) {
+                    client.sendResponse(new BinarySaslResponse(cmd));
+                    break;
+                }
+
+                String bPass = bucket.getPassword();
+                if (bPass.isEmpty() || bPass.equals(pass)) {
                     client.sendResponse(new BinarySaslResponse(cmd, "Authenticated"));
                     client.setAuthenticated();
                 } else {
                     client.sendResponse(new BinarySaslResponse(cmd));
                 }
+
                 break;
             case SASL_STEP:
                 client.sendResponse(new BinarySaslResponse(cmd));
