@@ -145,5 +145,26 @@ public class ClientTest extends ClientBaseTest {
         assertFalse(ft.getStatus().isSuccess());
     }
 
+    public void testKeyStats() throws Exception {
+        client.set("foo", "bar");
+        OperationFuture<Map<String,String>> ft;
+        ft = client.getKeyStats("foo");
+
+        Map<String,String> results = ft.get();
+        assertTrue(ft.getStatus().isSuccess());
+
+        assertTrue(results.containsKey("key_is_dirty"));
+        assertTrue(results.containsKey("key_exptime"));
+        assertTrue(results.containsKey("key_flags"));
+        assertTrue(results.containsKey("key_cas"));
+        assertTrue(results.containsKey("key_vb_state"));
+        assertEquals("active", results.get("key_vb_state"));
+        assertEquals("0", results.get("key_exptime"));
+
+        client.delete("foo").get();
+        ft = client.getKeyStats("foo");
+        ft.get();
+        assertFalse(ft.getStatus().isSuccess());
+    }
 
 }
