@@ -167,4 +167,7 @@ public class ClientTest extends ClientBaseTest {
         assertFalse(ft.getStatus().isSuccess());
     }
 
+    public void testBasicStats() throws Exception {
+        assertFalse(client.getStats().isEmpty());
+    }
 }

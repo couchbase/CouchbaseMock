@@ -71,7 +71,7 @@ public class StatCommandExecutor implements CommandExecutor {
     @Override
     public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
         String key = cmd.getKey();
-        if (key.startsWith("key ")) {
+        if (key != null && key.startsWith("key ")) {
             try {
                 keyStats(cmd, key, server, client);
             } catch (IllegalArgumentException ex) {
