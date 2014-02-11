@@ -16,29 +16,28 @@
 package org.couchbase.mock;
 
 import com.sun.net.httpserver.HttpServer;
-
-import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.List;
-import java.util.logging.Logger;
-import java.io.IOException;
-import java.net.BindException;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
-
-import org.couchbase.mock.harakiri.HarakiriMonitor;
 import org.couchbase.mock.Bucket.BucketType;
 import org.couchbase.mock.control.MockCommandDispatcher;
+import org.couchbase.mock.harakiri.HarakiriMonitor;
 import org.couchbase.mock.http.Authenticator;
 import org.couchbase.mock.http.ControlHandler;
 import org.couchbase.mock.http.PoolsHandler;
 import org.couchbase.mock.util.Getopt;
 import org.couchbase.mock.util.Getopt.CommandLineOption;
 import org.couchbase.mock.util.Getopt.Entry;
+
+import java.io.IOException;
+import java.net.BindException;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * This is a super-scaled down version of something that might look like
@@ -308,6 +307,8 @@ public class CouchbaseMock {
             bucket.start(nodeThreads);
         }
 
+        boolean useAnyPort = (port == 0);
+
         try {
             boolean busy = true;
             do {
@@ -320,6 +321,9 @@ public class CouchbaseMock {
                     httpServer = HttpServer.create(new InetSocketAddress(port), 10);
                     busy = false;
                 } catch (BindException ex) {
+                    if (!useAnyPort) {
+                        throw ex;
+                    }
                     System.err.println("Looks like port " + port + " busy, lets try another one");
                 }
             } while (busy);
