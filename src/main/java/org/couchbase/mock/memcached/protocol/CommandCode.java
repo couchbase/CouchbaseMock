@@ -38,7 +38,7 @@ public enum CommandCode {
     LAST_RESERVED(0xef), SCRUB(0xf0),
     GET_REPLICA(0x83), OBSERVE(0x92), EVICT(0x93),
     GETL(0x94), UNL(0x95),
-    GET_CLUSTER_CONFIG(0xb5), ILLEGAL(0xff);
+    GET_CLUSTER_CONFIG(0xb5), HELLO(0x1f), ILLEGAL(0xff);
 
 
 
@@ -134,6 +134,8 @@ public enum CommandCode {
                 return OBSERVE;
             case (byte)0xb5:
                 return GET_CLUSTER_CONFIG;
+            case (byte)0x1f:
+                return HELLO;
             default:
                 return ILLEGAL;
         }
@@ -223,6 +225,8 @@ public enum CommandCode {
                 return "observe";
             case GET_CLUSTER_CONFIG:
                 return "get_cluster_config";
+            case HELLO:
+                return "hello";
             default:
                 return "unknown";
 
