@@ -53,9 +53,20 @@ public class JMembaseTest extends TestCase {
     }
 
     private CouchbaseMock instance;
-    private final int port = 18091;
-    private int numNodes = 100;
-    private int numVBuckets = 4096;
+    static private final int port = 28091;
+    static private final int numNodes;
+    static private final int numVBuckets;
+
+    static {
+        final String platform = System.getProperty("os.name");
+        if (platform.equals("Mac OS X") || platform.equals("Linux")) {
+            numNodes = 4;
+            numVBuckets = 16;
+        } else {
+            numNodes = 100;
+            numVBuckets = 1024;
+        }
+    }
 
     private boolean serverNotReady(int port) {
         Socket socket = null;
@@ -78,11 +89,6 @@ public class JMembaseTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        final String platform = System.getProperty("os.name");
-        if (platform.equals("Mac OS X") || platform.equals("Linux")) {
-            numNodes = 4;
-            numVBuckets = 16;
-        }
 
         instance = new CouchbaseMock(null, port, numNodes, numVBuckets, "default:,protected:secret");
         instance.start();
