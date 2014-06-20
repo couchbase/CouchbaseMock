@@ -268,14 +268,14 @@ public class JMembaseTest extends TestCase {
         }
     }
 
-    @SuppressWarnings("UnusedAssignment")
-    public void testHarakiriMonitorInvalidHost() throws IOException {
-        try {
-            HarakiriMonitor m = new HarakiriMonitor("ItWouldSuckIfYouHadAHostNamedThis", 0, false, instance.getDispatcher());
-            fail("I was not expecting to be able to connect to: \"ItWouldSuckIfYouHadAHostNamedThis:0\"");
-        } catch (Throwable t) {
-        }
-    }
+//    @SuppressWarnings("UnusedAssignment")
+//    public void testHarakiriMonitorInvalidHost() throws IOException {
+//        try {
+//            HarakiriMonitor m = new HarakiriMonitor("ItWouldSuckIfYouHadAHostNamedThis", 0, false, instance.getDispatcher());
+//            fail("I was not expecting to be able to connect to: \"ItWouldSuckIfYouHadAHostNamedThis:0\"");
+//        } catch (Throwable t) {
+//        }
+//    }
 
     @SuppressWarnings("UnusedAssignment")
     public void testHarakiriMonitorInvalidPort() throws IOException {
