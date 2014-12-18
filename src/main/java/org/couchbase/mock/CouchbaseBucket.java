@@ -21,7 +21,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.CRC32;
-import net.sf.json.JSONObject;
 import org.couchbase.mock.memcached.MemcachedServer;
 
 /**
@@ -46,7 +45,7 @@ public class CouchbaseBucket extends Bucket {
     }
 
     @Override
-    public String getJSON() {
+    public Map<String,Object> getConfigMap() {
         Map<String, Object> map = new HashMap<String, Object>();
         List<MemcachedServer> active = activeServers();
         map.put("name", name);
@@ -57,9 +56,9 @@ public class CouchbaseBucket extends Bucket {
         map.put("uri", "/pools/" + poolName + "/buckets/" + name);
         map.put("streamingUri", "/pools/" + poolName + "/bucketsStreaming/" + name);
         map.put("flushCacheUri", "/pools/" + poolName + "/buckets/" + name + "/controller/doFlush");
-        List<String> nodes = new ArrayList<String>();
+        List<Map> nodes = new ArrayList<Map>();
         for (MemcachedServer server : active) {
-            nodes.add(server.toString());
+            nodes.add(server.toNodeConfigInfo());
         }
         map.put("nodes", nodes);
 
@@ -97,8 +96,7 @@ public class CouchbaseBucket extends Bucket {
         }
         vbm.put("vBucketMap", m);
         map.put("vBucketServerMap", vbm);
-        return JSONObject.fromObject(map).toString();
-
+        return map;
     }
 
     @Override

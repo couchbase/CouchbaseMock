@@ -15,7 +15,6 @@
  */
 package org.couchbase.mock.memcached;
 
-import net.sf.json.JSONObject;
 import org.couchbase.mock.Bucket;
 import org.couchbase.mock.Bucket.BucketType;
 import org.couchbase.mock.CouchbaseMock;
@@ -181,8 +180,7 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
     }
 
     @SuppressWarnings("SpellCheckingInspection")
-    @Override
-    public String toString() {
+    public Map<String,Object> toNodeConfigInfo() {
         Map<String, Object> map = new HashMap<String, Object>();
         long now = System.currentTimeMillis() / 1000;
         long uptime = now - bootTime;
@@ -204,7 +202,7 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         ports.put("direct", port);
         ports.put("proxy", 0); //todo this should be fixed (Vitaly.R)
         map.put("ports", ports);
-        return JSONObject.fromObject(map).toString();
+        return map;
     }
 
     @SuppressWarnings("SpellCheckingInspection")

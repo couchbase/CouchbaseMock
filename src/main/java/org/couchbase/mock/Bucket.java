@@ -20,10 +20,7 @@ import org.couchbase.mock.memcached.VBucketInfo;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -120,8 +117,10 @@ public abstract class Bucket {
     }
 
     public abstract BucketType getType();
-
-    public abstract String getJSON();
+    public abstract Map<String,Object> getConfigMap();
+    public final String getJSON() {
+        return JsonUtils.encode(getConfigMap());
+    }
 
     public void configReadLock() {
         configurationRwLock.readLock().lock();

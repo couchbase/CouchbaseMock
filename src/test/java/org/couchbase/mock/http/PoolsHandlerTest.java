@@ -20,7 +20,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import java.io.IOException;
 import junit.framework.TestCase;
-import net.sf.json.JSONObject;
 import org.couchbase.mock.CouchbaseMock;
 
 /**
