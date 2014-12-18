@@ -15,136 +15,64 @@
  */
 package org.couchbase.mock.http;
 
-import com.sun.net.httpserver.Headers;
+import org.apache.http.*;
+import org.apache.http.protocol.HttpContext;
+import org.apache.http.protocol.HttpRequestHandler;
+import org.couchbase.mock.Bucket;
 import org.couchbase.mock.CouchbaseMock;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
+import org.couchbase.mock.httpio.HandlerUtil;
+import org.couchbase.mock.httpio.HttpServer;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.couchbase.mock.Bucket;
-import org.couchbase.mock.memcached.MemcachedServer;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Sergey Avseyev
  */
-public class PoolsHandler implements HttpHandler {
-
+public class PoolsHandler {
     private final CouchbaseMock mock;
-
-    private class ResourceNotFoundException extends Throwable {
-    }
 
     public PoolsHandler(CouchbaseMock mock) {
         this.mock = mock;
     }
 
-    private List<Bucket> getAllowedBuckets(HttpExchange exchange) {
-        List<Bucket> bucketList = new LinkedList<Bucket>();
-        String httpUser = exchange.getPrincipal().getUsername();
-        String adminUser = mock.getAuthenticator().getAdminName();
-
-        for (Bucket bucket : mock.getBuckets().values()) {
-            if ( // Public
-                    (httpUser.isEmpty() && bucket.getPassword().isEmpty())
-                            || // Administrator
-                            adminUser.equals(httpUser)
-                            || // Protected
-                            bucket.getName().equals(httpUser)) {
-                bucketList.add(bucket);
-            }
+    private final HttpRequestHandler poolHandler = new HttpRequestHandler() {
+        @Override
+        public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
+            String payload = StateGrabber.getAllPoolsJSON(mock);
+            HandlerUtil.makeJsonResponse(response, payload);
         }
-        return bucketList;
-    }
+    };
 
-    private byte[] extractPayload(HttpExchange exchange, String path)
-            throws ResourceNotFoundException, IOException {
-        byte[] payload = null;
-
-        if (path.matches("^/pools/?$")) {
-            // GET /pools
-            payload = StateGrabber.getAllPoolsJSON(mock).getBytes();
-
-        } else if (path.matches("^/pools/" + mock.getPoolName() + "$/?")) {
-            // GET /pools/:poolName
-            payload = StateGrabber.getPoolInfoJSON(mock).getBytes();
-
-        } else if (path.matches("^/pools/" + mock.getPoolName() + "/buckets/?$")) {
-            // GET /pools/:poolName/buckets
-            payload = StateGrabber.getAllBucketsJSON(
-                    getAllowedBuckets(exchange)).getBytes();
-
-        } else if (path.matches("^/pools/" + mock.getPoolName() + "/buckets/[^/]+/?$")) {
-            // GET /pools/:poolName/buckets/:bucketName
-            String[] tokens = path.split("/");
-            Bucket bucket = mock.getBuckets().get(tokens[tokens.length - 1]);
-            payload = StateGrabber.getBucketJSON(bucket).getBytes();
-
-        } else if (path.matches("^/pools/" + mock.getPoolName() + "/bucketsStreaming/[^/]+/?$")) {
-            // GET /pools/:poolName/bucketsStreaming/:bucketName
-            String[] tokens = path.split("/");
-            Bucket bucket = mock.getBuckets().get(tokens[tokens.length - 1]);
-            if (bucket == null) {
-                throw new ResourceNotFoundException();
-            }
-
-            exchange.getResponseHeaders().set("Transfer-Encoding", "chunked");
-            exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, 0);
-            BucketsStreamingHandler streamingHandler =
-                    new BucketsStreamingHandler(mock.getMonitor(),
-                            bucket, exchange.getResponseBody());
-            try {
-                streamingHandler.startStreaming();
-            } catch (InterruptedException ex) {
-                Logger.getLogger(PoolsHandler.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        } else if (path.matches("^/pools/" + mock.getPoolName() + "/buckets/[\\w]+/controller/doFlush$")) {
-            String[] tokens = path.split("/");
-            Bucket bucket = mock.getBuckets().get(tokens[4]);
-            if (bucket == null) {
-                throw new ResourceNotFoundException();
-            }
-            for (MemcachedServer server : bucket.getServers()) {
-                server.flushAll();
-            }
-
-            return new byte[0];
-        } else {
-
-            throw new ResourceNotFoundException();
+    private final HttpRequestHandler poolsDefaultHandler = new HttpRequestHandler() {
+        @Override
+        public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
+            String payload = StateGrabber.getPoolInfoJSON(mock);
+            HandlerUtil.makeJsonResponse(response, payload);
         }
+    };
 
-        return payload;
-    }
+    private final HttpRequestHandler allBucketsHandler = new HttpRequestHandler() {
+        @Override
+        public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
+            List<Bucket> allowedBuckets = new ArrayList<Bucket>(mock.getBuckets().size());
+            Authenticator authenticator = mock.getAuthenticator();
+            AuthContext authContext = HandlerUtil.getAuth(context, request);
 
-    @Override
-    public void handle(HttpExchange exchange) throws IOException {
-        String path = exchange.getRequestURI().getPath();
-        OutputStream body = exchange.getResponseBody();
-        Headers responseHeaders = exchange.getResponseHeaders();
-
-        responseHeaders.set("Server", "CouchbaseMock/1.0");
-
-        byte[] payload;
-
-        try {
-            payload = extractPayload(exchange, path);
-            if (payload != null) {
-                responseHeaders.set("Content-Type", "application/json");
-                exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, payload.length);
-                body.write(payload);
-            } else {
-                exchange.sendResponseHeaders(HttpURLConnection.HTTP_INTERNAL_ERROR, -1);
+            for (Bucket bucket : mock.getBuckets().values()) {
+                if (authenticator.isAuthorizedForBucket(authContext, bucket)) {
+                    allowedBuckets.add(bucket);
+                }
             }
-        } catch (ResourceNotFoundException ex) {
-            exchange.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, -1);
-        } finally {
-            body.close();
+            String payload = StateGrabber.getAllBucketsJSON(allowedBuckets);
+            HandlerUtil.makeJsonResponse(response, payload);
         }
+    };
+
+    public void register(HttpServer server) {
+        server.register("/pools", poolHandler);
+        server.register(String.format("/pools/%s", mock.getPoolName()), poolsDefaultHandler);
+        server.register(String.format("/pools/%s/buckets", mock.getPoolName()), allBucketsHandler);
     }
 }

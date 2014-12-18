@@ -15,19 +15,19 @@
  */
 package org.couchbase.mock;
 
-import com.sun.net.httpserver.HttpServer;
 import org.couchbase.mock.Bucket.BucketType;
 import org.couchbase.mock.control.MockCommandDispatcher;
 import org.couchbase.mock.harakiri.HarakiriMonitor;
 import org.couchbase.mock.http.Authenticator;
+import org.couchbase.mock.http.BucketHandlers;
 import org.couchbase.mock.http.ControlHandler;
 import org.couchbase.mock.http.PoolsHandler;
+import org.couchbase.mock.httpio.HttpServer;
 import org.couchbase.mock.util.Getopt;
 import org.couchbase.mock.util.Getopt.CommandLineOption;
 import org.couchbase.mock.util.Getopt.Entry;
 
 import java.io.IOException;
-import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.ArrayList;
@@ -35,7 +35,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -158,7 +157,7 @@ public class CouchbaseMock {
             Bucket bucket = Bucket.create(this, config);
             buckets.put(bucket.getName(), bucket);
         }
-        authenticator = new Authenticator("Administrator", "password", buckets);
+        authenticator = new Authenticator("Administrator", "password");
         controlDispatcher = new MockCommandDispatcher(this);
     }
 
@@ -279,7 +278,7 @@ public class CouchbaseMock {
 
     public void stop() {
         if (httpServer != null) {
-            httpServer.stop(0);
+            httpServer.stopServer();
             httpServer = null;
         }
 
@@ -301,41 +300,32 @@ public class CouchbaseMock {
      * Start cluster in background
      */
     public void start() {
-        nodeThreads = new ArrayList<Thread>();
-        for (String s : getBuckets().keySet()) {
-            Bucket bucket = getBuckets().get(s);
-            bucket.start(nodeThreads);
-        }
-
-        boolean useAnyPort = (port == 0);
-
+        httpServer = new HttpServer();
         try {
-            boolean busy = true;
-            do {
-                if (port == 0) {
-                    ServerSocket server = new ServerSocket(0);
-                    port = server.getLocalPort();
-                    server.close();
-                }
-                try {
-                    httpServer = HttpServer.create(new InetSocketAddress(port), 10);
-                    busy = false;
-                } catch (BindException ex) {
-                    if (!useAnyPort) {
-                        throw ex;
-                    }
-                    System.err.println("Looks like port " + port + " busy, lets try another one");
-                }
-            } while (busy);
-            httpServer.createContext("/pools", new PoolsHandler(this)).setAuthenticator(authenticator);
-            httpServer.createContext("/mock", new ControlHandler(controlDispatcher));
-            httpServer.setExecutor(Executors.newCachedThreadPool());
-            httpServer.start();
-            startupLatch.countDown();
+            if (port == 0) {
+                ServerSocket s = new ServerSocket(0);
+                port = s.getLocalPort();
+                httpServer.bind(s);
+            } else {
+                httpServer.bind(new InetSocketAddress(port));
+            }
         } catch (IOException ex) {
             Logger.getLogger(CouchbaseMock.class.getName()).log(Level.SEVERE, null, ex);
             System.exit(-1);
         }
 
+        PoolsHandler poolsHandler = new PoolsHandler(this);
+        poolsHandler.register(httpServer);
+        httpServer.register("/mock/*", new ControlHandler(controlDispatcher));
+
+        nodeThreads = new ArrayList<Thread>();
+        for (String s : getBuckets().keySet()) {
+            Bucket bucket = getBuckets().get(s);
+            bucket.start(nodeThreads);
+            BucketHandlers.installBucketHandler(bucket, httpServer, this);
+        }
+
+        httpServer.start();
+        startupLatch.countDown();
     }
 }

@@ -15,97 +15,31 @@
  */
 package org.couchbase.mock.http;
 
-import com.sun.net.httpserver.BasicAuthenticator;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpPrincipal;
-
-import java.io.IOException;
-import java.util.Map;
-
 import org.couchbase.mock.Bucket;
 
 /**
  * @author Sergey Avseyev
  */
-public class Authenticator extends BasicAuthenticator {
+public class Authenticator {
 
     private final String adminName;
     private final String adminPass;
-    private String currentBucketName;
-    private final Map<String, Bucket> buckets;
 
-    public Authenticator(String username, String password, Map<String, Bucket> buckets) {
-        super("Couchbase Mock");
+    public Authenticator(String username, String password) {
         this.adminName = username;
         this.adminPass = password;
-        this.buckets = buckets;
     }
 
-    @SuppressWarnings("SimplifiableIfStatement")
-    @Override
-    public boolean checkCredentials(String username, String password) {
-        // Always allow admin
-        if (adminName.equals(username) && adminPass.equals(password)) {
-            return true;
+    public boolean isAuthorizedForBucket(AuthContext ctx, Bucket bucket) {
+        if (ctx.getUsername().equals(adminName)) {
+            return ctx.getPassword().equals(adminPass);
         }
 
-        Bucket bucket = buckets.get(username);
-        if (bucket == null) {
-            // No such bucket
-            return false;
+        if (bucket.getName().equals(ctx.getUsername())) {
+            return bucket.getPassword().equals(ctx.getPassword());
         }
 
-        // No credentials
-        if (username.isEmpty()) {
-            return bucket.getPassword().isEmpty();
-        }
-
-        if (!currentBucketName.equals(username)) {
-            return false;
-        }
-
-        String bucketPassword = bucket.getPassword();
-        return bucketPassword.isEmpty() || bucketPassword.equals(password);
-    }
-
-    @Override
-    public Result authenticate(HttpExchange exchange) {
-        String path = exchange.getRequestURI().normalize().getPath();
-        path = path.replaceAll("^/", "");
-        String[] components = path.split("/");
-        exchange.setAttribute(realm, this);
-        // pools, default, buckets(Streaming)/ bucket
-        currentBucketName = null;
-
-        if (components.length > 3 && components[2].startsWith("buckets")) {
-            currentBucketName = components[3];
-        }
-
-        AuthContext context = null;
-        String auth = exchange.getRequestHeaders().getFirst("Authorization");
-        if (auth != null) {
-            try {
-                context = new AuthContext(auth);
-            } catch (IOException e) {
-                return new Failure(400);
-            }
-        }
-
-        // For now, if we don't have a bucket name, just continue
-        if (currentBucketName == null) {
-            return new Authenticator.Success(new HttpPrincipal("", realm));
-        }
-
-        Bucket bucket = buckets.get(currentBucketName);
-        if (bucket == null) {
-            return new Failure(404);
-        } else {
-            if ((bucket.getPassword() == null || bucket.getPassword().isEmpty()) && context == null) {
-                return new Authenticator.Success(new HttpPrincipal("", realm));
-            }
-        }
-
-        return super.authenticate(exchange);
+        return bucket.getPassword().isEmpty() && ctx.getPassword().isEmpty();
     }
 
     public String getAdminName() {

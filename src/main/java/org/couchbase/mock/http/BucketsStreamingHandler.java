@@ -50,10 +50,17 @@ class BucketsStreamingHandler implements Observer {
         return StateGrabber.getBucketJSON(bucket).getBytes();
     }
 
+    private void writeChunk(byte[] chunk) throws IOException {
+        String s = String.format("%x\r\n", chunk.length);
+        output.write(s.getBytes());
+        output.write(chunk);
+        output.write("\r\n".getBytes());
+
+    }
+
     private void writeConfigBytes(byte[] payload) throws IOException {
-        output.write(payload);
-        output.flush();
-        output.write(chunkedDelimiter);
+        writeChunk(payload);
+        writeChunk(chunkedDelimiter);
         output.flush();
     }
 
