@@ -88,12 +88,12 @@ public class Base64 {
     /**
      * Base64 encode a textual string according to RFC 3548
      *
-     * @param input The string to encode
+     * @param input The bytes to encode
      * @return The encoded string
      */
     @SuppressWarnings("StatementWithEmptyBody")
-    public static String encode(String input) {
-        ByteArrayInputStream in = new ByteArrayInputStream(input.getBytes());
+    public static String encode(byte[] input) {
+        ByteArrayInputStream in = new ByteArrayInputStream(input);
         StringBuilder sb = new StringBuilder();
         try {
             while (encode(sb, in)) {
@@ -105,6 +105,10 @@ public class Base64 {
 
 
         return sb.toString();
+    }
+
+    public static String encode(String input) {
+        return encode(input.getBytes());
     }
 
     private static byte getByte(byte val) {
