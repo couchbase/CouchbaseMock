@@ -16,8 +16,8 @@
 package org.couchbase.mock.memcached;
 
 import java.security.AccessControlException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+
 import org.couchbase.mock.Bucket;
 
 /**
@@ -37,6 +37,7 @@ import org.couchbase.mock.Bucket;
  * @author Mark Nunberg <mnunberg@haskalah.org>
  */
 public class Storage {
+    public enum StorageType { CACHE, DISK }
     private final VBucketInfo vbInfo[];
     private final VBucketStore cacheStore;
     private final Map<KeySpec,Item> persistStore;
@@ -179,6 +180,28 @@ public class Storage {
     public VBucketStore getCache(short vBucketId) {
         verifyOwnership(null, vBucketId);
         return cacheStore;
+    }
+
+    public Iterable<Item> getMasterStore(final StorageType type) {
+        // Create the list now:
+        List<Item> validItems = new ArrayList<Item>();
+        Collection<Item> inputs;
+
+        if (type == StorageType.CACHE) {
+            inputs = cacheStore.getMap().values();
+        } else {
+            inputs = persistStore.values();
+        }
+
+        for (Item itm : inputs) {
+            int vbId = itm.getKeySpec().vbId;
+            MemcachedServer owner = vbInfo[vbId].getOwner();
+            if (owner == server) {
+                validItems.add(itm);
+            }
+        }
+
+        return validItems;
     }
 
     public void flush() {

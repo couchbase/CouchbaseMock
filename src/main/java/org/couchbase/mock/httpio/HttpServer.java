@@ -88,6 +88,11 @@ public class HttpServer extends Thread {
         registry.register(pattern + "/", handler);
     }
 
+    public void unregister(String pattern) {
+        registry.unregister(pattern);
+        registry.unregister(pattern + "/");
+    }
+
     public void bind(ServerSocket newSock) {
         listener = newSock;
     }

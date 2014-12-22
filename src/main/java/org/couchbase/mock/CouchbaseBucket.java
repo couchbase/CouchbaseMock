@@ -58,9 +58,16 @@ public class CouchbaseBucket extends Bucket {
         map.put("flushCacheUri", "/pools/" + poolName + "/buckets/" + name + "/controller/doFlush");
         List<Map> nodes = new ArrayList<Map>();
         for (MemcachedServer server : active) {
-            nodes.add(server.toNodeConfigInfo());
+            Map<String,Object> nodeInfo = server.toNodeConfigInfo();
+            if (cluster != null) {
+                // Add 'couchApiBase'
+                String capiBase = String.format("http://%s:%d/%s", cluster.getHttpHost(), cluster.getHttpPort(), name);
+                nodeInfo.put("couchApiBase", capiBase);
+            }
+            nodes.add(nodeInfo);
         }
         map.put("nodes", nodes);
+
 
         Map<String, String> stats = new HashMap<String, String>();
         stats.put("uri", "/pools/" + poolName + "/buckets/" + name + "/stats");

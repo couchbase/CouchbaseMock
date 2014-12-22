@@ -75,6 +75,11 @@ public class Item {
         this.cached_UTF8 = src.cached_UTF8;
     }
 
+    public Item(String key, byte[] value) {
+        this(new KeySpec(key, (short)-1));
+        this.value = value;
+    }
+
     public int getExpiryTime() {
         return expiryTime;
     }

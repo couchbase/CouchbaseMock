@@ -16,7 +16,7 @@
 package org.couchbase.mock;
 
 public class BucketConfiguration {
-    public int numVBuckets = 4096;
+    public int numVBuckets = 1024;
     public int numNodes = 10;
     public int numReplicas = 2;
     public Bucket.BucketType type = Bucket.BucketType.COUCHBASE;

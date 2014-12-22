@@ -12,6 +12,8 @@ import org.couchbase.mock.http.AuthContext;
 
 import java.io.*;
 import java.net.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by mnunberg on 12/17/14.
@@ -63,6 +65,25 @@ public class HandlerUtil {
             payload.add(optName, optVal);
         }
         return payload;
+    }
+
+    public static Map<String,String> getQueryParams(String s) throws MalformedURLException {
+        Map<String,String> params = new HashMap<String, String>();
+
+        for (String kv : s.split("&")) {
+            String[] parts = kv.split("=");
+            if (parts.length != 2) {
+                throw new MalformedURLException();
+            }
+            try {
+                String k = URLDecoder.decode(parts[0], "UTF-8");
+                String v = URLDecoder.decode(parts[1], "UTF-8");
+                params.put(k, v);
+            } catch (UnsupportedEncodingException ex) {
+                throw new MalformedURLException(ex.getMessage());
+            }
+        }
+        return params;
     }
 
     public static void makeStringResponse(HttpResponse response, String s) {

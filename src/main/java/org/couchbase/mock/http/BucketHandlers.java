@@ -16,18 +16,24 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 public final class BucketHandlers {
-    private static class StreamingHandler extends AuthRequiredHandler {
+    private static class StreamingHandler implements HttpRequestHandler {
         private final CouchbaseMock mock;
+        private final HttpAuthVerifier verifier;
+        private final Bucket bucket;
 
-        StreamingHandler(Bucket bucket, CouchbaseMock mock) {
-            super(bucket, mock);
+        StreamingHandler(Bucket bucket, CouchbaseMock mock, HttpAuthVerifier verifier) {
             this.mock = mock;
+            this.verifier = verifier;
+            this.bucket = bucket;
         }
 
         @Override
-        protected void doHandle(HttpRequest req, HttpResponse response, HttpContext context) throws HttpException, IOException {
-            HttpServerConnection htConn = HandlerUtil.getConnection(context);
+        public void handle(HttpRequest req, HttpResponse response, HttpContext context) throws HttpException, IOException {
+            if (!verifier.verify(req, response, context)) {
+                return;
+            }
 
+            HttpServerConnection htConn = HandlerUtil.getConnection(context);
             response.setHeader(HttpHeaders.TRANSFER_ENCODING, HTTP.CHUNK_CODING);
             response.setHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
             response.setHeader(HttpHeaders.CONNECTION, HTTP.CONN_CLOSE);
@@ -51,18 +57,25 @@ public final class BucketHandlers {
     }
 
     public static void installBucketHandler(final Bucket bucket, final HttpServer server, final CouchbaseMock cbMock) {
-        final AuthRequiredHandler staticHandler = new AuthRequiredHandler(bucket, cbMock) {
+        final HttpAuthVerifier verifier = new HttpAuthVerifier(bucket, cbMock.getAuthenticator());
+        final HttpRequestHandler staticHandler = new HttpRequestHandler() {
             @Override
-            protected void doHandle(HttpRequest req, HttpResponse response, HttpContext context) throws HttpException, IOException {
+            public void handle(HttpRequest req, HttpResponse response, HttpContext context) throws HttpException, IOException {
+                if (!verifier.verify(req, response, context)) {
+                    return;
+                }
                 HandlerUtil.makeJsonResponse(response, StateGrabber.getBucketJSON(bucket));
             }
         };
 
-        final AuthRequiredHandler streamingHandler = new StreamingHandler(bucket, cbMock);
-
-        final AuthRequiredHandler flushHandler = new AuthRequiredHandler(bucket, cbMock) {
+        final StreamingHandler streamingHandler = new StreamingHandler(bucket, cbMock, verifier);
+        final HttpRequestHandler flushHandler = new HttpRequestHandler() {
             @Override
-            protected void doHandle(HttpRequest req, HttpResponse response, HttpContext context) throws HttpException, IOException {
+            public void handle(HttpRequest req, HttpResponse response, HttpContext context) throws HttpException, IOException {
+                if (!verifier.verify(req, response, context)) {
+                    return;
+                }
+
                 for (MemcachedServer server : bucket.getServers()) {
                     server.flushAll();
                 }
@@ -73,31 +86,5 @@ public final class BucketHandlers {
         server.register(String.format("%s/buckets/%s", prefix, bucket.getName()), staticHandler);
         server.register(String.format("%s/bucketsStreaming/%s", prefix, bucket.getName()), streamingHandler);
         server.register(String.format("%s/buckets/%s/controller/doFlush", prefix, bucket.getName()), flushHandler);
-    }
-
-    abstract static class AuthRequiredHandler implements HttpRequestHandler {
-        protected final String username;
-        protected final Bucket bucket;
-        protected final Authenticator authInfo;
-
-        AuthRequiredHandler(Bucket bucket, CouchbaseMock mock) {
-            this.username = bucket.getName();
-            this.bucket = bucket;
-            this.authInfo = mock.getAuthenticator();
-        }
-
-        protected abstract void doHandle(HttpRequest req, HttpResponse response, HttpContext context) throws HttpException, IOException;
-
-        @Override
-        public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
-            // See if we need authentication
-            AuthContext ctx = HandlerUtil.getAuth(context, request);
-            if (!authInfo.isAuthorizedForBucket(ctx, bucket)) {
-                response.setStatusCode(HttpStatus.SC_UNAUTHORIZED);
-                return;
-            }
-            // Otherwise, simply invoke
-            doHandle(request, response, context);
-        }
     }
 }

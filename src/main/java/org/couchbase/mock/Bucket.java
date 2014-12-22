@@ -15,8 +15,7 @@
  */
 package org.couchbase.mock;
 
-import org.couchbase.mock.memcached.MemcachedServer;
-import org.couchbase.mock.memcached.VBucketInfo;
+import org.couchbase.mock.memcached.*;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -56,6 +55,51 @@ public abstract class Bucket {
         return servers;
     }
 
+    private Iterator<Item> getMasterItemsIterator(final Storage.StorageType type) {
+        return new Iterator<Item>() {
+            private int curIndex = -1;
+            private int counter = 0;
+
+            private Iterator<Item> getNextIterator() {
+                if (++curIndex == servers.length) {
+                    return null;
+                }
+                MemcachedServer s = servers[curIndex];
+                return s.getStorage().getMasterStore(type).iterator();
+            }
+
+            private Iterator<Item> curIterator = getNextIterator();
+
+            @Override
+            public boolean hasNext() {
+                while (!curIterator.hasNext()) {
+                    curIterator = getNextIterator();
+                    if (curIterator == null) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            @Override
+            public Item next() {
+                return curIterator.next();
+            }
+
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+        };
+    }
+    public Iterable<Item> getMasterItems(final Storage.StorageType type) {
+        return new Iterable<Item>() {
+            @Override
+            public Iterator<Item> iterator() {
+                return getMasterItemsIterator(type);
+            }
+        };
+    }
 
     /**
      * Get the server index for a given key

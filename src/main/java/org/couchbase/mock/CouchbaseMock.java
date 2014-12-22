@@ -18,10 +18,8 @@ package org.couchbase.mock;
 import org.couchbase.mock.Bucket.BucketType;
 import org.couchbase.mock.control.MockCommandDispatcher;
 import org.couchbase.mock.harakiri.HarakiriMonitor;
-import org.couchbase.mock.http.Authenticator;
-import org.couchbase.mock.http.BucketHandlers;
-import org.couchbase.mock.http.ControlHandler;
-import org.couchbase.mock.http.PoolsHandler;
+import org.couchbase.mock.http.*;
+import org.couchbase.mock.http.capi.CAPIServer;
 import org.couchbase.mock.httpio.HttpServer;
 import org.couchbase.mock.util.Getopt;
 import org.couchbase.mock.util.Getopt.CommandLineOption;
@@ -50,6 +48,7 @@ public class CouchbaseMock {
 
     private final Map<String, Bucket> buckets = new HashMap<String, Bucket>();
     private int port = 8091;
+    private volatile String host = "127.0.0.1";
     private HttpServer httpServer;
     private Authenticator authenticator;
     private ArrayList<Thread> nodeThreads;
@@ -171,6 +170,7 @@ public class CouchbaseMock {
     public int getHttpPort() {
         return port;
     }
+    public String getHttpHost() { return host; }
 
     public Authenticator getAuthenticator() {
         return authenticator;
@@ -323,6 +323,9 @@ public class CouchbaseMock {
             Bucket bucket = getBuckets().get(s);
             bucket.start(nodeThreads);
             BucketHandlers.installBucketHandler(bucket, httpServer, this);
+            HttpAuthVerifier verifier = new HttpAuthVerifier(bucket, authenticator);
+            CAPIServer capi = new CAPIServer(bucket, verifier);
+            capi.register(httpServer);
         }
 
         httpServer.start();

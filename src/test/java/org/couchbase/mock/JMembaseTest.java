@@ -15,14 +15,8 @@
  */
 package org.couchbase.mock;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.*;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -37,6 +31,7 @@ import java.util.Map;
 import org.couchbase.mock.client.*;
 import org.couchbase.mock.util.Base64;
 import org.couchbase.mock.harakiri.HarakiriMonitor;
+import org.couchbase.mock.util.ReaderUtils;
 
 
 /**
@@ -412,6 +407,36 @@ public class JMembaseTest extends TestCase {
         } catch (Exception ex) {
             fail(ex.getMessage());
         }
+    }
+
+    final static String DDOC = "{"
+            + "  \"_id\": \"_design/beer\","
+            + "  \"language\": \"javascript\","
+            + "  \"views\": {"
+            + "    \"all\": {"
+            + "      \"map\": \"function(doc){ emit(doc.id, null); }\""
+            + "    }"
+            + "  }"
+            + "}";
+
+
+    public void testDesignManagement() throws Exception {
+        URL url = new URL("http://localhost:"+instance.getHttpPort()+"/default/_design/beer");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setDoOutput(true);
+
+        conn.setRequestMethod("PUT");
+        conn.setRequestProperty("Content-Type", "application/json");
+        OutputStreamWriter osw = new OutputStreamWriter(conn.getOutputStream());
+        osw.write(DDOC);
+        osw.flush();
+        osw.close();
+        conn.getInputStream().close();
+
+        // Get it back
+        conn = (HttpURLConnection) url.openConnection();
+        String s = ReaderUtils.fromStream(conn.getInputStream());
+        assertEquals(s, DDOC);
     }
 
 

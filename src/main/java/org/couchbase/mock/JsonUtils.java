@@ -9,13 +9,13 @@ import java.util.List;
 import java.util.Map;
 
 public final class JsonUtils {
-    final static private Gson gs = new Gson();
+    final static public Gson GSON = new Gson();
 
     public static String encode(Object obj) {
-        return gs.toJson(obj);
+        return GSON.toJson(obj);
     }
     public static <T> T decode(String json, Class<T> cls) {
-        return gs.fromJson(json, cls);
+        return GSON.fromJson(json, cls);
     }
     public static List decodeAsList(String json) {
         return decode(json, ArrayList.class);
