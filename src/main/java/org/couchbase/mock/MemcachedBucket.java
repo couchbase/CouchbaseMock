@@ -21,7 +21,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.couchbase.mock.memcached.Item;
 import org.couchbase.mock.memcached.MemcachedServer;
+import org.couchbase.mock.memcached.protocol.ErrorCode;
 
 /**
  * Representation of a CacheBucket (aka memcached)
@@ -62,5 +64,10 @@ public class MemcachedBucket extends Bucket {
     @Override
     public BucketType getType() {
         return BucketType.MEMCACHED;
+    }
+
+    @Override
+    public ErrorCode storeItem(String key, byte[] value) {
+        throw new UnsupportedOperationException("Storing items not yet supported for memcached buckets!");
     }
 }

@@ -21,20 +21,29 @@ import org.couchbase.mock.harakiri.HarakiriMonitor;
 import org.couchbase.mock.http.*;
 import org.couchbase.mock.http.capi.CAPIServer;
 import org.couchbase.mock.httpio.HttpServer;
+import org.couchbase.mock.memcached.*;
+import org.couchbase.mock.memcached.protocol.ErrorCode;
+import org.couchbase.mock.util.Base64;
 import org.couchbase.mock.util.Getopt;
 import org.couchbase.mock.util.Getopt.CommandLineOption;
 import org.couchbase.mock.util.Getopt.Entry;
+import org.couchbase.mock.util.ReaderUtils;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.net.URL;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
  * This is a super-scaled down version of something that might look like
@@ -201,6 +210,8 @@ public class CouchbaseMock {
         String harakiriMonitorAddress = null;
         String hostname = null;
         String bucketsSpec = null;
+        String docsFile = null;
+        boolean useBeerSample = false;
         int replicaCount = -1;
 
         Getopt getopt = new Getopt();
@@ -211,6 +222,8 @@ public class CouchbaseMock {
                 addOption(new CommandLineOption('v', "--vbuckets", true)).
                 addOption(new CommandLineOption('\0', "--harakiri-monitor", true)).
                 addOption(new CommandLineOption('R', "--replicas", true)).
+                addOption(new CommandLineOption('D', "--docs", true)).
+                addOption(new CommandLineOption('S', "--with-beer-sample", false)).
                 addOption(new CommandLineOption('?', "--help", false));
 
         List<Entry> options = getopt.parse(args);
@@ -227,6 +240,10 @@ public class CouchbaseMock {
                 vbuckets = Integer.parseInt(e.value);
             } else if (e.key.equals("-R") || e.key.equals("--replicas")) {
                 replicaCount = Integer.parseInt(e.value);
+            } else if (e.key.equals("-D") || e.key.equals("--docs")) {
+                docsFile = e.value;
+            } else if (e.key.equals("-S") || e.key.equals("--with-beer-sample")) {
+                useBeerSample = true;
             } else if (e.key.equals("--harakiri-monitor")) {
                 int idx = e.value.indexOf(':');
                 if (idx == -1) {
@@ -248,12 +265,28 @@ public class CouchbaseMock {
             }
         }
 
+        if (useBeerSample) {
+            if (bucketsSpec == null || bucketsSpec.isEmpty()) {
+                bucketsSpec = "default::couchbase,";
+            }
+            bucketsSpec += ",beer-sample::couchbase";
+        }
+
         try {
             CouchbaseMock mock = new CouchbaseMock(hostname, port, nodes, 0, vbuckets, bucketsSpec, replicaCount);
             if (harakiriMonitorAddress != null) {
                 mock.setupHarakiriMonitor(harakiriMonitorAddress, true);
             }
             mock.start();
+            // See if we need to load documents:
+            if (docsFile != null) {
+                DocumentLoader loader = new DocumentLoader(mock, "default");
+                loader.loadDocuments(docsFile);
+            } else if (useBeerSample) {
+                InputStream iss = CouchbaseMock.class.getClassLoader().getResourceAsStream("views/beer-sample.serialized.xz");
+                DocumentLoader.loadFromSerializedXZ(iss, "beer-sample", mock);
+            }
+
         } catch (Exception e) {
             Logger.getLogger(CouchbaseMock.class.getName()).log(Level.SEVERE, "Fatal error! failed to create socket: ", e);
         }

@@ -16,6 +16,7 @@
     <orderEntry type="library" name="Maven: org.apache.httpcomponents:httpcore:4.4" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:3.8.1" level="project" />
     <orderEntry type="library" name="Maven: com.google.code.gson:gson:2.2.4" level="project" />
+    <orderEntry type="library" name="Maven: org.tukaani:xz:1.5" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: couchbase:couchbase-client:1.1.7" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: io.netty:netty:3.5.5.Final" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.codehaus.jettison:jettison:1.1" level="project" />

@@ -21,7 +21,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.CRC32;
-import org.couchbase.mock.memcached.MemcachedServer;
+
+import org.couchbase.mock.memcached.*;
+import org.couchbase.mock.memcached.protocol.ErrorCode;
 
 /**
  * Representation of a membase bucket
@@ -109,5 +111,15 @@ public class CouchbaseBucket extends Bucket {
     @Override
     public BucketType getType() {
         return BucketType.COUCHBASE;
+    }
+
+    @Override
+    public ErrorCode storeItem(String key, byte[] value) {
+        short vbIndex = getVbIndexForKey(key);
+        KeySpec ks = new KeySpec(key, vbIndex);
+        Item item = new Item(ks, 0, 0, value, 0);
+        MemcachedServer server = vbInfo[vbIndex].getOwner();
+        VBucketStore vbStore = server.getStorage().getCache(vbIndex);
+        return vbStore.set(item);
     }
 }

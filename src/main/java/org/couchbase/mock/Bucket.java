@@ -16,6 +16,7 @@
 package org.couchbase.mock;
 
 import org.couchbase.mock.memcached.*;
+import org.couchbase.mock.memcached.protocol.ErrorCode;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -173,6 +174,8 @@ public abstract class Bucket {
     public void configReadUnlock() {
         configurationRwLock.readLock().unlock();
     }
+
+    public abstract ErrorCode storeItem(String key, byte[] value);
 
     void failSome(float percentage) {
         configurationRwLock.writeLock().lock();
