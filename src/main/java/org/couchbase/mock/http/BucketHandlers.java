@@ -13,7 +13,7 @@ import org.couchbase.mock.httpio.ResponseHandledException;
 import org.couchbase.mock.memcached.MemcachedServer;
 
 import java.io.IOException;
-import java.io.OutputStream;
+import java.net.Socket;
 
 public final class BucketHandlers {
     private static class StreamingHandler implements HttpRequestHandler {
@@ -43,8 +43,8 @@ public final class BucketHandlers {
             htConn.sendResponseHeader(response);
             htConn.flush();
 
-            OutputStream os = HandlerUtil.getSocket(context).getOutputStream();
-            BucketsStreamingHandler streamingHandler = new BucketsStreamingHandler(mock.getMonitor(),bucket, os);
+            Socket s = HandlerUtil.getSocket(context);
+            BucketsStreamingHandler streamingHandler = new BucketsStreamingHandler(mock.getMonitor(),bucket, s);
 
             try {
                 streamingHandler.startStreaming();

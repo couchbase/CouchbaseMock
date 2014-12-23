@@ -8,6 +8,7 @@ import org.couchbase.mock.Info;
 
 import java.io.IOException;
 import java.net.*;
+import java.nio.channels.ServerSocketChannel;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -48,7 +49,7 @@ public class HttpServer extends Thread {
     private static final String serverString = String.format("CouchbaseMock/%s (mcd; views) httpcomponents/%s",
             Info.getVersion(), VersionInfo.loadVersionInfo("org.apache.http", null).getRelease());
 
-    private ServerSocket listener;
+    private ServerSocketChannel listener;
 
     final public static String CX_SOCKET = "couchbase.mock.http.socket";
     final public static String CX_AUTH = "couchbase.mock.http.auth";
@@ -78,9 +79,8 @@ public class HttpServer extends Thread {
             listener.close();
             listener = null;
         }
-
-        listener = new ServerSocket();
-        listener.bind(address);
+        listener = ServerSocketChannel.open();
+        listener.socket().bind(address);
     }
 
     public void register(String pattern, HttpRequestHandler handler) {
@@ -93,7 +93,7 @@ public class HttpServer extends Thread {
         registry.unregister(pattern + "/");
     }
 
-    public void bind(ServerSocket newSock) {
+    public void bind(ServerSocketChannel newSock) {
         listener = newSock;
     }
 
@@ -105,6 +105,7 @@ public class HttpServer extends Thread {
         Worker(HttpServerConnection htConn, Socket rawSocket) {
             this.htConn = htConn;
             this.rawSocket = rawSocket;
+            setName("Mock Http Worker: " + rawSocket.getRemoteSocketAddress());
         }
 
         void stopSocket() {
@@ -163,11 +164,11 @@ public class HttpServer extends Thread {
 
     @Override
     public void run() {
-        setName("Mock HTTP Listener: "+listener.getInetAddress());
+        setName("Mock HTTP Listener: "+listener.socket().getInetAddress());
         while (shouldRun) {
             Socket incoming;
             try {
-                incoming = listener.accept();
+                incoming = listener.accept().socket();
                 HttpServerConnection conn = connectionFactory.createConnection(incoming);
                 Worker worker = new Worker(conn, incoming);
 

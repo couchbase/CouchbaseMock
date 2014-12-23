@@ -16,8 +16,13 @@
 package org.couchbase.mock.http;
 
 import java.io.*;
+import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
+import java.nio.channels.SocketChannel;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -30,6 +35,7 @@ import org.couchbase.mock.harakiri.HarakiriMonitor;
  */
 class BucketsStreamingHandler implements Observer {
 
+    private final Socket rawSocket;
     private final OutputStream output;
     private final Bucket bucket;
     private final HarakiriMonitor monitor;
@@ -37,13 +43,22 @@ class BucketsStreamingHandler implements Observer {
     private final Condition condHasUpdatedConfig = updateHandlerLock.newCondition();
     private volatile boolean hasUpdatedConfig = false;
     private volatile boolean shouldTerminate = false;
+    // Some more book keeping stuff for the socket
+
+    private final ByteBuffer dummyBuf = ByteBuffer.allocate(1);
+
 
     private static final byte[] chunkedDelimiter = "\n\n\n\n".getBytes();
 
-    public BucketsStreamingHandler(HarakiriMonitor monitor, Bucket bucket, OutputStream output) {
-        this.output = output;
+    public BucketsStreamingHandler(HarakiriMonitor monitor, Bucket bucket, Socket socket) {
         this.bucket = bucket;
         this.monitor = monitor;
+        this.rawSocket = socket;
+        try {
+            this.output = socket.getOutputStream();
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     private byte[] getConfigBytes() {
@@ -75,12 +90,40 @@ class BucketsStreamingHandler implements Observer {
         }
     }
 
+    private boolean checkIfClosed() throws IOException {
+        SocketChannel ch = rawSocket.getChannel();
+        ch.configureBlocking(false);
+
+        dummyBuf.rewind();
+
+        try {
+            int nBytes = ch.read(dummyBuf);
+            // Anything other than 0 bytes is bad (keep in mind that in this case, 0 means "No data")
+            return nBytes == 0;
+        } catch (IOException ex) {
+            return false;
+        } finally {
+            ch.configureBlocking(true);
+        }
+    }
+
     private boolean streamNewConfig() throws InterruptedException {
         updateHandlerLock.lock();
         boolean isLocked = true;
         try {
             while (!shouldTerminate && !hasUpdatedConfig) {
-                condHasUpdatedConfig.await();
+                condHasUpdatedConfig.await(10, TimeUnit.MILLISECONDS);
+                // See if the underlying connection has been closed yet?
+                try {
+                    if (!checkIfClosed()) {
+                        return false;
+                    }
+                } catch (ClosedChannelException ex) {
+                    return false;
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                    return false;
+                }
             }
 
             isLocked = false;

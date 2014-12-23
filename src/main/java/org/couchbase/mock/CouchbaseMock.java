@@ -21,29 +21,21 @@ import org.couchbase.mock.harakiri.HarakiriMonitor;
 import org.couchbase.mock.http.*;
 import org.couchbase.mock.http.capi.CAPIServer;
 import org.couchbase.mock.httpio.HttpServer;
-import org.couchbase.mock.memcached.*;
-import org.couchbase.mock.memcached.protocol.ErrorCode;
-import org.couchbase.mock.util.Base64;
 import org.couchbase.mock.util.Getopt;
 import org.couchbase.mock.util.Getopt.CommandLineOption;
 import org.couchbase.mock.util.Getopt.Entry;
-import org.couchbase.mock.util.ReaderUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.URL;
-import java.util.*;
+import java.nio.channels.ServerSocketChannel;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 /**
  * This is a super-scaled down version of something that might look like
@@ -204,9 +196,10 @@ public class CouchbaseMock {
      * @param args Command line arguments
      */
     public static void main(String[] args) {
+        BucketConfiguration defaultConfig = new BucketConfiguration();
         int port = 8091;
-        int nodes = 100;
-        int vbuckets = 4096;
+        int nodes = defaultConfig.numNodes;
+        int vbuckets = defaultConfig.numVBuckets;
         String harakiriMonitorAddress = null;
         String hostname = null;
         String bucketsSpec = null;
@@ -336,9 +329,10 @@ public class CouchbaseMock {
         httpServer = new HttpServer();
         try {
             if (port == 0) {
-                ServerSocket s = new ServerSocket(0);
-                port = s.getLocalPort();
-                httpServer.bind(s);
+                ServerSocketChannel ch = ServerSocketChannel.open();
+                ch.socket().bind(new InetSocketAddress(0));
+                port = ch.socket().getLocalPort();
+                httpServer.bind(ch);
             } else {
                 httpServer.bind(new InetSocketAddress(port));
             }
