@@ -92,6 +92,15 @@ public class HandlerUtil {
         response.setEntity(entity);
     }
 
+    public static void makeResponse(HttpResponse response, String msg, int status) {
+        response.setStatusCode(status);
+        makeStringResponse(response, msg);
+    }
+
+    public static void make400Response(HttpResponse response, String msg) {
+        makeResponse(response, msg, HttpStatus.SC_BAD_REQUEST);
+    }
+
     public static void makeJsonResponse(HttpResponse response, String encoded) {
         StringEntity ent = new StringEntity(encoded, ContentType.APPLICATION_JSON);
         response.setEntity(ent);

@@ -15,6 +15,7 @@
  */
 package org.couchbase.mock;
 
+import org.couchbase.mock.http.BucketAdminServer;
 import org.couchbase.mock.http.capi.CAPIServer;
 import org.couchbase.mock.memcached.*;
 import org.couchbase.mock.memcached.protocol.ErrorCode;
@@ -33,6 +34,7 @@ import java.util.logging.Logger;
  */
 public abstract class Bucket {
     private CAPIServer capiServer = null;
+    private BucketAdminServer adminServer = null;
 
     public enum BucketType {
         MEMCACHED, COUCHBASE
@@ -174,6 +176,15 @@ public abstract class Bucket {
 
     public CAPIServer getCAPIServer() {
         return capiServer;
+    }
+
+
+    public BucketAdminServer getAdminServer() {
+        return adminServer;
+    }
+
+    public void setAdminServer(BucketAdminServer adminServer) {
+        this.adminServer = adminServer;
     }
 
     public abstract Map<String,Object> getConfigMap();

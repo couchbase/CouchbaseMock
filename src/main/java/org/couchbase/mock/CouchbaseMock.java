@@ -25,6 +25,7 @@ import org.couchbase.mock.util.Getopt;
 import org.couchbase.mock.util.Getopt.CommandLineOption;
 import org.couchbase.mock.util.Getopt.Entry;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
@@ -53,6 +54,8 @@ public class CouchbaseMock {
     private final Authenticator authenticator;
     private final CountDownLatch startupLatch = new CountDownLatch(1);
     private final MockCommandDispatcher controlDispatcher;
+    private final PoolsHandler poolsHandler;
+    private BucketConfiguration defaultConfig = new BucketConfiguration();
 
     private int port = 8091;
     private volatile String host = "127.0.0.1";
@@ -111,6 +114,14 @@ public class CouchbaseMock {
         return controlDispatcher;
     }
 
+    public PoolsHandler getPoolsHandler() {
+        return poolsHandler;
+    }
+
+    public BucketConfiguration getDefaultConfig() {
+        return new BucketConfiguration(defaultConfig);
+    }
+
     private static BucketConfiguration parseBucketString(String spec, BucketConfiguration defaults) {
         BucketConfiguration config = new BucketConfiguration(defaults);
 
@@ -163,6 +174,7 @@ public class CouchbaseMock {
 
     public CouchbaseMock(String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, String bucketSpec, int numReplicas) throws IOException {
         this(port, fromSpecString(bucketSpec, createDefaultConfig(hostname, numNodes, port, bucketStartPort, numVBuckets, numReplicas)));
+        defaultConfig = createDefaultConfig(hostname, numNodes, port, bucketStartPort, numVBuckets, numReplicas);
     }
     public CouchbaseMock(String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets) throws IOException {
         this(hostname, port, numNodes, bucketStartPort, numVBuckets, null, -1);
@@ -187,7 +199,7 @@ public class CouchbaseMock {
             initialConfigs.put(config.name, config);
         }
 
-        PoolsHandler poolsHandler = new PoolsHandler(this);
+        poolsHandler = new PoolsHandler(this);
         poolsHandler.register(httpServer);
         httpServer.register("/mock/*", new ControlHandler(controlDispatcher));
     }
@@ -223,6 +235,7 @@ public class CouchbaseMock {
         String bucketsSpec = null;
         String docsFile = null;
         boolean useBeerSample = false;
+        boolean emptyCluster = false;
         int replicaCount = -1;
 
         Getopt getopt = new Getopt();
@@ -235,6 +248,7 @@ public class CouchbaseMock {
                 addOption(new CommandLineOption('R', "--replicas", true)).
                 addOption(new CommandLineOption('D', "--docs", true)).
                 addOption(new CommandLineOption('S', "--with-beer-sample", false)).
+                addOption(new CommandLineOption('E', "--empty", false)).
                 addOption(new CommandLineOption('?', "--help", false));
 
         List<Entry> options = getopt.parse(args);
@@ -255,6 +269,8 @@ public class CouchbaseMock {
                 docsFile = e.value;
             } else if (e.key.equals("-S") || e.key.equals("--with-beer-sample")) {
                 useBeerSample = true;
+            } else if (e.key.equals("-E") || e.key.equals("--empty")) {
+                emptyCluster = true;
             } else if (e.key.equals("--harakiri-monitor")) {
                 int idx = e.value.indexOf(':');
                 if (idx == -1) {
@@ -288,6 +304,11 @@ public class CouchbaseMock {
             if (harakiriMonitorAddress != null) {
                 mock.setupHarakiriMonitor(harakiriMonitorAddress, true);
             }
+
+            if (emptyCluster) {
+                mock.clearInitialConfigs();
+            }
+
             mock.start();
             // See if we need to load documents:
             if (docsFile != null) {
@@ -321,7 +342,10 @@ public class CouchbaseMock {
             }
 
             Bucket bucket = Bucket.create(this, config);
-            BucketHandlers.installBucketHandler(bucket, httpServer, this);
+            BucketAdminServer adminServer = new BucketAdminServer(bucket, httpServer, this);
+            adminServer.register();
+            bucket.setAdminServer(adminServer);
+
             HttpAuthVerifier verifier = new HttpAuthVerifier(bucket, authenticator);
 
             if (config.type == BucketType.COUCHBASE) {
@@ -333,6 +357,25 @@ public class CouchbaseMock {
             buckets.put(config.name, bucket);
             bucket.start();
         }
+    }
+
+    public void removeBucket(String name) throws FileNotFoundException {
+        Bucket bucket;
+        synchronized (buckets) {
+            if (!buckets.containsKey(name)) {
+                throw new FileNotFoundException("No such bucket: "+ name);
+            }
+            bucket = buckets.remove(name);
+        }
+        CAPIServer capi = bucket.getCAPIServer();
+        if (capi != null) {
+            capi.shutdown();
+        }
+        BucketAdminServer adminServer = bucket.getAdminServer();
+        if (adminServer != null) {
+            adminServer.shutdown();
+        }
+        bucket.stop();
     }
 
     /*

@@ -33,6 +33,15 @@ public final class CAPIServer {
         parentServer = server;
     }
 
+    public void shutdown() {
+        synchronized (designDocMap) {
+            for (DesignDocument ddoc : designDocMap.values()) {
+                removeDesign(ddoc, false);
+            }
+        }
+        parentServer.unregister(String.format("%s/_design/*", bucket.getName()));
+    }
+
     private String makeViewPaths(DesignDocument design, View view) {
         return String.format("/%s/%s/_view/%s", bucket.getName(), design.getId(), view.getName());
     }

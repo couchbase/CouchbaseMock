@@ -25,7 +25,6 @@ import java.util.concurrent.Callable;
 
 import org.couchbase.mock.CouchbaseMock;
 import org.couchbase.mock.control.MockCommandDispatcher;
-import sun.nio.ch.AlreadyBoundException;
 
 /**
  * The HarakiriMonitor started off as a class that was designed to
@@ -49,7 +48,7 @@ public class HarakiriMonitor extends Observable implements Runnable {
 
     public void bind(String host, int port) throws IOException {
         if (input != null) {
-            throw new AlreadyBoundException();
+            throw new IOException("Already have socket");
         }
 
         Socket sock = new Socket(host, port);

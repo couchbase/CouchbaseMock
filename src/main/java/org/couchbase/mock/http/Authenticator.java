@@ -42,6 +42,11 @@ public class Authenticator {
         return bucket.getPassword().isEmpty() && ctx.getPassword().isEmpty();
     }
 
+    public boolean isAdministrator(AuthContext ctx) {
+        return ctx.getUsername() != null && ctx.getUsername().equals(adminName) &&
+                ctx.getPassword() != null && ctx.getPassword().equals(adminPass);
+    }
+
     public String getAdminName() {
         return adminName;
     }
