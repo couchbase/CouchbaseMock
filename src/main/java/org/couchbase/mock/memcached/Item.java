@@ -16,6 +16,13 @@
 
 package org.couchbase.mock.memcached;
 
+import org.couchbase.mock.util.Base64;
+import sun.nio.cs.StandardCharsets;
+
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
 import java.util.Date;
 
 /**
@@ -26,8 +33,11 @@ public class Item {
     private final int flags;
     private int expiryTime;
     private byte[] value;
+    private String cached_UTF8 = null;
+    private String cached_B64 = null;
     private long cas;
     private long modificationTime;
+    final static private Charset UTF8_CHARSET = Charset.forName("UTF-8");
 
     /** When the lock expires, if any */
     private int lockExpiryTime;
@@ -61,6 +71,8 @@ public class Item {
         this.cas = src.cas;
         this.modificationTime = src.modificationTime;
         this.lockExpiryTime = src.lockExpiryTime;
+        this.cached_B64 = src.cached_B64;
+        this.cached_UTF8 = src.cached_UTF8;
     }
 
     public int getExpiryTime() {
@@ -89,6 +101,25 @@ public class Item {
 
     public byte[] getValue() {
         return value;
+    }
+
+    public String getUtf8() throws CharacterCodingException {
+        if (cached_UTF8 != null) {
+            return cached_UTF8;
+        }
+
+        CharsetDecoder dec = UTF8_CHARSET.newDecoder();
+        cached_UTF8 = dec.decode(ByteBuffer.wrap(value)).toString();
+        return cached_UTF8;
+    }
+
+    public String getBase64() {
+        if (cached_B64 != null) {
+            return cached_B64;
+        } else {
+            cached_B64 = Base64.encode(value);
+            return cached_B64;
+        }
     }
 
     public long getCas() {
