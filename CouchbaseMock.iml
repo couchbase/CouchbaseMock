@@ -17,13 +17,13 @@
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:3.8.1" level="project" />
     <orderEntry type="library" name="Maven: com.google.code.gson:gson:2.2.4" level="project" />
     <orderEntry type="library" name="Maven: org.tukaani:xz:1.5" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: couchbase:couchbase-client:1.1.7" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.couchbase.client:couchbase-client:1.4.6" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: io.netty:netty:3.5.5.Final" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.codehaus.jettison:jettison:1.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: stax:stax-api:1.0.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: commons-codec:commons-codec:1.5" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: net.spy:spymemcached:2.9.0" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.apache.httpcomponents:httpcore-nio:4.1.1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: net.spy:spymemcached:2.11.5" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.apache.httpcomponents:httpcore-nio:4.3" level="project" />
     <orderEntry type="library" name="Maven: org.mozilla:rhino:1.7R4" level="project" />
   </component>
 </module>

@@ -62,6 +62,7 @@ public abstract class ClientBaseTest extends TestCase {
     // Don't make the client flood the screen with log messages..
     static {
         System.setProperty("net.spy.log.LoggerImpl", "net.spy.memcached.compat.log.SunLogger");
+        System.setProperty("cbclient.disableCarrierBootstrap", "true");
         Logger.getLogger("net.spy.memcached").setLevel(Level.WARNING);
         Logger.getLogger("com.couchbase.client").setLevel(Level.WARNING);
         Logger.getLogger("com.couchbase.client.vbucket").setLevel(Level.WARNING);
