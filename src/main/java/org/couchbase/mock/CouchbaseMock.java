@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -46,22 +47,33 @@ import java.util.logging.Logger;
  * @author Trond Norbye
  */
 public class CouchbaseMock {
-
+    private final Map<String,BucketConfiguration> initialConfigs;
     private final Map<String, Bucket> buckets = new HashMap<String, Bucket>();
+    private final HttpServer httpServer;
+    private final Authenticator authenticator;
+    private final CountDownLatch startupLatch = new CountDownLatch(1);
+    private final MockCommandDispatcher controlDispatcher;
+
     private int port = 8091;
     private volatile String host = "127.0.0.1";
-    private HttpServer httpServer;
-    private Authenticator authenticator;
-    private ArrayList<Thread> nodeThreads;
-    private final CountDownLatch startupLatch = new CountDownLatch(1);
     private HarakiriMonitor harakiriMonitor;
-    private MockCommandDispatcher controlDispatcher;
 
     public void setupHarakiriMonitor(String host, boolean terminate) throws IOException {
         int idx = host.indexOf(':');
         String h = host.substring(0, idx);
         int p = Integer.parseInt(host.substring(idx + 1));
-        harakiriMonitor = new HarakiriMonitor(h, p, terminate, controlDispatcher);
+
+        if (terminate) {
+            harakiriMonitor.setTemrinateAction(new Callable() {
+                @Override
+                public Object call() throws Exception {
+                    System.exit(1);
+                    return null;
+                }
+            });
+        }
+
+        harakiriMonitor.bind(h, p);
         harakiriMonitor.start();
     }
 
@@ -80,6 +92,17 @@ public class CouchbaseMock {
         return buckets;
     }
 
+    Map<String,BucketConfiguration> getInitialConfigs() {
+        return initialConfigs;
+    }
+
+    public void clearInitialConfigs() {
+        if (!buckets.isEmpty()) {
+            throw new IllegalStateException("Cannot clear initial configs once they have been started");
+        }
+        initialConfigs.clear();
+    }
+
     public HarakiriMonitor getMonitor() {
         return harakiriMonitor;
     }
@@ -88,8 +111,7 @@ public class CouchbaseMock {
         return controlDispatcher;
     }
 
-    private static BucketConfiguration parseBucketString(String spec, BucketConfiguration defaults)
-    {
+    private static BucketConfiguration parseBucketString(String spec, BucketConfiguration defaults) {
         BucketConfiguration config = new BucketConfiguration(defaults);
 
         String[] parts = spec.split(":");
@@ -100,7 +122,7 @@ public class CouchbaseMock {
         if (parts.length > 1) {
             pass = parts[1];
             if (parts.length > 2) {
-                if (parts[2].equals("memcache")) {
+                if (parts[2].startsWith("memcache")) {
                     config.type = BucketType.MEMCACHED;
                 }
             }
@@ -109,11 +131,8 @@ public class CouchbaseMock {
         return config;
     }
 
-    public CouchbaseMock(String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, String bucketSpec, int numReplicas) throws IOException {
-        List<BucketConfiguration> configs = new ArrayList<BucketConfiguration>();
+    private static BucketConfiguration createDefaultConfig(String hostname, int numNodes, int port, int bucketStartPort, int numVBuckets, int numReplicas) {
         BucketConfiguration defaultConfig = new BucketConfiguration();
-
-        defaultConfig.name = "default";
         defaultConfig.type = BucketType.COUCHBASE;
         defaultConfig.hostname = hostname;
         defaultConfig.port = port;
@@ -124,41 +143,53 @@ public class CouchbaseMock {
 
         defaultConfig.bucketStartPort = bucketStartPort;
         defaultConfig.numVBuckets = numVBuckets;
-        if (bucketSpec == null) {
-            configs.add(defaultConfig);
-        } else {
+        return defaultConfig;
+    }
+
+    private static List<BucketConfiguration> fromSpecString(String bucketSpec, BucketConfiguration defaultConfig) {
+        List<BucketConfiguration> configs = new ArrayList<BucketConfiguration>();
+        if (bucketSpec != null) {
             for (String spec : bucketSpec.split(",")) {
                 configs.add(parseBucketString(spec, defaultConfig));
             }
         }
-
-        initCommon(port, configs);
+        if (configs.isEmpty()) {
+            BucketConfiguration defaultBucket = new BucketConfiguration(defaultConfig);
+            defaultBucket.name = "default";
+            configs.add(defaultBucket);
+        }
+        return configs;
     }
 
+    public CouchbaseMock(String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, String bucketSpec, int numReplicas) throws IOException {
+        this(port, fromSpecString(bucketSpec, createDefaultConfig(hostname, numNodes, port, bucketStartPort, numVBuckets, numReplicas)));
+    }
     public CouchbaseMock(String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets) throws IOException {
         this(hostname, port, numNodes, bucketStartPort, numVBuckets, null, -1);
     }
-
     public CouchbaseMock(String hostname, int port, int numNodes, int numVBuckets) throws IOException {
         this(hostname, port, numNodes, 0, numVBuckets, null, -1);
     }
-
     public CouchbaseMock(String hostname, int port, int numNodes, int numVBuckets, String bucketSpec) throws IOException {
         this(hostname, port, numNodes, 0, numVBuckets, bucketSpec, -1);
     }
 
     public CouchbaseMock(int port, List<BucketConfiguration> configs) throws IOException {
-        initCommon(port, configs);
-    }
-
-    private void initCommon(int port, List<BucketConfiguration> configs) throws IOException {
         this.port = port;
-        for (BucketConfiguration config : configs) {
-            Bucket bucket = Bucket.create(this, config);
-            buckets.put(bucket.getName(), bucket);
-        }
+
         authenticator = new Authenticator("Administrator", "password");
         controlDispatcher = new MockCommandDispatcher(this);
+        initialConfigs = new HashMap<String, BucketConfiguration>();
+        harakiriMonitor = new HarakiriMonitor(controlDispatcher);
+        httpServer = new HttpServer();
+
+        for (BucketConfiguration config : configs) {
+            initialConfigs.put(config.name, config);
+        }
+
+        PoolsHandler poolsHandler = new PoolsHandler(this);
+        poolsHandler.register(httpServer);
+        httpServer.register("/mock/*", new ControlHandler(controlDispatcher));
     }
 
     public void waitForStartup() throws InterruptedException {
@@ -175,19 +206,6 @@ public class CouchbaseMock {
 
     public Authenticator getAuthenticator() {
         return authenticator;
-    }
-
-    /**
-     * Set the required http basic authorization. To have no http auth at all, just provide
-     * <code>null</code>.
-     *
-     * @param authenticator the credentials that need to be passed as Authorization header
-     *                      (basic auth) when accessing the REST interface, or <code>null</code>
-     *                      if no http auth is wanted.
-     */
-    @SuppressWarnings("UnusedDeclaration")
-    public void setAuthenticator(Authenticator authenticator) {
-        this.authenticator = authenticator;
     }
 
     /**
@@ -285,40 +303,35 @@ public class CouchbaseMock {
         }
     }
 
-    @SuppressWarnings("UnusedDeclaration")
-    public void failSome(String name, float percentage) {
-        Bucket bucket = getBuckets().get(name);
-        if (bucket != null) {
-            bucket.failSome(percentage);
-        }
-
-    }
-
-    @SuppressWarnings("UnusedDeclaration")
-    public void fixSome(String name, float percentage) {
-        Bucket bucket = getBuckets().get(name);
-        if (bucket != null) {
-            bucket.fixSome(percentage);
-        }
-    }
-
     public void stop() {
-        if (httpServer != null) {
-            httpServer.stopServer();
-            httpServer = null;
+        httpServer.stopServer();
+        for (Bucket bucket : buckets.values()) {
+            bucket.stop();
+        }
+    }
+
+    public void createBucket(BucketConfiguration config) throws BucketAlreadyExistsException, IOException {
+        if (!config.validate()) {
+            throw new IllegalArgumentException("Invalid bucket configuration");
         }
 
-        for (Thread t : nodeThreads) {
-            t.interrupt();
-            do {
-                try {
-                    t.join();
-                    t = null;
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(CouchbaseMock.class.getName()).log(Level.SEVERE, null, ex);
-                    t.interrupt();
-                }
-            } while (t != null);
+        synchronized (buckets) {
+            if (buckets.containsKey(config.name)) {
+                throw new BucketAlreadyExistsException(config.name);
+            }
+
+            Bucket bucket = Bucket.create(this, config);
+            BucketHandlers.installBucketHandler(bucket, httpServer, this);
+            HttpAuthVerifier verifier = new HttpAuthVerifier(bucket, authenticator);
+
+            if (config.type == BucketType.COUCHBASE) {
+                CAPIServer capi = new CAPIServer(bucket, verifier);
+                capi.register(httpServer);
+                bucket.setCAPIServer(capi);
+            }
+
+            buckets.put(config.name, bucket);
+            bucket.start();
         }
     }
 
@@ -326,7 +339,6 @@ public class CouchbaseMock {
      * Start cluster in background
      */
     public void start() {
-        httpServer = new HttpServer();
         try {
             if (port == 0) {
                 ServerSocketChannel ch = ServerSocketChannel.open();
@@ -341,20 +353,13 @@ public class CouchbaseMock {
             System.exit(-1);
         }
 
-        PoolsHandler poolsHandler = new PoolsHandler(this);
-        poolsHandler.register(httpServer);
-        httpServer.register("/mock/*", new ControlHandler(controlDispatcher));
-
-        nodeThreads = new ArrayList<Thread>();
-        for (String s : getBuckets().keySet()) {
-            Bucket bucket = getBuckets().get(s);
-            bucket.start(nodeThreads);
-            BucketHandlers.installBucketHandler(bucket, httpServer, this);
-            HttpAuthVerifier verifier = new HttpAuthVerifier(bucket, authenticator);
-            CAPIServer capi = new CAPIServer(bucket, verifier);
-            capi.register(httpServer);
-            if (bucket instanceof CouchbaseBucket) {
-                bucket.setCAPIServer(capi);
+        for (BucketConfiguration config : initialConfigs.values()) {
+            try {
+                createBucket(config);
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            } catch (BucketAlreadyExistsException ex) {
+                ex.printStackTrace();
             }
         }
 

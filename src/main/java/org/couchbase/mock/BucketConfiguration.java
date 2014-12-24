@@ -53,4 +53,16 @@ public class BucketConfiguration {
         port = other.port;
         bucketStartPort = other.bucketStartPort;
     }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public Bucket.BucketType getType() {
+        return type;
+    }
 }

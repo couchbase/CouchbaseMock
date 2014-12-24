@@ -49,7 +49,7 @@ import java.util.logging.Logger;
  *
  * @author Trond Norbye
  */
-public class MemcachedServer implements Runnable, BinaryProtocolHandler {
+public class MemcachedServer extends Thread implements BinaryProtocolHandler {
     private final Storage storage;
     private final long bootTime;
     private final String hostname;

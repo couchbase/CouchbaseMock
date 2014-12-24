@@ -23,6 +23,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Representation of the bucket in the membase concept.
@@ -241,12 +243,26 @@ public abstract class Bucket {
         }
     }
 
-    void start(List<Thread> threads) {
+    void start() {
         for (int ii = 0; ii < servers.length; ii++) {
-            Thread t = new Thread(servers[ii], "mock memcached " + ii);
-            t.setDaemon(true);
-            t.start();
-            threads.add(t);
+            servers[ii].setName(String.format("%s:MCD[%d]", name, ii));
+            servers[ii].setDaemon(true);
+            servers[ii].start();
+        }
+    }
+
+    void stop() {
+        for (MemcachedServer t : servers) {
+            t.interrupt();
+            do {
+                try {
+                    t.join();
+                    t = null;
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(CouchbaseMock.class.getName()).log(Level.SEVERE, null, ex);
+                    t.interrupt();
+                }
+            } while (t != null);
         }
     }
 
