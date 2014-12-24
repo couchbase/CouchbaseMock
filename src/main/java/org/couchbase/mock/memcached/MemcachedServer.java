@@ -18,6 +18,7 @@ package org.couchbase.mock.memcached;
 import org.couchbase.mock.Bucket;
 import org.couchbase.mock.Bucket.BucketType;
 import org.couchbase.mock.CouchbaseMock;
+import org.couchbase.mock.Info;
 import org.couchbase.mock.memcached.protocol.BinaryCommand;
 import org.couchbase.mock.memcached.protocol.BinaryConfigResponse;
 import org.couchbase.mock.memcached.protocol.BinaryResponse;
@@ -206,7 +207,7 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
     }
 
     @SuppressWarnings("SpellCheckingInspection")
-    public Map<String, String> getStats() {
+    private Map<String,String> getDefaultStats() {
         HashMap<String, String> stats = new HashMap<String, String>();
         stats.put("pid", Long.toString(Thread.currentThread().getId()));
         stats.put("time", Long.toString(new Date().getTime()));
@@ -225,6 +226,31 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         stats.put("mem_used", "100000000000000000000");
         stats.put("curr_connections", "-1");
         return stats;
+    }
+
+    @SuppressWarnings("SpellCheckingInspection")
+    public Map<String, String> getStats(String about) {
+        if (about == null || about.isEmpty()) {
+            return getDefaultStats();
+        } else if (about.equals("memory")) {
+            Map<String, String> memStats = new HashMap<String, String>();
+            Runtime rt = Runtime.getRuntime();
+            memStats.put("mem_used", Long.toString(rt.totalMemory()));
+            memStats.put("mem_free", Long.toString(rt.freeMemory()));
+            memStats.put("mem_max", Long.toString(rt.maxMemory()));
+            return memStats;
+        } else if (about.equals("tap")) {
+            Map<String, String> tapStats = new HashMap<String, String>();
+            tapStats.put("ep_tap_count", "0");
+            return tapStats;
+        } else if (about.equals("__MOCK__")) {
+            Map<String,String> mockInfo = new HashMap<String, String>();
+            mockInfo.put("implementation", "java");
+            mockInfo.put("version", Info.getVersion());
+            return mockInfo;
+        } else {
+            return null;
+        }
     }
 
     public String getSocketName() {
