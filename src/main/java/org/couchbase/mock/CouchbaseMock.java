@@ -353,6 +353,9 @@ public class CouchbaseMock {
             HttpAuthVerifier verifier = new HttpAuthVerifier(bucket, authenticator);
             CAPIServer capi = new CAPIServer(bucket, verifier);
             capi.register(httpServer);
+            if (bucket instanceof CouchbaseBucket) {
+                bucket.setCAPIServer(capi);
+            }
         }
 
         httpServer.start();

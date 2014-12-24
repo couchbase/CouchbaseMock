@@ -15,6 +15,7 @@
  */
 package org.couchbase.mock;
 
+import org.couchbase.mock.http.capi.CAPIServer;
 import org.couchbase.mock.memcached.*;
 import org.couchbase.mock.memcached.protocol.ErrorCode;
 
@@ -29,6 +30,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @author Trond Norbye
  */
 public abstract class Bucket {
+    private CAPIServer capiServer = null;
+
     public enum BucketType {
         MEMCACHED, COUCHBASE
     }
@@ -162,6 +165,15 @@ public abstract class Bucket {
     }
 
     public abstract BucketType getType();
+
+    void setCAPIServer(CAPIServer server) {
+        this.capiServer = server;
+    }
+
+    public CAPIServer getCAPIServer() {
+        return capiServer;
+    }
+
     public abstract Map<String,Object> getConfigMap();
     public final String getJSON() {
         return JsonUtils.encode(getConfigMap());

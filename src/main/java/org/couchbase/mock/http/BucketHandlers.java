@@ -7,6 +7,8 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestHandler;
 import org.couchbase.mock.Bucket;
 import org.couchbase.mock.CouchbaseMock;
+import org.couchbase.mock.JsonUtils;
+import org.couchbase.mock.http.capi.CAPIServer;
 import org.couchbase.mock.httpio.HandlerUtil;
 import org.couchbase.mock.httpio.HttpServer;
 import org.couchbase.mock.httpio.ResponseHandledException;
@@ -14,6 +16,7 @@ import org.couchbase.mock.memcached.MemcachedServer;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Map;
 
 public final class BucketHandlers {
     private static class StreamingHandler implements HttpRequestHandler {
@@ -82,9 +85,29 @@ public final class BucketHandlers {
             }
         };
 
+        final HttpRequestHandler listDesignHandler = new HttpRequestHandler() {
+            @Override
+            public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
+                if (!verifier.verify(request, response, context)) {
+                    return;
+                }
+                CAPIServer capi = bucket.getCAPIServer();
+                if (capi == null) {
+                    HandlerUtil.makeStringResponse(response, "Not found");
+                    response.setStatusCode(HttpStatus.SC_NOT_FOUND);
+                    return;
+                }
+
+                Map<String,Object> ddInfo = capi.getDddocApiInfo();
+                String encoded = JsonUtils.encode(ddInfo);
+                HandlerUtil.makeJsonResponse(response, encoded);
+            }
+        };
+
         final String prefix = "/pools/"+cbMock.getPoolName();
         server.register(String.format("%s/buckets/%s", prefix, bucket.getName()), staticHandler);
         server.register(String.format("%s/bucketsStreaming/%s", prefix, bucket.getName()), streamingHandler);
         server.register(String.format("%s/buckets/%s/controller/doFlush", prefix, bucket.getName()), flushHandler);
+        server.register(String.format("%s/buckets/%s/ddocs", prefix, bucket.getName()), listDesignHandler);
     }
 }

@@ -10,10 +10,7 @@ import org.couchbase.mock.httpio.HttpServer;
 import org.couchbase.mock.views.DesignDocument;
 import org.couchbase.mock.views.View;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class CAPIServer {
@@ -80,6 +77,66 @@ public final class CAPIServer {
 
     DesignDocument findDesign(PathInfo info) {
         return designDocMap.get(info.getDesignId());
+    }
+
+    private Map<String,Object> getSingleViewInfo(View view) {
+        Map<String,Object> topLevel = new HashMap<String, Object>();
+        String sMap = view.getMapSource();
+        String sRed = view.getReduceSource();
+
+        if (sMap != null) {
+            topLevel.put("map", sMap);
+        }
+
+        if (sRed != null) {
+            topLevel.put("reduce", sRed);
+        }
+        return topLevel;
+    }
+
+    private Map<String,Object> getSingleDdocInfo(DesignDocument ddoc) {
+        Map<String,Object> topLevel = new HashMap<String, Object>();
+        topLevel.put("controllers", new HashMap<String,Object>());
+
+        Map<String,Object> doc = new HashMap<String, Object>();
+        topLevel.put("doc", doc);
+
+        // Meta
+        Map<String,Object> meta = new HashMap<String, Object>();
+        doc.put("meta", meta);
+        meta.put("id", ddoc.getId());
+        meta.put("rev", ddoc.hashCode());
+
+
+        Map<String,Object> json = new HashMap<String, Object>();
+        doc.put("json", json);
+        json.put("_id", ddoc.getId()); // This is not a typo. Server uses _id here
+        json.put("language", "javascript");
+
+
+        Map<String,Object> views = new HashMap<String, Object>();
+        json.put("views", views);
+        for (View view : ddoc.getViews()) {
+            Map<String,Object> viewInfo = getSingleViewInfo(view);
+            views.put(view.getName(), viewInfo);
+        }
+        return topLevel;
+    }
+
+    public Map<String,Object> getDddocApiInfo() {
+        // {
+        Map<String,Object> retvalOuterObject = new HashMap<String, Object>();
+
+        // "rows": [
+        List<Map<String,Object>> retvalRows = new ArrayList<Map<String, Object>>();
+        retvalOuterObject.put("rows", retvalRows);
+
+        synchronized (designDocMap) {
+            for (DesignDocument ddoc : designDocMap.values()) {
+                retvalRows.add(getSingleDdocInfo(ddoc));
+            }
+        }
+        return retvalOuterObject;
     }
 
     public static String makeError(String errStr, String reasonStr) {
