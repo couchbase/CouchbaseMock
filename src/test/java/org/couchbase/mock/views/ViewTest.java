@@ -44,7 +44,7 @@ public class ViewTest extends ClientBaseTest {
                 + "    }"
                 + "  }"
                 + "}";
-        DesignDocument ddoc = DesignDocument.create(body);
+        DesignDocument ddoc = DesignDocument.create(body, "blog");
         assertEquals("_design/blog", ddoc.getId());
         assertEquals(body, ddoc.getBody());
         ArrayList<View> views = ddoc.getViews();
