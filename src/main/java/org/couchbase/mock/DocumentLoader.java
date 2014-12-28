@@ -126,6 +126,11 @@ public class DocumentLoader {
         System.err.printf("Finished loading %d documents and %d designs into %s%n", si.documents.size(), si.designs.size(), bucketName);
     }
 
+    public static void loadBeerSample(CouchbaseMock mock) throws IOException {
+        InputStream iss = CouchbaseMock.class.getClassLoader().getResourceAsStream("views/beer-sample.serialized.xz");
+        DocumentLoader.loadFromSerializedXZ(iss, "beer-sample", mock);
+    }
+
     public static void main(String[] args) throws Exception {
         String input = args[0];
         File outputFile = new File(input.replace(".zip", "") + ".serialized.xz");

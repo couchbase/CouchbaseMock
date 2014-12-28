@@ -16,6 +16,7 @@
 package org.couchbase.mock;
 
 import org.couchbase.mock.Bucket.BucketType;
+import org.couchbase.mock.client.RestAPIUtil;
 import org.couchbase.mock.control.MockCommandDispatcher;
 import org.couchbase.mock.harakiri.HarakiriMonitor;
 import org.couchbase.mock.http.*;
@@ -292,13 +293,6 @@ public class CouchbaseMock {
             }
         }
 
-        if (useBeerSample) {
-            if (bucketsSpec == null || bucketsSpec.isEmpty()) {
-                bucketsSpec = "default::couchbase,";
-            }
-            bucketsSpec += ",beer-sample::couchbase";
-        }
-
         try {
             CouchbaseMock mock = new CouchbaseMock(hostname, port, nodes, 0, vbuckets, bucketsSpec, replicaCount);
             if (harakiriMonitorAddress != null) {
@@ -315,8 +309,7 @@ public class CouchbaseMock {
                 DocumentLoader loader = new DocumentLoader(mock, "default");
                 loader.loadDocuments(docsFile);
             } else if (useBeerSample) {
-                InputStream iss = CouchbaseMock.class.getClassLoader().getResourceAsStream("views/beer-sample.serialized.xz");
-                DocumentLoader.loadFromSerializedXZ(iss, "beer-sample", mock);
+                RestAPIUtil.loadBeerSample(mock);
             }
 
         } catch (Exception e) {

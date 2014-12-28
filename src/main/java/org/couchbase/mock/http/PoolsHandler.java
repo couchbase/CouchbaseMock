@@ -15,15 +15,13 @@
  */
 package org.couchbase.mock.http;
 
+import com.google.gson.JsonElement;
 import com.sun.net.httpserver.HttpHandler;
 import org.apache.http.*;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestHandler;
 import org.apache.http.util.EntityUtils;
-import org.couchbase.mock.Bucket;
-import org.couchbase.mock.BucketAlreadyExistsException;
-import org.couchbase.mock.BucketConfiguration;
-import org.couchbase.mock.CouchbaseMock;
+import org.couchbase.mock.*;
 import org.couchbase.mock.httpio.HandlerUtil;
 import org.couchbase.mock.httpio.HttpServer;
 
@@ -58,6 +56,62 @@ public class PoolsHandler {
         public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
             String payload = StateGrabber.getPoolInfoJSON(mock);
             HandlerUtil.makeJsonResponse(response, payload);
+        }
+    };
+
+    private final HttpRequestHandler sampleBucketsHandler = new HttpRequestHandler() {
+        @Override
+        public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
+            AuthContext authContext = HandlerUtil.getAuth(context, request);
+            if (!mock.getAuthenticator().isAdministrator(authContext)) {
+                response.setStatusCode(HttpStatus.SC_UNAUTHORIZED);
+                return;
+            }
+
+            if (!request.getRequestLine().getMethod().equals("POST")) {
+                HandlerUtil.makeResponse(response, "Not Found", HttpStatus.SC_NOT_FOUND);
+                return;
+            }
+
+            // Parse the JSON
+            if (! (request instanceof HttpEntityEnclosingRequest)) {
+                HandlerUtil.make400Response(response, "Must have body");
+                return;
+            }
+
+            String rawBody = EntityUtils.toString(((HttpEntityEnclosingRequest) request).getEntity());
+            JsonElement elem = JsonUtils.GSON.fromJson(rawBody, JsonElement.class);
+            if (!elem.isJsonArray()) {
+                HandlerUtil.make400Response(response, "Request must be JSON array");
+                return;
+            }
+            for (JsonElement mem : elem.getAsJsonArray()) {
+                if (!mem.isJsonPrimitive()) {
+                    HandlerUtil.make400Response(response, "Element must be string");
+                    return;
+                }
+
+                String s = mem.getAsString();
+                if (!s.equals("beer-sample")) {
+                    HandlerUtil.make400Response(response, String.format("[\"Sample %s is not a valid sample.\"]", s));
+                    return;
+                }
+
+                // Load the bucket!
+                try {
+                    BucketConfiguration newConfig = new BucketConfiguration(mock.getDefaultConfig());
+                    newConfig.name = "beer-sample";
+                    try {
+                        mock.createBucket(newConfig);
+                    } catch (BucketAlreadyExistsException ex) {
+                        HandlerUtil.make400Response(response, "[\"Sample beer-sample is already loaded.\"]");
+                        return;
+                    }
+                    DocumentLoader.loadBeerSample(mock);
+                } catch (IOException ex) {
+                    HandlerUtil.makeResponse(response, ex.toString(), HttpStatus.SC_INTERNAL_SERVER_ERROR);
+                }
+            }
         }
     };
 
@@ -190,5 +244,6 @@ public class PoolsHandler {
         server.register("/pools", poolHandler);
         server.register(String.format("/pools/%s", mock.getPoolName()), poolsDefaultHandler);
         server.register(String.format("/pools/%s/buckets", mock.getPoolName()), allBucketsHandler);
+        server.register("/sampleBuckets/install", sampleBucketsHandler);
     }
 }

@@ -50,5 +50,7 @@ public class Authenticator {
     public String getAdminName() {
         return adminName;
     }
-
+    public String getAdminPass() {
+        return adminPass;
+    }
 }

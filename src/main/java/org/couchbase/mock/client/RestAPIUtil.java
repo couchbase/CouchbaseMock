@@ -2,6 +2,7 @@ package org.couchbase.mock.client;
 
 import org.couchbase.mock.Bucket;
 import org.couchbase.mock.CouchbaseMock;
+import org.couchbase.mock.http.Authenticator;
 import org.couchbase.mock.util.Base64;
 import org.couchbase.mock.util.ReaderUtils;
 
@@ -22,6 +23,12 @@ public class RestAPIUtil {
             String authStr = "Basic " + Base64.encode(bucket.getName() + ":" + bucket.getPassword());
             conn.setRequestProperty("Authorization", authStr);
         }
+    }
+
+    public static void setAdminHeader(CouchbaseMock mock, HttpURLConnection conn) {
+        Authenticator ac = mock.getAuthenticator();
+        String authStr = "Basic " + Base64.encode(ac.getAdminName() + ":" + ac.getAdminPass());
+        conn.setRequestProperty("Authorization", authStr);
     }
 
     // Utility method to define a view
@@ -59,6 +66,22 @@ public class RestAPIUtil {
         setAuthHeaders(mock, bucketName, conn);
         conn.setRequestMethod("DELETE");
         ReaderUtils.fromStream(conn.getInputStream());
+        conn.getInputStream().close();
+    }
+
+    public static void loadBeerSample(CouchbaseMock mock) throws IOException {
+        URL url = new URL(String.format("http://%s:%d/sampleBuckets/install", mock.getHttpHost(), mock.getHttpPort()));
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        setAdminHeader(mock, conn);
+        conn.setRequestMethod("POST");
+        conn.setDoOutput(true);
+        conn.setRequestProperty("Content-Type", "application/json");
+
+        String data = "[\"beer-sample\"]";
+        OutputStreamWriter osw = new OutputStreamWriter(conn.getOutputStream());
+        osw.write(data);
+        osw.flush();
+        osw.close();
         conn.getInputStream().close();
     }
 }
