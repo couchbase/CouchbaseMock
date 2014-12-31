@@ -274,7 +274,7 @@ public class JMembaseTest extends TestCase {
     public void testHarakiriMonitorInvalidPort() throws IOException {
         try {
             HarakiriMonitor m = new HarakiriMonitor(instance.getDispatcher());
-            m.bind(null, 0);
+            m.connect(null, 0);
             fail("I was not expecting to be able to connect to port 0");
         } catch (Throwable t) {
         }
@@ -284,7 +284,7 @@ public class JMembaseTest extends TestCase {
         ServerSocket server = new ServerSocket(0);
         HarakiriMonitor m;
         m = new HarakiriMonitor(instance.getDispatcher());
-        m.bind(null, server.getLocalPort());
+        m.connect(null, server.getLocalPort());
 
         Thread t = new Thread(m);
         t.start();
@@ -344,7 +344,7 @@ public class JMembaseTest extends TestCase {
     @SuppressWarnings("SpellCheckingInspection")
     public void testConfigStreaming() throws IOException {
         MockClient mock = new MockClient(new InetSocketAddress("localhost", 0));
-        instance.setupHarakiriMonitor("localhost:" + mock.getPort(), false);
+        instance.startHarakiriMonitor("localhost:" + mock.getPort(), false);
         mock.negotiate();
 
         Bucket bucket = instance.getBuckets().get("protected");
@@ -378,7 +378,7 @@ public class JMembaseTest extends TestCase {
 
     public void testIllegalMockCommand() throws IOException {
         ServerSocket server = new ServerSocket(0);
-        instance.setupHarakiriMonitor("localhost:" + server.getLocalPort(), false);
+        instance.startHarakiriMonitor("localhost:" + server.getLocalPort(), false);
         Socket client = server.accept();
         InputStream input = client.getInputStream();
         OutputStream output = client.getOutputStream();
@@ -390,7 +390,7 @@ public class JMembaseTest extends TestCase {
 
     public void testUnknownMockCommand() throws IOException {
         MockClient mock = new MockClient(new InetSocketAddress("localhost", 0));
-        instance.setupHarakiriMonitor("localhost:" + mock.getPort(), false);
+        instance.startHarakiriMonitor("localhost:" + mock.getPort(), false);
         mock.negotiate();
         MockRequest request = MockRequest.build("foo");
         MockResponse resp = mock.request(request);

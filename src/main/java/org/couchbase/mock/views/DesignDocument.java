@@ -26,7 +26,7 @@ import com.google.gson.JsonParseException;
 import org.couchbase.mock.JsonUtils;
 
 /**
- *
+ * @author Mark Nunberg
  * @author Sergey Avseyev
  */
 public class DesignDocument {
@@ -40,6 +40,15 @@ public class DesignDocument {
         this.views = new ArrayList<View>();
     }
 
+    /**
+     * Create a new design document
+     * @param body The JSON encoded source of this design document
+     * @param name The name of the design document. This should be the simple name, e.g. {@code beer}. If the
+     *             {@code body} contains a {@code _id} property, then that property will override
+     *             {@code name}
+     * @return A new design document
+     * @throws DesignParseException
+     */
     public static DesignDocument create(String body, String name) throws DesignParseException {
         DesignDocument doc = new DesignDocument(body);
         doc.id = "_design/" + name;
@@ -87,14 +96,25 @@ public class DesignDocument {
         }
     }
 
+    /**
+     * @return Get the raw JSON string from which this design was constructed
+     */
     public String getBody() {
         return body;
     }
 
+    /**
+     * Get the name of the design document
+     * @return A string in the form of {@code _design/$name}
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * Get a list of views contained within this design document
+     * @return The list of views
+     */
     public ArrayList<View> getViews() {
         return views;
     }

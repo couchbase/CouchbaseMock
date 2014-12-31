@@ -17,6 +17,8 @@ package org.couchbase.mock.views;
 
 import org.couchbase.mock.JsonUtils;
 import org.couchbase.mock.memcached.Item;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.mozilla.javascript.*;
 import sun.security.krb5.Config;
 
@@ -24,8 +26,12 @@ import javax.script.ScriptException;
 import java.util.Map;
 
 /**
+ * This represents a compiled Couchbase View that is part of the bucket. A view
+ * consists of a {@link org.couchbase.mock.views.DesignDocument} consisting of a
+ * {@code map} function and optionally a {@code reduce} function.
  *
  * @author Sergey Avseyev
+ * @author Mark Nunberg
  */
 public class View {
     private final String name;
@@ -40,7 +46,14 @@ public class View {
         this(name, map, null);
     }
 
-    public View(String name, String map, String reduce) throws ScriptException {
+    /**
+     * Create a new view
+     * @param name The name of the view
+     * @param map The JavaScript map function as a String
+     * @param reduce The JavaScript reduce function, as a String
+     * @throws org.mozilla.javascript.EcmaError if the map or reduce functions could not be parsed
+     */
+    public View(@NotNull String name, @NotNull String map, @Nullable String reduce) throws ScriptException {
         this.name = name;
         this.mapSource = map;
         this.reduceSource = reduce;
@@ -54,14 +67,26 @@ public class View {
         }
     }
 
+    /**
+     * Gets the name of the view
+     * @return The name of the view
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Gets the JavaScript source code for the map function
+     * @return The map source code
+     */
     public String getMapSource() {
         return mapSource;
     }
 
+    /**
+     * Gets the JavaScript source code for the reduce function
+     * @return The reduce source code
+     */
     public String getReduceSource() {
         return reduceSource;
     }
@@ -70,10 +95,25 @@ public class View {
         return execute(items, null);
     }
 
+    /**
+     * Executes the view query with the given parameters
+     * @param items The items in the bucket which should be processed via the view
+     * @param config The configuration for the view, acting as a filter on the items processed
+     * @return A results object which may be inspected
+     * @throws QueryExecutionException If there was an error while processing the options
+     * @see {@link #executeRaw(Iterable, Configuration)}
+     */
     public QueryResult execute(Iterable<Item> items, Configuration config) throws QueryExecutionException {
         return new QueryResult(JsonUtils.decodeAsMap(executeRaw(items, config)));
     }
 
+    /**
+     * Executes the view query with the given parameters.
+     * @param items The items to be indexed
+     * @param config The configuration to use for filters
+     * @return A string suitable for returning to a Couchbase client
+     * @throws QueryExecutionException
+     */
     public String executeRaw(Iterable<Item> items, Configuration config) throws QueryExecutionException {
         if (config == null) {
             config = new Configuration();

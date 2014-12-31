@@ -13,6 +13,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class HttpServer extends Thread {
+    /**
+     * Subclass of HttpService which adds some additional hooks to all responses
+     */
     static class MyHttpService extends HttpService {
         MyHttpService(HttpProcessor proc, UriHttpRequestHandlerMapper registry) {
             super(proc, registry);
@@ -26,6 +29,10 @@ public class HttpServer extends Thread {
         }
     }
 
+    /**
+     * Subclass of UriHttpRequestHandlerMapper which normalizes a URI and matches only its path.
+     * This is because we ignore the host part (we don't use the {@code Host} header)
+     */
     static class MyRequestHandlerMapper extends UriHttpRequestHandlerMapper {
         @Override
         protected String getRequestPath(final HttpRequest request) {
@@ -54,6 +61,14 @@ public class HttpServer extends Thread {
     final public static String CX_SOCKET = "couchbase.mock.http.socket";
     final public static String CX_AUTH = "couchbase.mock.http.auth";
 
+    /**
+     * Creates a new server. To make the server respond to requests, invoke
+     * the {@link #bind(java.net.InetSocketAddress)} method to make it use a socket,
+     * and then invoke the {@link #start()} method to start it up in the background.
+     *
+     * Use {@link #register(String, org.apache.http.protocol.HttpRequestHandler)} to add
+     * handlers which respond to various URL paths
+     */
     public HttpServer() {
         this.connectionFactory = new DefaultBHttpServerConnectionFactory();
         this.registry = new MyRequestHandlerMapper();
@@ -74,6 +89,12 @@ public class HttpServer extends Thread {
         });
     }
 
+    /**
+     * Set the server's listening address
+     * @param address The address the server should listen on
+     * @throws IOException if a new socket could not be created
+     * @see {@link #bind(java.nio.channels.ServerSocketChannel)}
+     */
     public void bind(InetSocketAddress address) throws IOException {
         if (listener != null) {
             listener.close();
@@ -83,19 +104,37 @@ public class HttpServer extends Thread {
         listener.socket().bind(address);
     }
 
+    /**
+     * Set the server's listening socket.
+     * @param newSock An existing listening socket.
+     * @see {@link #bind(java.net.InetSocketAddress)}
+     */
+    public void bind(ServerSocketChannel newSock) {
+        listener = newSock;
+    }
+
+    /**
+     * Register a path with a handler
+     * @param pattern The path to register
+     * @param handler The handler to handle the path
+     * @see {@link org.apache.http.protocol.UriHttpRequestHandlerMapper}
+     */
     public void register(String pattern, HttpRequestHandler handler) {
         registry.register(pattern, handler);
         registry.register(pattern + "/", handler);
     }
 
+    /**
+     * Unregister a given path. Further requests to paths matching the specified
+     * pattern will result in a 404 being delivered to the client
+     * @param pattern The pattern to unregister. Must have previously been registered
+     *                via {@link #register(String, org.apache.http.protocol.HttpRequestHandler)}
+     */
     public void unregister(String pattern) {
         registry.unregister(pattern);
         registry.unregister(pattern + "/");
     }
 
-    public void bind(ServerSocketChannel newSock) {
-        listener = newSock;
-    }
 
     class Worker extends Thread {
         final HttpServerConnection htConn;
@@ -185,6 +224,9 @@ public class HttpServer extends Thread {
         }
     }
 
+    /**
+     * Shut down the HTTP server and all its workers, and close the listener socket.
+     */
     public void stopServer() {
         shouldRun = false;
         try {

@@ -46,7 +46,7 @@ public class HarakiriMonitor extends Observable implements Runnable {
         this.dispatcher = dispatcher;
     }
 
-    public void bind(String host, int port) throws IOException {
+    public void connect(String host, int port) throws IOException {
         if (input != null) {
             throw new IOException("Already have socket");
         }

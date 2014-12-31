@@ -1,22 +1,14 @@
 package org.couchbase.mock.views;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import org.couchbase.mock.JsonUtils;
 import org.couchbase.mock.memcached.Item;
 import org.couchbase.mock.util.ReaderUtils;
 import org.mozilla.javascript.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
- * Class for indexer. This is run on every document.
+ * This class maintains an index on all items within a bucket. It is first created when
+ * the view {@link org.couchbase.mock.views.View} is created, and is updated as necessary
  */
 public class Indexer {
     private static final String INDEX_JS;
@@ -52,6 +44,14 @@ public class Indexer {
         scope.put("emit", scope, emitFunc);
     }
 
+    /**
+     * Run the indexer on the given iterable of items. This will attempt to apply some
+     * optimizations to ensure that only items which need re-indexing are actually passed
+     * to the map function.
+     *
+     * @param items The items to index
+     * @param cx The current execution context
+     */
     public void run(Iterable<Item> items, Context cx) {
         Function prepareFunc = (Function) indexResults.getPrototype().get("prepare", indexResults);
         prepareFunc.call(cx, scope, indexResults, NO_ARGS);
@@ -66,6 +66,10 @@ public class Indexer {
         doneFunc.call(cx, scope, indexResults, NO_ARGS);
     }
 
+    /**
+     * Create a new indexer object
+     * @param mapTxt The text of the map function
+     */
     public static Indexer create(String mapTxt) {
         Context cx = Context.enter();
         try {
@@ -75,49 +79,12 @@ public class Indexer {
         }
     }
 
+    /**
+     * Get the underlying Javascript indexed rows, suitable for passing to
+     * {@link org.couchbase.mock.views.JavascriptRun#execute(org.mozilla.javascript.NativeObject, org.mozilla.javascript.Scriptable, org.mozilla.javascript.Scriptable, org.mozilla.javascript.Context)}
+     * @return The JavaScript index
+     */
     Scriptable getLastResults() {
         return indexResults;
-    }
-
-    public static void main(String[] argv) {
-        List<Item> items = new ArrayList<Item>();
-        Map<String,Object> jsonMap = new HashMap<String,Object>();
-        for (int i = 0; i < 10; i++) {
-            String key = "Key_" + i;
-            jsonMap.put("name", "Name" + i);
-            jsonMap.put("number", i);
-
-            Item item = new Item(key, JsonUtils.encode(jsonMap).getBytes());
-            items.add(item);
-        }
-
-        items.add(new Item("binary key", new byte[]{1,2,3}));
-        Context cx = Context.enter();
-        Scriptable scope = new ImporterTopLevel(cx);
-        Indexer indexer = Indexer.create("function(doc,meta) { if (doc.name) { emit([doc.number % 2 == 0 ? true : false, doc.name], null); } }");
-        indexer.run(items, cx);
-
-        // we should have a 'results'
-        NativeObject lastResults = (NativeObject) indexer.getLastResults().get("results", indexer.getLastResults());
-        System.out.println(lastResults);
-        String s = (String) NativeJSON.stringify(cx, scope, lastResults, null, null);
-        System.out.println(s);
-
-        System.out.printf("Now running REDUCE...%n");
-        Reducer reducer = Reducer.create("_count");
-
-        Map<String,String> options = new HashMap<String, String>();
-        options.put("group_level", "1");
-        JavascriptRun jsRun = new JavascriptRun();
-        Query q = new Query(indexer, reducer, jsRun, options);
-        Object queryResult = q.executeJson();
-
-        String outString = (String) NativeJSON.stringify(cx, scope, queryResult, null, null);
-        JsonObject obj = new Gson().fromJson(outString, JsonObject.class);
-        JsonArray rows = obj.getAsJsonArray("rows");
-        for (JsonElement rowElem : rows) {
-            JsonObject row = rowElem.getAsJsonObject();
-            System.out.println(row);
-        }
     }
 }

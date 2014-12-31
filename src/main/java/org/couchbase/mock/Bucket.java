@@ -28,16 +28,23 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Representation of the bucket in the membase concept.
+ * Abstract class for all bucket types in Couchbase.
+ * @see {@link org.couchbase.mock.CouchbaseBucket}
+ * @see {@link org.couchbase.mock.MemcachedBucket}
  *
- * @author Trond Norbye
+ * A bucket is instantiated via {@link org.couchbase.mock.CouchbaseMock#createBucket(BucketConfiguration)}. The number
+ * of servers a bucket has is limited to the amount provided in the {@link org.couchbase.mock.BucketConfiguration#numNodes}
+ * field.
+ *
+ * Nodes can be removed and then re-added, but currently new nodes cannot be added once the bucket has been instantiated.
  */
 public abstract class Bucket {
     private CAPIServer capiServer = null;
     private BucketAdminServer adminServer = null;
 
     public enum BucketType {
-        MEMCACHED, COUCHBASE
+        MEMCACHED,
+        COUCHBASE
     }
 
     protected final VBucketInfo vbInfo[];
@@ -51,14 +58,18 @@ public abstract class Bucket {
     protected final ReentrantReadWriteLock configurationRwLock;
     private final UUID uuid;
 
-    public String getBucketUri() {
-        return "/pools/" + poolName + "/bucketsStreaming/" + name;
-    }
-
+    /**
+     * Returns the vBucket map for the given bucket. This is only relevant for {@link org.couchbase.mock.CouchbaseBucket}
+     * @return An array of vBucket map structures
+     */
     public VBucketInfo[] getVBucketInfo() {
         return vbInfo;
     }
 
+    /**
+     * Get the list of servers allocated for this bucket. This returns both active and inactive servers
+     * @return an array of servers for this bucket.
+     */
     public MemcachedServer[] getServers() {
         return servers;
     }
@@ -66,7 +77,6 @@ public abstract class Bucket {
     private Iterator<Item> getMasterItemsIterator(final Storage.StorageType type) {
         return new Iterator<Item>() {
             private int curIndex = -1;
-            private int counter = 0;
 
             private Iterator<Item> getNextIterator() {
                 if (++curIndex == servers.length) {
@@ -100,6 +110,15 @@ public abstract class Bucket {
             }
         };
     }
+
+    /**
+     * Returns an iterable over all the items in this bucket
+     * @param type The storage location to fetch from
+     * @return An iterable which will return all items in the bucket.
+     *
+     * Note this currently makes a copy of the items list, making it thread safe. It also means
+     * that this will potentially return stale data
+     */
     public Iterable<Item> getMasterItems(final Storage.StorageType type) {
         return new Iterable<Item>() {
             @Override
@@ -157,6 +176,13 @@ public abstract class Bucket {
         rebalance();
     }
 
+    /**
+     * Create a bucket.
+     * @param mock The cluster this bucket is a member of
+     * @param config The configuration for the bucket
+     * @return The newly instantiated subclass
+     * @throws IOException
+     */
     public static Bucket create(CouchbaseMock mock, BucketConfiguration config) throws IOException {
           switch (config.type) {
                 case MEMCACHED:
@@ -168,68 +194,99 @@ public abstract class Bucket {
             }
     }
 
+    /**
+     * Gets the type of the bucket
+     * @return The type of the bucket
+     */
     public abstract BucketType getType();
 
+    // Used internally by CouchbaseMock
     void setCAPIServer(CAPIServer server) {
         this.capiServer = server;
     }
 
+    /**
+     * Get the {@link org.couchbase.mock.http.capi.CAPIServer} object used for managing views.
+     * @return The view manager
+     */
     public CAPIServer getCAPIServer() {
         return capiServer;
     }
 
+    void setAdminServer(BucketAdminServer adminServer) {
+        this.adminServer = adminServer;
+    }
 
+    /**
+     * Get the object used for handling configuration changes
+     * @return The configuration manager
+     */
     public BucketAdminServer getAdminServer() {
         return adminServer;
     }
 
-    public void setAdminServer(BucketAdminServer adminServer) {
-        this.adminServer = adminServer;
-    }
-
+    /**
+     * Gets a map of the current bucket configuration which can be JSON-serialized
+     * as a valid "Cluster configuration". This method is useful for other configuration handlers
+     * which wish to embed the current bucket's configuration into a larger structure.
+     *
+     * The information returned is equivalent to that returned via the
+     * {@code /pools/default/buckets/$bucket} endpoint in a Couchbase cluster.
+     *
+     * @return A map representing the cluster configuration
+     *
+     * Note that to avoid race conditions, invoke {@link #configReadLock()}
+     * before calling this method, and {@link #configReadUnlock()} after calling
+     * this method.
+     */
     public abstract Map<String,Object> getConfigMap();
+
+    /**
+     * Convenience method to get the JSON-encoded version of the configuration map.
+     * @return An encoded JSON String
+     * @see {@link #getConfigMap()}
+     */
     public final String getJSON() {
         return JsonUtils.encode(getConfigMap());
     }
 
+    /**
+     * Lock the current configuration for reading. As long as this lock is held, any
+     * configuration changes to the bucket (such as failover, removing a node, rebalances,
+     * etc.) will be blocked. Be sure to call {@link #configReadUnlock()} once the lock
+     * is no longer required.
+     *
+     * This method is most useful to ensure that the bucket state remains the same while
+     * reading configuration-related properties.
+     */
     public void configReadLock() {
         configurationRwLock.readLock().lock();
     }
 
+    /**
+     * Unlock the configuration read lock. This is the exit bracket for {@link #configReadLock()}
+     */
     public void configReadUnlock() {
         configurationRwLock.readLock().unlock();
     }
 
+    /**
+     * Convenience method to store an item in a bucket
+     * @param key The key of the item
+     * @param value The value of the item
+     * @return The status of the operation
+     */
     public abstract ErrorCode storeItem(String key, byte[] value);
 
-    void failSome(float percentage) {
-        configurationRwLock.writeLock().lock();
-        try {
-            for (int ii = 0; ii < servers.length; ii++) {
-                if (ii % percentage == 0) {
-                    servers[ii].shutdown();
-                }
-            }
-        } finally {
-            configurationRwLock.writeLock().unlock();
-        }
-    }
-
-    void fixSome(float percentage) {
-        configurationRwLock.writeLock().lock();
-        try {
-            for (int ii = 0; ii < servers.length; ii++) {
-                if (ii % percentage == 0) {
-                    servers[ii].startup();
-                }
-            }
-        } finally {
-            configurationRwLock.writeLock().unlock();
-        }
-    }
-
-
-
+    /**
+     * Fail over one of the bucket's nodes
+     * @param index The index of the node to fail over. This index
+     *              is the index of the node within the {@link #servers}
+     *              (or {@link #getServers()} array; not the logical index
+     *              within the vBucket map!
+     *
+     * Note this will also automatically rebalance the cluster
+     */
     public void failover(int index) {
         configurationRwLock.writeLock().lock();
         try {
@@ -242,6 +299,11 @@ public abstract class Bucket {
         }
     }
 
+    /**
+     * Re-Add a previously failed-over node
+     * @param index The index to restore. This should be an index into the
+     *              {@link #servers} array.
+     */
     public void respawn(int index) {
         configurationRwLock.writeLock().lock();
         try {
@@ -277,6 +339,11 @@ public abstract class Bucket {
         }
     }
 
+    /**
+     * Gets the list of <b>active</b> nodes within the bucket. An active node is one that
+     * is not failed over
+     * @return The list of active nodes in the cluster.
+     */
     public List<MemcachedServer> activeServers() {
         ArrayList<MemcachedServer> active = new ArrayList<MemcachedServer>(servers.length);
         for (MemcachedServer server : servers) {
@@ -287,6 +354,10 @@ public abstract class Bucket {
         return active;
     }
 
+    /**
+     * Issues a rebalance within the bucket. vBuckets which are mapped to failed-over
+     * nodes are relocated with their first replica being promoted to active.
+     */
     final void rebalance() {
         // Let's start distribute the vbuckets across the servers
         configurationRwLock.writeLock().lock();
@@ -309,18 +380,25 @@ public abstract class Bucket {
         }
     }
 
+    /**
+     * Get the password for this bucket.
+     * @return The password
+     */
     public String getPassword() {
         return password;
     }
 
+    /** Get the name of the bucket */
     public String getName() {
         return name;
     }
 
+    /** Gets the UUID for the bucket. This is only used to generate the stats response */
     public String getUUID() {
         return uuid.toString();
     }
 
+    /** Gets the parent {@link org.couchbase.mock.CouchbaseMock} object */
     public CouchbaseMock getCluster() {
         return cluster;
     }

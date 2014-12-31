@@ -88,7 +88,7 @@ public abstract class ClientBaseTest extends TestCase {
 
     protected void createClients() throws Exception {
         mockClient = new MockClient(new InetSocketAddress("localhost", 0));
-        couchbaseMock.setupHarakiriMonitor("localhost:" + mockClient.getPort(), false);
+        couchbaseMock.startHarakiriMonitor("localhost:" + mockClient.getPort(), false);
         mockClient.negotiate();
 
         List<URI> uriList = new ArrayList<URI>();

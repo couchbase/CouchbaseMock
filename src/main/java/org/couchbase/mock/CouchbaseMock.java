@@ -28,25 +28,24 @@ import org.couchbase.mock.util.Getopt.Entry;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.PrintStream;
 import java.net.InetSocketAddress;
 import java.nio.channels.ServerSocketChannel;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * This is a super-scaled down version of something that might look like
- * membase ;-) It provides the REST interface to our bucket lists, so that
- * you may use it to retrieve a list of servers and where their vbuckets
- * are...
+ * This class is the main entry point to the Mock cluster. It represents a "Cluster"
+ * of sorts.
  *
- * @author Trond Norbye
+ *
+ * Unlike in a real cluster, the mock "Nodes" do not support multi-tenancy, or in
+ * other words, a single "Node" can only serve a single bucket. From a client
+ * perspective this should not matter, but it is important to keep this aspect in
+ * mind.
  */
 public class CouchbaseMock {
     private final Map<String,BucketConfiguration> initialConfigs;
@@ -59,14 +58,15 @@ public class CouchbaseMock {
     private BucketConfiguration defaultConfig = new BucketConfiguration();
 
     private int port = 8091;
-    private volatile String host = "127.0.0.1";
     private HarakiriMonitor harakiriMonitor;
 
-    public void setupHarakiriMonitor(String host, boolean terminate) throws IOException {
-        int idx = host.indexOf(':');
-        String h = host.substring(0, idx);
-        int p = Integer.parseInt(host.substring(idx + 1));
-
+    /**
+     * Tell the harakiri monitor to connect to the given address.
+     * @param address The address the monitor should connect to
+     * @param terminate Whether the application should exit when a disconnect is detected on the socket
+     * @throws IOException If the monitor could not listen on the given port, or if the monitor is already listening
+     */
+    public void startHarakiriMonitor(InetSocketAddress address, boolean terminate) throws IOException {
         if (terminate) {
             harakiriMonitor.setTemrinateAction(new Callable() {
                 @Override
@@ -77,29 +77,46 @@ public class CouchbaseMock {
             });
         }
 
-        harakiriMonitor.bind(h, p);
+        harakiriMonitor.connect(address.getHostName(), address.getPort());
         harakiriMonitor.start();
     }
 
     /**
-     * @return the poolName
+     * Start the monitor
+     * @param host A string in the form of {@code host:port}
+     * @param terminate Whether the application should terminate on disconnect
+     * @throws IOException
+     * @see {@link #startHarakiriMonitor(java.net.InetSocketAddress, boolean)}
      */
-    @SuppressWarnings("SameReturnValue")
+    public void startHarakiriMonitor(String host, boolean terminate) throws IOException {
+        int idx = host.indexOf(':');
+        String h = host.substring(0, idx);
+        int p = Integer.parseInt(host.substring(idx + 1));
+        startHarakiriMonitor(new InetSocketAddress(h, p), terminate);
+    }
+
     public String getPoolName() {
         return "default";
     }
 
     /**
-     * @return the buckets
+     * Return the list of active buckets for inspection. The returned value should not be modified.
+     * Use {@link #createBucket(BucketConfiguration)} or {@link #removeBucket(String)} to add or
+     * remove buckets
      */
     public Map<String, Bucket> getBuckets() {
-        return buckets;
+        return Collections.unmodifiableMap(buckets);
     }
 
+    // Used by tests.
     Map<String,BucketConfiguration> getInitialConfigs() {
         return initialConfigs;
     }
 
+    /**
+     * Clear the initial bucket configurations which were added during construction. This should be used
+     * if you want {@link #start()} to start up a blank cluster.
+     */
     public void clearInitialConfigs() {
         if (!buckets.isEmpty()) {
             throw new IllegalStateException("Cannot clear initial configs once they have been started");
@@ -119,35 +136,62 @@ public class CouchbaseMock {
         return poolsHandler;
     }
 
+    /**
+     * Get the default configuration for buckets. The default configuration is determined by values
+     * passed to the constructor.
+     * @return A copy of the default configuration. This may be passed as the first argument to
+     * {@link org.couchbase.mock.BucketConfiguration}
+     */
     public BucketConfiguration getDefaultConfig() {
         return new BucketConfiguration(defaultConfig);
     }
 
-    private static BucketConfiguration parseBucketString(String spec, BucketConfiguration defaults) {
-        BucketConfiguration config = new BucketConfiguration(defaults);
+    /**
+     * Parses the "Bucket specification string" (typically supplied on the command line) into a list of buckets
+     * @param bucketSpec The specification string specified
+     * @param defaultConfig The default configuration used to supplant non-specified values
+     * @return A list of initial configurations
+     */
+    private static List<BucketConfiguration> fromSpecString(String bucketSpec, BucketConfiguration defaultConfig) {
+        List<BucketConfiguration> configs = new ArrayList<BucketConfiguration>();
+        if (bucketSpec != null) {
+            for (String spec : bucketSpec.split(",")) {
+                BucketConfiguration config = new BucketConfiguration(defaultConfig);
 
-        String[] parts = spec.split(":");
-        String name = parts[0];
-        String pass = "";
+                String[] parts = spec.split(":");
+                String name = parts[0];
+                String pass = "";
 
-        config.name = name;
-        if (parts.length > 1) {
-            pass = parts[1];
-            if (parts.length > 2) {
-                if (parts[2].startsWith("memcache")) {
-                    config.type = BucketType.MEMCACHED;
+                config.name = name;
+                if (parts.length > 1) {
+                    pass = parts[1];
+                    if (parts.length > 2) {
+                        if (parts[2].startsWith("memcache")) {
+                            config.type = BucketType.MEMCACHED;
+                        }
+                    }
                 }
+                config.password = pass;
+                configs.add(config);
             }
         }
-        config.password = pass;
-        return config;
+
+        if (configs.isEmpty()) {
+            BucketConfiguration defaultBucket = new BucketConfiguration(defaultConfig);
+            defaultBucket.name = "default";
+            configs.add(defaultBucket);
+        }
+        return configs;
     }
 
-    private static BucketConfiguration createDefaultConfig(String hostname, int numNodes, int port, int bucketStartPort, int numVBuckets, int numReplicas) {
+    /**
+     * Initializes the default configuration from the command line parameters. This is present in order to allow the
+     * super constructor to be the first statement
+     */
+    private static BucketConfiguration createDefaultConfig(String hostname, int numNodes, int bucketStartPort, int numVBuckets, int numReplicas) {
         BucketConfiguration defaultConfig = new BucketConfiguration();
         defaultConfig.type = BucketType.COUCHBASE;
         defaultConfig.hostname = hostname;
-        defaultConfig.port = port;
         defaultConfig.numNodes = numNodes;
         if (numReplicas > -1) {
             defaultConfig.numReplicas = numReplicas;
@@ -158,24 +202,9 @@ public class CouchbaseMock {
         return defaultConfig;
     }
 
-    private static List<BucketConfiguration> fromSpecString(String bucketSpec, BucketConfiguration defaultConfig) {
-        List<BucketConfiguration> configs = new ArrayList<BucketConfiguration>();
-        if (bucketSpec != null) {
-            for (String spec : bucketSpec.split(",")) {
-                configs.add(parseBucketString(spec, defaultConfig));
-            }
-        }
-        if (configs.isEmpty()) {
-            BucketConfiguration defaultBucket = new BucketConfiguration(defaultConfig);
-            defaultBucket.name = "default";
-            configs.add(defaultBucket);
-        }
-        return configs;
-    }
-
     public CouchbaseMock(String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets, String bucketSpec, int numReplicas) throws IOException {
-        this(port, fromSpecString(bucketSpec, createDefaultConfig(hostname, numNodes, port, bucketStartPort, numVBuckets, numReplicas)));
-        defaultConfig = createDefaultConfig(hostname, numNodes, port, bucketStartPort, numVBuckets, numReplicas);
+        this(port, fromSpecString(bucketSpec, createDefaultConfig(hostname, numNodes, bucketStartPort, numVBuckets, numReplicas)));
+        defaultConfig = createDefaultConfig(hostname, numNodes, bucketStartPort, numVBuckets, numReplicas);
     }
     public CouchbaseMock(String hostname, int port, int numNodes, int bucketStartPort, int numVBuckets) throws IOException {
         this(hostname, port, numNodes, bucketStartPort, numVBuckets, null, -1);
@@ -187,6 +216,14 @@ public class CouchbaseMock {
         this(hostname, port, numNodes, 0, numVBuckets, bucketSpec, -1);
     }
 
+    /**
+     * Create a new CouchbaseMock object.
+     * @param port The REST port which the mock should listen on. If set to 0, a random available
+     *             port will be selected
+     * @param configs A list of bucket configurations which the mock should start when the
+     *                {@link #start()} method is called.
+     * @throws IOException
+     */
     public CouchbaseMock(int port, List<BucketConfiguration> configs) throws IOException {
         this.port = port;
 
@@ -205,39 +242,181 @@ public class CouchbaseMock {
         httpServer.register("/mock/*", new ControlHandler(controlDispatcher));
     }
 
+    /**
+     * Wait until all initial buckets have been created
+     * @throws InterruptedException
+     */
     public void waitForStartup() throws InterruptedException {
         startupLatch.await();
     }
 
     /**
-     * The port of the http server providing the REST interface.
+     * Get The port of the http server providing the REST interface.
+     * @return The REST API port
      */
     public int getHttpPort() {
         return port;
     }
-    public String getHttpHost() { return host; }
 
+    /**
+     * Get the name of the host to which the REST API is bound
+     * @return The bound host
+     */
+    public String getHttpHost() {
+        return "127.0.0.1";
+    }
+
+    /**
+     * Get the authenticator object which can be used to verify credentials for access to the cluster
+     * @return The authenticator
+     */
     public Authenticator getAuthenticator() {
         return authenticator;
     }
 
     /**
-     * Program entry point
-     *
-     * @param args Command line arguments
+     * Create a new bucket, and start it.
+     * @param config The bucket configuration to use
+     * @throws BucketAlreadyExistsException If the bucket already exists
+     * @throws IOException
      */
+    public void createBucket(BucketConfiguration config) throws BucketAlreadyExistsException, IOException {
+        if (!config.validate()) {
+            throw new IllegalArgumentException("Invalid bucket configuration");
+        }
+
+        synchronized (buckets) {
+            if (buckets.containsKey(config.name)) {
+                throw new BucketAlreadyExistsException(config.name);
+            }
+
+            Bucket bucket = Bucket.create(this, config);
+            BucketAdminServer adminServer = new BucketAdminServer(bucket, httpServer, this);
+            adminServer.register();
+            bucket.setAdminServer(adminServer);
+
+            HttpAuthVerifier verifier = new HttpAuthVerifier(bucket, authenticator);
+
+            if (config.type == BucketType.COUCHBASE) {
+                CAPIServer capi = new CAPIServer(bucket, verifier);
+                capi.register(httpServer);
+                bucket.setCAPIServer(capi);
+            }
+
+            buckets.put(config.name, bucket);
+            bucket.start();
+        }
+    }
+
+    /**
+     * Destroy a bucket
+     * @param name The name of the bucket to remove
+     * @throws FileNotFoundException If the bucket does not exist
+     */
+    public void removeBucket(String name) throws FileNotFoundException {
+        Bucket bucket;
+        synchronized (buckets) {
+            if (!buckets.containsKey(name)) {
+                throw new FileNotFoundException("No such bucket: "+ name);
+            }
+            bucket = buckets.remove(name);
+        }
+        CAPIServer capi = bucket.getCAPIServer();
+        if (capi != null) {
+            capi.shutdown();
+        }
+        BucketAdminServer adminServer = bucket.getAdminServer();
+        if (adminServer != null) {
+            adminServer.shutdown();
+        }
+        bucket.stop();
+    }
+
+    /**
+     * Start the mock. This will open the REST API port and initialize any buckets
+     * which are configured in the initial configuration list.
+     *
+     * To stop the cluster, invoke {@link #stop()}
+     */
+    public void start() {
+        try {
+            if (port == 0) {
+                ServerSocketChannel ch = ServerSocketChannel.open();
+                ch.socket().bind(new InetSocketAddress(0));
+                port = ch.socket().getLocalPort();
+                httpServer.bind(ch);
+            } else {
+                httpServer.bind(new InetSocketAddress(port));
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(CouchbaseMock.class.getName()).log(Level.SEVERE, null, ex);
+            System.exit(-1);
+        }
+
+        for (BucketConfiguration config : initialConfigs.values()) {
+            try {
+                createBucket(config);
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            } catch (BucketAlreadyExistsException ex) {
+                ex.printStackTrace();
+            }
+        }
+
+        httpServer.start();
+        startupLatch.countDown();
+    }
+
+    /**
+     * Stops the cluster. This stops the server listening on the REST API port, and also destroys
+     * any buckets which are part of the cluster.
+     */
+    public void stop() {
+        httpServer.stopServer();
+        for (Bucket bucket : buckets.values()) {
+            bucket.stop();
+        }
+    }
+
+    private static void printHelp() {
+        final PrintStream o = System.out;
+        BucketConfiguration defaultConfig = new BucketConfiguration();
+
+        o.printf("Options are:%n");
+        o.printf("-h --host             The hostname for the REST port. Default=8091%n");
+        o.printf("-b --buckets          (See description below%n");
+        o.printf("-p --nodes            The number of nodes each bucket should contain. Default=%d%n", defaultConfig.numNodes);
+        o.printf("-v --vbuckets         The number of vbuckets each bucket should contain. Default=%d%n", defaultConfig.numVBuckets);
+        o.printf("-R --replicas         The number of replica nodes for each bucket. Default=%d%n", defaultConfig.numReplicas);
+        o.printf("   --harakiri-monitor The host:port on which the control socket should connect to%n");
+        o.printf("-S --with-beer-sample Initialize the cluster with the `beer-sample` bucket active%n");
+        o.printf("-D --docs             Specify a ZIP file that should contain documents to be loaded%n");
+        o.printf("                      into the `default` bucket%n");
+        o.printf("-E --empty            Initialize a blank cluster without any buckets. Buckets may then%n");
+        o.printf("                      be later added via the REST API%n");
+        o.printf("%n");
+        o.printf("=== -- bucket option ===%n");
+        o.printf("Buckets descriptions is a comma-separated list of {name}:{password}:{bucket type} pairs.%n");
+        o.printf("To allow unauthorized connections, omit password.%n");
+        o.printf("Third parameter could be either 'memcache' or 'couchbase' (default value is 'couchbase'). E.g.%n");
+        o.printf("    default:,test:,protected:secret,cache::memcache%n");
+        o.printf("The default is equivalent to `couchbase::`%n");
+    }
+
+    @SuppressWarnings("ConstantConditions")
     public static void main(String[] args) {
         BucketConfiguration defaultConfig = new BucketConfiguration();
         int port = 8091;
         int nodes = defaultConfig.numNodes;
         int vbuckets = defaultConfig.numVBuckets;
+        int replicaCount = defaultConfig.numReplicas;
+
         String harakiriMonitorAddress = null;
         String hostname = null;
         String bucketsSpec = null;
         String docsFile = null;
         boolean useBeerSample = false;
         boolean emptyCluster = false;
-        int replicaCount = -1;
 
         Getopt getopt = new Getopt();
         getopt.addOption(new CommandLineOption('h', "--host", true)).
@@ -279,16 +458,7 @@ public class CouchbaseMock {
                 }
                 harakiriMonitorAddress = e.value;
             } else if (e.key.equals("-?") || e.key.equals("--help")) {
-                System.out.println("Usage: --host=hostname --buckets=bucketsSpec --port=REST-port --nodes=#nodes --vbuckets=#vbuckets --harakiri-monitor=host:port --replicas=#replicas");
-                System.out.println("  Default values: REST-port:    8091");
-                System.out.println("                  bucketsSpec:  default:");
-                System.out.println("                  #nodes:       10");
-                System.out.println("                  #vbuckets:    4096");
-                System.out.println("                  #replicas:    2");
-                System.out.println("Buckets descriptions is a comma-separated list of {name}:{password}:{bucket type} pairs. "
-                        + "To allow unauthorized connections, omit password. "
-                        + "Third parameter could be either 'memcache' or 'couchbase' (default value is 'couchbase'). E.g.\n"
-                        + "    default:,test:,protected:secret,cache::memcache");
+                printHelp();
                 System.exit(0);
             }
         }
@@ -296,7 +466,7 @@ public class CouchbaseMock {
         try {
             CouchbaseMock mock = new CouchbaseMock(hostname, port, nodes, 0, vbuckets, bucketsSpec, replicaCount);
             if (harakiriMonitorAddress != null) {
-                mock.setupHarakiriMonitor(harakiriMonitorAddress, true);
+                mock.startHarakiriMonitor(harakiriMonitorAddress, true);
             }
 
             if (emptyCluster) {
@@ -313,93 +483,8 @@ public class CouchbaseMock {
             }
 
         } catch (Exception e) {
-            Logger.getLogger(CouchbaseMock.class.getName()).log(Level.SEVERE, "Fatal error! failed to create socket: ", e);
+            Logger.getLogger(CouchbaseMock.class.getName()).log(Level.SEVERE, "Could not create cluster: ", e);
+            System.exit(1);
         }
-    }
-
-    public void stop() {
-        httpServer.stopServer();
-        for (Bucket bucket : buckets.values()) {
-            bucket.stop();
-        }
-    }
-
-    public void createBucket(BucketConfiguration config) throws BucketAlreadyExistsException, IOException {
-        if (!config.validate()) {
-            throw new IllegalArgumentException("Invalid bucket configuration");
-        }
-
-        synchronized (buckets) {
-            if (buckets.containsKey(config.name)) {
-                throw new BucketAlreadyExistsException(config.name);
-            }
-
-            Bucket bucket = Bucket.create(this, config);
-            BucketAdminServer adminServer = new BucketAdminServer(bucket, httpServer, this);
-            adminServer.register();
-            bucket.setAdminServer(adminServer);
-
-            HttpAuthVerifier verifier = new HttpAuthVerifier(bucket, authenticator);
-
-            if (config.type == BucketType.COUCHBASE) {
-                CAPIServer capi = new CAPIServer(bucket, verifier);
-                capi.register(httpServer);
-                bucket.setCAPIServer(capi);
-            }
-
-            buckets.put(config.name, bucket);
-            bucket.start();
-        }
-    }
-
-    public void removeBucket(String name) throws FileNotFoundException {
-        Bucket bucket;
-        synchronized (buckets) {
-            if (!buckets.containsKey(name)) {
-                throw new FileNotFoundException("No such bucket: "+ name);
-            }
-            bucket = buckets.remove(name);
-        }
-        CAPIServer capi = bucket.getCAPIServer();
-        if (capi != null) {
-            capi.shutdown();
-        }
-        BucketAdminServer adminServer = bucket.getAdminServer();
-        if (adminServer != null) {
-            adminServer.shutdown();
-        }
-        bucket.stop();
-    }
-
-    /*
-     * Start cluster in background
-     */
-    public void start() {
-        try {
-            if (port == 0) {
-                ServerSocketChannel ch = ServerSocketChannel.open();
-                ch.socket().bind(new InetSocketAddress(0));
-                port = ch.socket().getLocalPort();
-                httpServer.bind(ch);
-            } else {
-                httpServer.bind(new InetSocketAddress(port));
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(CouchbaseMock.class.getName()).log(Level.SEVERE, null, ex);
-            System.exit(-1);
-        }
-
-        for (BucketConfiguration config : initialConfigs.values()) {
-            try {
-                createBucket(config);
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            } catch (BucketAlreadyExistsException ex) {
-                ex.printStackTrace();
-            }
-        }
-
-        httpServer.start();
-        startupLatch.countDown();
     }
 }

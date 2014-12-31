@@ -15,49 +15,66 @@
  */
 package org.couchbase.mock;
 
+import org.jetbrains.annotations.NotNull;
+
 public class BucketConfiguration {
+    /** The number of VBuckets the bucket should contain */
     public int numVBuckets = 1024;
+
+    /** The number of cluster nodes the bucket should have */
     public int numNodes = 10;
+
+    /** The number of replicas for the bucket */
     public int numReplicas = 2;
+
+    /** The type of the bucket (Couchbase or Memcached) */
     public Bucket.BucketType type = Bucket.BucketType.COUCHBASE;
-    public String poolName = "default";
+
+    /** The name of the bucket. This field must be set when adding a new bucket */
     public String name;
+
+    /** The password for the bucket. If no password is required, set this to the empty string (NOT null) */
+    @NotNull
     public String password = "";
+
+    /** The hostname the nodes should be bound to */
     public String hostname = "localhost";
-    public int port = 0;
+
+    /** The port number the nodes should begin at. For example, if set to 1100 and {@link #numNodes} is set to
+     * 5, then the nodes will listen on ports 1100 through 1104 */
     public int bucketStartPort = 0;
 
-    @SuppressWarnings("SimplifiableIfStatement")
     public boolean validate() {
-        if (name ==  null) {
-            return false;
-        }
-        return !(port < 0 || bucketStartPort < 0);
+        return name != null && bucketStartPort >= 0;
     }
 
+    /**
+     * Creates an empty configuration with the default options
+     */
     public BucketConfiguration() {
 
     }
 
-    // Creates a new BucketConfiguration setting the defaults from another
-    // object.
-    // Note that this does not set the name or password of the bucket, which
-    // must still be set explicitly
+    /**
+     * Copies settings from the configuration {@code other} to a new object.
+     * Note that bucket-specific settings, such as {@link #name}, {@link #password} and similar
+     * are <b>not</b> copied.
+     * @param other The configuration to copy
+     */
     public BucketConfiguration(BucketConfiguration other) {
         numVBuckets = other.numVBuckets;
         numNodes = other.numNodes;
         numReplicas = other.numReplicas;
         type = other.type;
-        poolName = other.poolName;
         hostname = other.hostname;
-        port = other.port;
-        bucketStartPort = other.bucketStartPort;
     }
 
+    /** Gets the {@link #name } */
     public String getName() {
         return name;
     }
 
+    @NotNull
     public String getPassword() {
         return password;
     }

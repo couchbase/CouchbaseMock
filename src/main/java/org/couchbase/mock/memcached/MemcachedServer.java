@@ -91,7 +91,7 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
      * Create a new new memcached server.
      *
      * @param bucket    The bucket owning all of the stores
-     * @param hostname  The hostname to bind to (null == any)
+     * @param hostname  The hostname to connect to (null == any)
      * @param port      The port this server should listen to (0 to choose an
      *                  ephemeral port)
      * @throws IOException If we fail to create the server socket
