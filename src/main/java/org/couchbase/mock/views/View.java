@@ -20,10 +20,8 @@ import org.couchbase.mock.memcached.Item;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.mozilla.javascript.*;
-import sun.security.krb5.Config;
 
 import javax.script.ScriptException;
-import java.util.Map;
 
 /**
  * This represents a compiled Couchbase View that is part of the bucket. A view
