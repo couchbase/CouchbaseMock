@@ -333,12 +333,15 @@ public class CouchbaseMock {
     }
 
     /**
-     * Start the mock. This will open the REST API port and initialize any buckets
-     * which are configured in the initial configuration list.
-     *
-     * To stop the cluster, invoke {@link #stop()}
+     * Used for the command line, this ensures that the CountDownLatch object is only set to 0
+     * when all the command line parameters have been initialized; so that when the monitor
+     * finally sends the port over the socket, all the items will have already been initialized.
+     * @param docsFile Document file to load
+     * @param monitorAddress Monitor address
+     * @param useBeerSample Whether to load the beer-sample bucket
+     * @throws IOException
      */
-    public void start() {
+    private void start(String docsFile, String monitorAddress, boolean useBeerSample) throws IOException {
         try {
             if (port == 0) {
                 ServerSocketChannel ch = ServerSocketChannel.open();
@@ -356,15 +359,35 @@ public class CouchbaseMock {
         for (BucketConfiguration config : initialConfigs.values()) {
             try {
                 createBucket(config);
-            } catch (IOException ex) {
-                ex.printStackTrace();
             } catch (BucketAlreadyExistsException ex) {
-                ex.printStackTrace();
+                throw new IOException(ex);
             }
         }
-
         httpServer.start();
+
+        // See if we need to load documents:
+        if (docsFile != null) {
+            DocumentLoader loader = new DocumentLoader(this, "default");
+            loader.loadDocuments(docsFile);
+        } else if (useBeerSample) {
+            RestAPIUtil.loadBeerSample(this);
+        }
+
+        if (monitorAddress != null) {
+            startHarakiriMonitor(monitorAddress, true);
+        }
+
         startupLatch.countDown();
+    }
+
+    /**
+     * Start the mock. This will open the REST API port and initialize any buckets
+     * which are configured in the initial configuration list.
+     *
+     * To stop the cluster, invoke {@link #stop()}
+     */
+    public void start() throws IOException {
+        start(null, null, false);
     }
 
     /**
@@ -465,22 +488,11 @@ public class CouchbaseMock {
 
         try {
             CouchbaseMock mock = new CouchbaseMock(hostname, port, nodes, 0, vbuckets, bucketsSpec, replicaCount);
-            if (harakiriMonitorAddress != null) {
-                mock.startHarakiriMonitor(harakiriMonitorAddress, true);
-            }
-
             if (emptyCluster) {
                 mock.clearInitialConfigs();
             }
 
-            mock.start();
-            // See if we need to load documents:
-            if (docsFile != null) {
-                DocumentLoader loader = new DocumentLoader(mock, "default");
-                loader.loadDocuments(docsFile);
-            } else if (useBeerSample) {
-                RestAPIUtil.loadBeerSample(mock);
-            }
+            mock.start(docsFile, harakiriMonitorAddress, useBeerSample);
 
         } catch (Exception e) {
             Logger.getLogger(CouchbaseMock.class.getName()).log(Level.SEVERE, "Could not create cluster: ", e);
