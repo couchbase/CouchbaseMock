@@ -34,40 +34,32 @@ public class ViewHandler implements HttpRequestHandler {
 
     @Override
     public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
-        // For now, ignore the configuration
         Iterable<Item> items = bucket.getMasterItems(Storage.StorageType.CACHE);
-        String queryString = null;
-        Configuration viewParams = null;
+        URL url = HandlerUtil.getUrl(request);
+        Map<String,String> paramsMap = new HashMap<String, String>();
 
-        if (request.getRequestLine().getMethod().equals("GET")) {
-            URL url = HandlerUtil.getUrl(request);
-            queryString = url.getQuery();
-
-        } else if (request.getRequestLine().getMethod().equals("POST")) {
-            // Request bodies sent to POST are raw JSON, not URL-encoded
-
+        if (request.getRequestLine().getMethod().equals("POST")) {
             HttpEntity reqEntity = ((HttpEntityEnclosingRequest)request).getEntity();
             String contentType = reqEntity.getContentType().getValue();
             String rawPayload = EntityUtils.toString(reqEntity);
 
-            if (contentType.equals(ContentType.APPLICATION_JSON.getMimeType())) {
-                JsonObject jsonDecoded = JsonUtils.decode(rawPayload, JsonObject.class);
-                Map<String,String> confParams = new HashMap<String, String>();
+            if (!contentType.equals(ContentType.APPLICATION_JSON.getMimeType())) {
+                HandlerUtil.makeJsonResponse(response, "Content type must be application/json");
+                response.setStatusCode(HttpStatus.SC_BAD_REQUEST);
+                return;
+            }
 
-                for (Map.Entry<String,JsonElement> entry : jsonDecoded.entrySet()) {
-                    confParams.put(entry.getKey(), entry.getValue().toString());
-                }
-                viewParams = new Configuration(confParams);
-
-            } else if (contentType.equals(ContentType.APPLICATION_FORM_URLENCODED.getMimeType())) {
-                queryString = rawPayload;
+            JsonObject jsonDecoded = JsonUtils.decode(rawPayload, JsonObject.class);
+            for (Map.Entry<String,JsonElement> entry : jsonDecoded.entrySet()) {
+                paramsMap.put(entry.getKey(), entry.getValue().toString());
             }
         }
 
+        String queryString = url.getQuery();
         if (queryString != null && !queryString.isEmpty()) {
             try {
-                Map<String,String> kvParams = HandlerUtil.getQueryParams(queryString);
-                viewParams = new Configuration(kvParams);
+                Map<String, String> kvParams = HandlerUtil.getQueryParams(queryString);
+                paramsMap.putAll(kvParams);
             } catch (MalformedURLException ex) {
                 String errMessage = ex.getMessage();
                 if (errMessage == null) {
@@ -77,12 +69,10 @@ public class ViewHandler implements HttpRequestHandler {
                 response.setStatusCode(HttpStatus.SC_BAD_REQUEST);
                 return;
             }
-        } else if (viewParams == null) {
-            viewParams = new Configuration();
         }
 
         try {
-            String s = view.executeRaw(items, viewParams);
+            String s = view.executeRaw(items, new Configuration(paramsMap));
             HandlerUtil.makeJsonResponse(response, s);
             response.setStatusCode(HttpStatus.SC_OK);
             StringEntity entity = (StringEntity)response.getEntity();
