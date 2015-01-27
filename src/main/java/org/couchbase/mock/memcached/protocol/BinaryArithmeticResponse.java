@@ -22,7 +22,7 @@ package org.couchbase.mock.memcached.protocol;
 public class BinaryArithmeticResponse extends BinaryResponse {
 
     public BinaryArithmeticResponse(BinaryArithmeticCommand command, long val, long cas) {
-        super(command, ErrorCode.SUCCESS, 8, 0, 0, cas);
+        super(command, ErrorCode.SUCCESS, 0, 0, 8, cas);
         buffer.putLong(24, val);
         buffer.rewind();
     }
