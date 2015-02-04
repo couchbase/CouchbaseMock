@@ -16,14 +16,22 @@
  */
 package org.couchbase.mock.memcached.protocol;
 
+import org.couchbase.mock.memcached.MutationInfoWriter;
+import org.couchbase.mock.memcached.MutationStatus;
+
 /**
  * @author Trond Norbye <trond.norbye@gmail.com>
  */
 public class BinaryArithmeticResponse extends BinaryResponse {
 
-    public BinaryArithmeticResponse(BinaryArithmeticCommand command, long val, long cas) {
-        super(command, ErrorCode.SUCCESS, 0, 0, 8, cas);
-        buffer.putLong(24, val);
+    public BinaryArithmeticResponse(BinaryArithmeticCommand command, long val, long cas, MutationStatus ms, MutationInfoWriter miw) {
+        super(command, ErrorCode.SUCCESS, miw.extrasLength(), 0, 8, cas);
+
+        if (miw.extrasLength() != 0) {
+            miw.write(buffer, ms.getCoords());
+        }
+
+        buffer.putLong(24 + miw.extrasLength(), val);
         buffer.rewind();
     }
 }

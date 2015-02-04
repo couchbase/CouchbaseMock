@@ -1,5 +1,8 @@
 package org.couchbase.mock.memcached.client;
 
+import org.couchbase.mock.memcached.MemcachedConnection;
+import org.couchbase.mock.memcached.MemcachedServer;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -40,5 +43,9 @@ public class MemcachedClient {
         socket.close();
         input.close();
         output.close();
+    }
+
+    public MemcachedConnection getConnection(MemcachedServer server) throws IOException {
+        return server.findConnection(socket.getLocalSocketAddress());
     }
 }

@@ -40,11 +40,91 @@ public class Storage {
     public enum StorageType { CACHE, DISK }
     private final VBucketInfo vbInfo[];
     private final VBucketStore cacheStore;
-    private final Map<KeySpec,Item> persistStore;
+    private final PersistentStorage persistStore;
     private final MemcachedServer server;
-
     private boolean persistEnabled = true;
     private boolean replicationEnabled = true;
+
+    private final static VBucketCoordinates EMPTY_COORDS = new BasicVBucketCoordinates(0, 0);
+    private class PersistentStorage {
+        class Slot {
+            long uuid = 0;
+            long seqno = 0;
+            Map<KeySpec, Item> mm = new HashMap<KeySpec, Item>();
+        }
+        final Slot[] slots;
+
+        PersistentStorage(int nvb) {
+            slots = new Slot[nvb];
+        }
+
+        private Slot updateCommon(KeySpec ks, VBucketCoordinates coords) {
+            Slot slot = slots[ks.vbId];
+            if (slot == null) {
+                slot = slots[ks.vbId] = new Slot();
+            }
+            if (coords.getUuid() != 0 && coords.getSeqno() != 0) {
+                slot.uuid = coords.getUuid();
+                slot.seqno = coords.getSeqno();
+            }
+            return slot;
+        }
+
+        public void put(Item item, VBucketCoordinates coords) {
+            updateCommon(item.getKeySpec(), coords).mm.put(item.getKeySpec(), item);
+        }
+
+        public Item get(KeySpec ks) {
+            Slot ss = slots[ks.vbId];
+            if (ss != null) {
+                return ss.mm.get(ks);
+            } else {
+                return null;
+            }
+        }
+
+        public Collection<Item> values() {
+            ArrayList<Item> ret = new ArrayList<Item>();
+            for (Slot s : slots) {
+                if (s != null) {
+                    ret.addAll(s.mm.values());
+                }
+            }
+            return ret;
+        }
+
+        public void clear() {
+            for (Slot s : slots) {
+                if (s != null) {
+                    s.mm.clear();
+                }
+            }
+        }
+
+        public void remove(KeySpec ks, VBucketCoordinates coords) {
+            updateCommon(ks, coords).mm.remove(ks);
+        }
+
+        VBucketCoordinates getCoords(int vbid) {
+            Slot ss = slots[vbid];
+            long seqno = 0;
+            long uuid = 0;
+            if (ss != null) {
+                seqno = ss.seqno;
+                uuid = ss.uuid;
+            }
+
+            return new BasicVBucketCoordinates(uuid, seqno);
+        }
+
+        public void updateSingleCoords(int vbid, VBucketCoordinates coords) {
+            Slot s = slots[vbid];
+            if (s != null) {
+                s.uuid = coords.getUuid();
+                s.seqno = coords.getSeqno();
+            }
+        }
+    }
 
     private class DeleteActionCallback implements VBucketStore.ItemAction {
         private final Storage storage;
@@ -53,12 +133,12 @@ public class Storage {
         }
 
         @Override
-        public void onAction(VBucketStore cacheStore, Item itm) {
+        public void onAction(VBucketStore cacheStore, Item itm, VBucketCoordinates coords) {
             if (storage.persistEnabled) {
-                storage.persistDeletedItem(itm.getKeySpec());
+                storage.persistDeletedItem(itm.getKeySpec(), coords);
             }
             if (storage.replicationEnabled) {
-                storage.replicateDeletedItem(itm.getKeySpec());
+                storage.replicateDeletedItem(itm.getKeySpec(), coords);
             }
         }
     }
@@ -70,36 +150,36 @@ public class Storage {
         }
 
         @Override
-        public void onAction(VBucketStore cacheStore, Item itm) {
+        public void onAction(VBucketStore cacheStore, Item itm, VBucketCoordinates coords) {
             if (storage.persistEnabled) {
-                storage.persistMutatedItem(itm);
+                storage.persistMutatedItem(itm, coords);
             }
             if (storage.replicationEnabled) {
-                storage.replicateMutatedItem(itm);
+                storage.replicateMutatedItem(itm, coords);
             }
         }
     }
 
     public Storage(VBucketInfo vbi[], MemcachedServer server) {
         vbInfo = vbi;
-        persistStore = new HashMap<KeySpec, Item>();
         VBucketStore.ItemAction deleteCallback = new DeleteActionCallback(this);
         VBucketStore.ItemAction mutateCallback = new MutateActionCallback(this);
-        cacheStore = new VBucketStore();
+        cacheStore = new VBucketStore(vbi);
+        persistStore = new PersistentStorage(vbi.length);
         cacheStore.onItemDelete = deleteCallback;
         cacheStore.onItemMutated = mutateCallback;
         this.server = server;
     }
 
-    public void persistDeletedItem(KeySpec ks) {
-        persistStore.remove(ks);
+    public void persistDeletedItem(KeySpec ks, VBucketCoordinates coords) {
+        persistStore.remove(ks, coords);
     }
 
-    public void persistMutatedItem(Item itm) {
-        persistStore.put(itm.getKeySpec(), new Item(itm));
+    public void persistMutatedItem(Item itm, VBucketCoordinates coords) {
+        persistStore.put(new Item(itm), coords);
     }
 
-    public void replicateMutatedItem(Item itm) {
+    private void replicateMutatedItem(Item itm, VBucketCoordinates coords) {
         VBucketInfo vbi = vbInfo[itm.getKeySpec().vbId];
         if (vbi.getOwner() != server) {
             return;
@@ -107,11 +187,11 @@ public class Storage {
         for (MemcachedServer replica : vbi.getReplicas()) {
             Item newItem = new Item(itm);
             VBucketStore rStore = replica.getStorage().cacheStore;
-            rStore.getMap().put(newItem.getKeySpec(), newItem);
-            rStore.onItemMutated.onAction(rStore, newItem);
+            rStore.forceStorageMutation(newItem, coords);
         }
     }
-    public void replicateDeletedItem(KeySpec ks) {
+
+    private void replicateDeletedItem(KeySpec ks, VBucketCoordinates coords) {
         VBucketInfo vbi = vbInfo[ks.vbId];
         if (vbi.getOwner() != server) {
             return;
@@ -119,18 +199,8 @@ public class Storage {
         Item itm = new Item(ks);
         for (MemcachedServer replica : vbi.getReplicas()) {
             VBucketStore rStore = replica.getStorage().cacheStore;
-            rStore.getMap().remove(ks);
-            rStore.onItemDelete.onAction(rStore, itm);
-            rStore.onItemMutated.onAction(rStore, itm);
+            rStore.forceDeleteMutation(itm, coords);
         }
-    }
-
-    public void setPersistenceEnabled(boolean val) {
-        persistEnabled = val;
-    }
-
-    public void setReplicationEnabled(boolean val) {
-        replicationEnabled = val;
     }
 
     public Item getCached(KeySpec ks) {
@@ -143,13 +213,13 @@ public class Storage {
         cacheStore.getMap().put(itm.getKeySpec(), itm);
     }
     public void putPersisted(Item itm) {
-        persistStore.put(itm.getKeySpec(), itm);
+        persistStore.put(itm, EMPTY_COORDS);
     }
     public void removeCached(KeySpec ks) {
         cacheStore.getMap().remove(ks);
     }
     public void removePersisted(KeySpec ks) {
-        persistStore.remove(ks);
+        persistStore.remove(ks, EMPTY_COORDS);
     }
 
     public VBucketInfo getVBucketInfo(short vb) {
@@ -182,6 +252,10 @@ public class Storage {
         return cacheStore;
     }
 
+    public long getPersistedSeqno(short vBucketId) {
+        return persistStore.getCoords(vBucketId).getSeqno();
+    }
+
     public Iterable<Item> getMasterStore(final StorageType type) {
         // Create the list now:
         List<Item> validItems = new ArrayList<Item>();
@@ -207,5 +281,12 @@ public class Storage {
     public void flush() {
         cacheStore.getMap().clear();
         persistStore.clear();
+    }
+
+    public void updateCoordinateInfo(VBucketInfo[] vbi) {
+        cacheStore.updateCoords(vbi);
+        for (int i = 0; i < vbi.length; i++) {
+            persistStore.updateSingleCoords(i, cacheStore.getCurrentCoords(i));
+        }
     }
 }

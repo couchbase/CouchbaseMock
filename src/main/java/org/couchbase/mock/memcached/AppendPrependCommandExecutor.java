@@ -33,31 +33,32 @@ class AppendPrependCommandExecutor implements CommandExecutor {
         BinaryStoreCommand command = (BinaryStoreCommand) cmd;
         VBucketStore cache = server.getStorage().getCache(server, cmd.getVBucketId());
 
-        ErrorCode err;
+        MutationStatus ms;
         Item existing = cache.get(command.getKeySpec());
 
         switch (cmd.getComCode()) {
             case APPEND:
             case APPENDQ:
-                err = cache.append(command.getItem());
+                ms = cache.append(command.getItem());
                 break;
             case PREPEND:
             case PREPENDQ:
-                err = cache.prepend(command.getItem());
+                ms = cache.prepend(command.getItem());
                 break;
             default:
                 return;
         }
 
-        if (err == ErrorCode.SUCCESS) {
+        if (ms.getStatus() == ErrorCode.SUCCESS) {
             switch (cmd.getComCode()) {
                 case APPEND:
                 case PREPEND:
-                    client.sendResponse(new BinaryStoreResponse(command, err, existing.getCas()));
+                    client.sendResponse(new BinaryStoreResponse(command, ms, client.getMutinfoWriter(), existing.getCas()));
                 default:
                     break;
             }
         } else {
+            ErrorCode err = ms.getStatus();
             if (err == ErrorCode.KEY_ENOENT) {
                 err = ErrorCode.NOT_STORED;
             }

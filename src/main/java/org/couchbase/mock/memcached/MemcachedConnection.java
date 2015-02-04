@@ -15,12 +15,14 @@
  */
 package org.couchbase.mock.memcached;
 
+import org.couchbase.mock.memcached.protocol.BinaryHelloCommand;
 import org.couchbase.mock.memcached.protocol.BinaryResponse;
 import org.couchbase.mock.memcached.protocol.BinaryCommand;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.LinkedList;
 
@@ -29,7 +31,7 @@ import org.couchbase.mock.memcached.protocol.CommandFactory;
 /**
  * Class representing a single <i>client</i> connection to the server
  */
-class MemcachedConnection {
+public class MemcachedConnection {
 
     private final BinaryProtocolHandler protocolHandler;
     private final byte header[];
@@ -38,6 +40,8 @@ class MemcachedConnection {
     private List<ByteBuffer> pending = new LinkedList<ByteBuffer>();
     private boolean authenticated;
     private boolean closed;
+    private final MutationInfoWriter miw = new MutationInfoWriter();
+    private boolean[] supportedFeatures = new boolean[BinaryHelloCommand.Feature.MAX.getValue()];
 
     public MemcachedConnection(MemcachedServer server) {
         closed = false;
@@ -166,5 +170,42 @@ class MemcachedConnection {
      */
     public boolean isAuthenticated() {
         return authenticated;
+    }
+
+    public MutationInfoWriter getMutinfoWriter() {
+        return miw;
+    }
+
+    public boolean[] getSupportedFeatures() {
+        return Arrays.copyOf(supportedFeatures, supportedFeatures.length);
+    }
+
+    /**
+     * Sets the supported features from a HELLO command.
+     *
+     * Note that the actual enabled features will be the ones supported by the mock
+     * and also supported by the client. Currently the only supported feature is
+     * MUTATION_SEQNO.
+     *
+     * @param input The features requested by the client.
+     */
+    void setSupportedFeatures(boolean[] input) {
+        if (input.length != supportedFeatures.length) {
+            throw new IllegalArgumentException("Bad features length!");
+        }
+        System.arraycopy(input, 0, supportedFeatures, 0, input.length);
+        if (supportedFeatures[BinaryHelloCommand.Feature.MUTATION_SEQNO.getValue()]) {
+            miw.setEnabled(true);
+        } else {
+            miw.setEnabled(false);
+        }
+        // Scan through all other features and disable them unless they are supported
+        for (int i = 0; i < supportedFeatures.length; i++) {
+            if (i == BinaryHelloCommand.Feature.MUTATION_SEQNO.getValue()) {
+                // nothing;
+            } else {
+                supportedFeatures[i] = false;
+            }
+        }
     }
 }

@@ -16,6 +16,9 @@
  */
 package org.couchbase.mock.memcached.protocol;
 
+import org.couchbase.mock.memcached.MutationInfoWriter;
+import org.couchbase.mock.memcached.MutationStatus;
+
 import java.nio.ByteBuffer;
 
 /**
@@ -36,6 +39,19 @@ public class BinaryResponse {
 
     public BinaryResponse(BinaryCommand command, ErrorCode errorCode) {
         buffer = createAndRewind(command, errorCode, 0, 0, 0, 0);
+    }
+
+    public BinaryResponse(BinaryCommand command, MutationStatus ms, MutationInfoWriter miw, long cas) {
+        int extlen = 0;
+        boolean shouldWrite = false;
+        if (ms.getStatus().value() == ErrorCode.SUCCESS.value()) {
+            extlen = miw.extrasLength();
+            shouldWrite = true;
+        }
+        buffer = createAndRewind(command, ms.getStatus(), extlen, 0, 0, cas);
+        if (shouldWrite) {
+            miw.write(buffer, ms.getCoords());
+        }
     }
 
     private static ByteBuffer createAndRewind(BinaryCommand command, ErrorCode errorCode, int extraLength, int keyLength, int dataLength, long cas) {

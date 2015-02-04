@@ -34,11 +34,13 @@ public class ArithmeticCommandExecutor implements CommandExecutor {
         VBucketStore cache = server.getStorage().getCache(server, cmd.getVBucketId());
         Item item = cache.get(cmd.getKeySpec());
         CommandCode cc = cmd.getComCode();
+        MutationInfoWriter miw = client.getMutinfoWriter();
 
         if (item == null) {
             if (cmd.create()) {
                 item = new Item(cmd.getKeySpec(), 0, cmd.getExpiration(), Long.toString(cmd.getInitial()).getBytes(), 0);
-                ErrorCode err = cache.add(item);
+                MutationStatus ms = cache.add(item);
+                ErrorCode err = ms.getStatus();
 
                 switch (err) {
                     case KEY_EEXISTS:
@@ -46,7 +48,7 @@ public class ArithmeticCommandExecutor implements CommandExecutor {
                         break;
                     case SUCCESS:
                         if (cc == CommandCode.INCREMENT || cc == CommandCode.DECREMENT) {
-                            client.sendResponse(new BinaryArithmeticResponse(cmd, cmd.getInitial(), item.getCas()));
+                            client.sendResponse(new BinaryArithmeticResponse(cmd, cmd.getInitial(), item.getCas(), ms, miw));
                         }
                         break;
                     default:
@@ -78,14 +80,14 @@ public class ArithmeticCommandExecutor implements CommandExecutor {
 
             int exp = cmd.getExpiration() > 0 ? cmd.getExpiration() : item.getExpiryTime();
             Item newValue = new Item(cmd.getKeySpec(), item.getFlags(), exp, Long.toString(value).getBytes(), item.getCas());
-            ErrorCode err = cache.set(newValue);
-            if (err == ErrorCode.SUCCESS) {
+            MutationStatus ms = cache.set(newValue);
+            if (ms.getStatus() == ErrorCode.SUCCESS) {
                 if (cc == CommandCode.INCREMENT || cc == CommandCode.DECREMENT) {
                     // return value
-                    client.sendResponse(new BinaryArithmeticResponse(cmd, value, newValue.getCas()));
+                    client.sendResponse(new BinaryArithmeticResponse(cmd, value, newValue.getCas(), ms, miw));
                 }
             } else {
-                client.sendResponse(new BinaryResponse(command, err));
+                client.sendResponse(new BinaryResponse(command, ms.getStatus()));
             }
         }
     }

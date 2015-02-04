@@ -1,5 +1,6 @@
 package org.couchbase.mock.memcached.client;
 
+import org.couchbase.mock.memcached.protocol.BinaryHelloCommand;
 import org.couchbase.mock.memcached.protocol.CommandCode;
 
 import java.nio.ByteBuffer;
@@ -27,6 +28,11 @@ public class CommandBuilder {
         return this;
     }
 
+    public CommandBuilder vBucket(short vbucket) {
+        this.vbucket = vbucket;
+        return this;
+    }
+
     public CommandBuilder value(String value) {
         this.value = value.getBytes();
         return this;
@@ -45,6 +51,34 @@ public class CommandBuilder {
     public CommandBuilder extras(byte[] extras) {
         this.extras = extras;
         return this;
+    }
+
+    public CommandBuilder value(byte[] value, int flags) {
+        ByteBuffer bb = ByteBuffer.allocate(4);
+        bb.putInt(flags);
+        bb.rewind();
+        extras(bb.array());
+        value(value);
+        return this;
+    }
+
+    public static byte[] buildHello(String name, BinaryHelloCommand.Feature... features) {
+        CommandBuilder cBuilder = new CommandBuilder(CommandCode.HELLO);
+        cBuilder.key(name, (short)0);
+        ByteBuffer bb = ByteBuffer.allocate(features.length * 2);
+        for (BinaryHelloCommand.Feature f : features) {
+            bb.putShort((short)f.getValue());
+        }
+        bb.rewind();
+        cBuilder.value(bb.array());
+        return cBuilder.build();
+    }
+
+    public static byte[] buildStore(String key, short vbucket, String value) {
+        CommandBuilder cBuilder = new CommandBuilder(CommandCode.SET);
+        cBuilder.key(key, vbucket);
+        cBuilder.value(value.getBytes(), 0);
+        return cBuilder.build();
     }
 
     public byte[] build() {

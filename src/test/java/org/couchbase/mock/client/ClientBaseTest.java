@@ -26,6 +26,7 @@ import org.couchbase.mock.Bucket.BucketType;
 import org.couchbase.mock.BucketConfiguration;
 import org.couchbase.mock.CouchbaseMock;
 import org.couchbase.mock.memcached.MemcachedServer;
+import org.couchbase.mock.memcached.VBucketInfo;
 import org.couchbase.mock.memcached.client.MemcachedClient;
 import org.jetbrains.annotations.NotNull;
 
@@ -120,16 +121,40 @@ public abstract class ClientBaseTest extends TestCase {
 
 
     protected MemcachedClient getBinClient(int index) throws IOException {
-        Bucket bucket = couchbaseMock.getBuckets().get(bucketConfiguration.name);
-        // Get the port..
-        MemcachedServer server = bucket.getServers()[index];
-
+        MemcachedServer server = getServer(index);
         Socket sock = new Socket();
         sock.connect(new InetSocketAddress(server.getHostname(), server.getPort()));
         return new MemcachedClient(sock);
     }
 
+    private Bucket getBucket() {
+        return couchbaseMock.getBuckets().get(bucketConfiguration.name);
+    }
+
     protected MemcachedClient getBinClient() throws IOException {
         return getBinClient(0);
+    }
+
+    protected MemcachedServer getServer(int index) {
+        return getBucket().getServers()[index];
+    }
+
+    /**
+     * Gets a valid vBucket ID for a given server. Used to generate a packet that
+     * will be accepted by it.
+     * @param on The index of the server
+     * @return The vBucket
+     */
+    protected short findValidVbucket(int on) {
+        Bucket bucket = getBucket();
+        VBucketInfo[] vbi = bucket.getVBucketInfo();
+        MemcachedServer target = getServer(on);
+        for (int i = 0; i < vbi.length; i++) {
+            VBucketInfo cur = vbi[i];
+            if (cur.getOwner().equals(target)) {
+                return (short)i;
+            }
+        }
+        return -1;
     }
 }

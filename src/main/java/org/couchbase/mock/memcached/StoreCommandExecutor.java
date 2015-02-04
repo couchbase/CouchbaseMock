@@ -33,22 +33,23 @@ public class StoreCommandExecutor implements CommandExecutor {
         BinaryStoreCommand command = (BinaryStoreCommand) cmd;
         VBucketStore cache = server.getStorage().getCache(server, cmd.getVBucketId());
 
-        ErrorCode err;
+        MutationStatus ms;
+        MutationInfoWriter miw = client.getMutinfoWriter();
         Item item = command.getItem();
         CommandCode cc = cmd.getComCode();
 
         switch (cc) {
             case ADD:
             case ADDQ:
-                err = cache.add(item);
+                ms = cache.add(item);
                 break;
             case REPLACE:
             case REPLACEQ:
-                err = cache.replace(item);
+                ms = cache.replace(item);
                 break;
             case SET:
             case SETQ:
-                err = cache.set(item);
+                ms = cache.set(item);
                 break;
             default:
                 client.sendResponse(new BinaryResponse(cmd, ErrorCode.EINTERNAL));
@@ -56,9 +57,9 @@ public class StoreCommandExecutor implements CommandExecutor {
         }
 
         // Quiet commands doesn't send a reply for success.
-        if (err == ErrorCode.SUCCESS && (cc == CommandCode.ADDQ || cc == CommandCode.SETQ || cc == CommandCode.REPLACEQ)) {
+        if (ms.getStatus() == ErrorCode.SUCCESS && (cc == CommandCode.ADDQ || cc == CommandCode.SETQ || cc == CommandCode.REPLACEQ)) {
             return;
         }
-        client.sendResponse(new BinaryStoreResponse(command, err, item.getCas()));
+        client.sendResponse(new BinaryStoreResponse(command, ms, miw, item.getCas()));
     }
 }

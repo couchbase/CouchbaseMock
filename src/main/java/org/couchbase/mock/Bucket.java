@@ -380,6 +380,15 @@ public abstract class Bucket {
         }
     }
 
+    public void regenCoords() {
+        for (VBucketInfo cur : vbInfo) {
+            cur.regenerateUuid();
+        }
+        for (MemcachedServer s : servers) {
+            s.getStorage().updateCoordinateInfo(vbInfo);
+        }
+    }
+
     /**
      * Get the password for this bucket.
      * @return The password

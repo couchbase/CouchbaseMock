@@ -28,6 +28,7 @@ import org.couchbase.mock.memcached.protocol.ErrorCode;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
@@ -145,6 +146,8 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
         executors[CommandCode.OBSERVE.cc()] = new ObserveCommandExecutor();
         executors[CommandCode.EVICT.cc()] = new EvictCommandExecutor();
         executors[CommandCode.GET_CLUSTER_CONFIG.cc()] = new ConfigCommandExecutor();
+        executors[CommandCode.HELLO.cc()] = new HelloCommandExecutor();
+        executors[CommandCode.OBSERVE_SEQNO.cc()] = new ObserveSeqnoCommandExecutor();
 
         bootTime = System.currentTimeMillis() / 1000;
         selector = Selector.open();
@@ -539,5 +542,19 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
      */
     public BucketType getType() {
         return bucket.getType();
+    }
+
+    public MemcachedConnection findConnection(SocketAddress address) throws IOException {
+        for (SelectionKey key : selector.keys()) {
+            Object o = key.attachment();
+            if (o == null || !(o instanceof MemcachedConnection)) {
+                continue;
+            }
+            SocketChannel ch = (SocketChannel) key.channel();
+            if (ch.socket().getRemoteSocketAddress().equals(address)) {
+                return (MemcachedConnection) o;
+            }
+        }
+        return null;
     }
 }
