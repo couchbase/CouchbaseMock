@@ -199,7 +199,13 @@ public class Storage {
         Item itm = new Item(ks);
         for (MemcachedServer replica : vbi.getReplicas()) {
             VBucketStore rStore = replica.getStorage().cacheStore;
+            PersistentStorage pStore = replica.getStorage().persistStore;
             rStore.forceDeleteMutation(itm, coords);
+
+            // Nasty hack needed to retain compat with existing tests which assume that
+            // deletion operations on the mock will silently 'persist' this mutation
+            // on disk.
+            pStore.put(itm, coords);
         }
     }
 
