@@ -147,8 +147,11 @@ public class View {
                     jsonException = (String) NativeJSON.stringify(cx, scope, thrownObject, null, null);
                     throw new QueryExecutionException(jsonException);
                 } catch (EcmaError ex2) {
+
                     throw new QueryExecutionException(ex2.getErrorMessage());
                 }
+            } catch (EcmaError parseErr) {
+                throw new QueryExecutionException(parseErr.getErrorMessage());
             }
 
             NativeArray rows = (NativeArray) resultObject.get("rows", resultObject);
