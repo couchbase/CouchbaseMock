@@ -90,7 +90,7 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
             if (this.remaining > 0) {
                 this.remaining--;
             }
-            logger.info("For all cmds " + code + " count:" + remaining);
+            logger.finer("For all cmds " + code + " count:" + remaining);
             return code;
         }
 
@@ -104,7 +104,7 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
             if (cmdRemaining > 0) {
                 countPerCmdType.put(cmdCode, cmdRemaining - 1);
             }
-            logger.info("For " + cmdCode + " error:" + cmdErrCode + " count:" + cmdRemaining);
+            logger.finer("For " + cmdCode + " error:" + cmdErrCode + " count:" + cmdRemaining);
             return cmdErrCode;
         }
     }
@@ -203,7 +203,7 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
     }
 
     public void updateFailMakerContext(CommandCode cmdName, ErrorCode code, int count) {
-        logger.info("Adding fail handler cmdName:" + cmdName + " count:" + count + " code:" + count);
+        logger.fine("Adding fail handler cmdName:" + cmdName + " count:" + count + " code:" + count);
         if (cmdName == null) failmaker.update(code, count);
         else failmaker.update(cmdName, code, count);
     }

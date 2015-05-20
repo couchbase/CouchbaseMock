@@ -74,7 +74,7 @@ public class OpfailCommandHandler extends MockCommand {
             return new CommandStatus().fail("Invalid error code");
         }
 
-        logger.info("Adding fail handler cmdName:" + cmdCode + " count:" + count + " code:" + eCode);
+        logger.finer("Adding fail handler cmdName:" + cmdCode + " count:" + count + " code:" + eCode);
         for (Bucket bucket : mock.getBuckets().values()) {
             MemcachedServer[] servers = bucket.getServers();
             for (int ii = 0; ii < servers.length; ii++) {

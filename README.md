@@ -302,7 +302,7 @@ Paramters:
         <td>JSON Number</td>
     </tr>
     <tr>
-        <td><b>name<b></td>
+        <td>name</td>
         <td>The name of the memcached command to fail. Other commands will
             be unaffected</td>
         <td>JSON String; In uppercase</td>
