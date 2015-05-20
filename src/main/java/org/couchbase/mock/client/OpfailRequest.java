@@ -17,6 +17,7 @@ package org.couchbase.mock.client;
 
 import java.util.List;
 import org.couchbase.mock.memcached.protocol.ErrorCode;
+import org.couchbase.mock.memcached.protocol.CommandCode;
 
 public class OpfailRequest extends MockRequest {
     public OpfailRequest(ErrorCode code, int count, List<Integer> servers) {
@@ -32,5 +33,13 @@ public class OpfailRequest extends MockRequest {
         setName("opfail");
         payload.put("code", code.value());
         payload.put("count", count);
+    }
+
+    public OpfailRequest(ErrorCode code, int count, CommandCode cmdCode) {
+        super();
+        setName("opfail");
+        payload.put("code", code.value());
+        payload.put("count", count);
+        payload.put("name", cmdCode.toString());
     }
 }

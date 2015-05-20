@@ -25,9 +25,13 @@ import org.couchbase.mock.control.CommandStatus;
 import org.couchbase.mock.control.MockCommand;
 import org.couchbase.mock.memcached.MemcachedServer;
 import org.couchbase.mock.memcached.protocol.ErrorCode;
+import org.couchbase.mock.memcached.protocol.CommandCode;
 import org.jetbrains.annotations.NotNull;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class OpfailCommandHandler extends MockCommand {
+    private static final Logger logger = Logger.getLogger(OpfailCommandHandler.class.getName());
 
     @Override
     public CommandStatus execute(@NotNull CouchbaseMock mock,
@@ -49,8 +53,16 @@ public class OpfailCommandHandler extends MockCommand {
         }
 
         int count = payload.get("count").getAsInt();
-        int iCode = payload.get("code").getAsInt();
+        CommandCode cmdCode = null;
+        try {
+            if (payload.has("name"))
+                cmdCode = CommandCode.valueOf( payload.get("name").getAsString() );
+        }
+        catch (IllegalArgumentException error) {
+            return new CommandStatus().fail("Invalid command code " + error);
+        }
 
+        int iCode = payload.get("code").getAsInt();
         for (ErrorCode rc : ErrorCode.values()) {
             if (iCode == rc.value()) {
                 eCode = rc;
@@ -58,11 +70,11 @@ public class OpfailCommandHandler extends MockCommand {
                 break;
             }
         }
-
         if (!eCodeFound) {
             return new CommandStatus().fail("Invalid error code");
         }
 
+        logger.info("Adding fail handler cmdName:" + cmdCode + " count:" + count + " code:" + eCode);
         for (Bucket bucket : mock.getBuckets().values()) {
             MemcachedServer[] servers = bucket.getServers();
             for (int ii = 0; ii < servers.length; ii++) {
@@ -71,7 +83,7 @@ public class OpfailCommandHandler extends MockCommand {
                     continue;
                 }
 
-                servers[ii].updateFailMakerContext(eCode, count);
+                servers[ii].updateFailMakerContext(cmdCode, eCode, count);
             }
         }
 

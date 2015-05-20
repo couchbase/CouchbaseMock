@@ -234,7 +234,22 @@ public class MockAPITest extends ClientBaseTest {
         assertTrue(mockHttpClient.request(new OpfailRequest(ErrorCode.SUCCESS, 0)).isOk());
     }
 
+    public void testOpfailWithCommand() throws Exception {
+        OperationFuture ft = client.set("foo", "bar");
+        ft.get();
+        assertTrue(ft.getStatus().isSuccess());
+        assertTrue(mockClient.request(new OpfailRequest(ErrorCode.KEY_ENOENT, 1, CommandCode.GET)).isOk());
 
+        ft = client.asyncGets("foo");
+        ft.get();
+        assertFalse(ft.getStatus().isSuccess());
+
+        ft = client.asyncGets("foo");
+        ft.get();
+        assertTrue(ft.getStatus().isSuccess());
+
+        assertTrue(mockHttpClient.request(new OpfailRequest(ErrorCode.SUCCESS, 0, CommandCode.GET)).isOk());
+    }
 
     private void checkCCCPEnabled(int index, boolean enabledExpected) throws Exception {
         MemcachedClient mcClient = getBinClient(index);

@@ -302,6 +302,12 @@ Paramters:
         <td>JSON Number</td>
     </tr>
     <tr>
+        <td><b>name<b></td>
+        <td>The name of the memcached command to fail. Other commands will
+            be unaffected</td>
+        <td>JSON String; In uppercase</td>
+    </tr>
+    <tr>
         <td>servers</td>
         <td>A list of servers to apply this setting to. Servers are specified
         as indices into the server array. By default, all servers are used</td>
