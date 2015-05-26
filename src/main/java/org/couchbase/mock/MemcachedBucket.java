@@ -39,7 +39,7 @@ public class MemcachedBucket extends Bucket {
 
     @Override
     public Map<String,Object> getConfigMap() {
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = getCommonConfig();
 
         map.put("name", name);
         map.put("authType", "sasl");

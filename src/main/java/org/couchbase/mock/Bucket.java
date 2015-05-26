@@ -242,6 +242,20 @@ public abstract class Bucket {
     public abstract Map<String,Object> getConfigMap();
 
     /**
+     * Returns configuration information common to both Couchbase and Memcached buckets
+     * @return The configuration object to be injected
+     */
+    protected Map<String,Object> getCommonConfig() {
+        Map<String,Object> mm = new HashMap<String, Object>();
+        mm.put("replicaNumber", numReplicas);
+        Map<String,Object> ramQuota = new HashMap<String, Object>();
+        ramQuota.put("rawRAM", 1024 * 1024 * 100);
+        ramQuota.put("ram", 1024 * 1024 * 100);
+        mm.put("quota", ramQuota);
+        return mm;
+    }
+
+    /**
      * Convenience method to get the JSON-encoded version of the configuration map.
      * @return An encoded JSON String
      * @see {@link #getConfigMap()}

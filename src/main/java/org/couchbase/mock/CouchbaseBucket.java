@@ -48,7 +48,7 @@ public class CouchbaseBucket extends Bucket {
 
     @Override
     public Map<String,Object> getConfigMap() {
-        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = getCommonConfig();
         List<MemcachedServer> active = activeServers();
         map.put("name", name);
         map.put("bucketType", "membase");
