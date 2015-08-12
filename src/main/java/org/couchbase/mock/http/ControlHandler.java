@@ -14,100 +14,49 @@
  * limitations under the License.
  */
 package org.couchbase.mock.http;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import java.io.*;
+import java.net.URL;
 import java.net.URLDecoder;
 
+import org.apache.http.HttpException;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
+import org.apache.http.protocol.HttpContext;
+import org.apache.http.protocol.HttpRequestHandler;
 import org.couchbase.mock.control.CommandNotFoundException;
 import org.couchbase.mock.control.MockCommandDispatcher;
 import org.couchbase.mock.control.handlers.MockHelpCommandHandler;
-import org.couchbase.mock.control.MockCommand;
+import org.couchbase.mock.httpio.HandlerUtil;
 
 /**
  *
  * @author Mark Nunberg <mnunberg@haskalah.org>
  */
-public class ControlHandler implements HttpHandler {
+public class ControlHandler implements HttpRequestHandler {
     private final MockCommandDispatcher dispatcher;
-
-    private static class InvalidQueryException extends Exception { }
     private class WantHelpException extends Exception { }
 
     public ControlHandler(MockCommandDispatcher dispatcher) {
         this.dispatcher = dispatcher;
 
     }
-
-
-    private static JsonObject parseQueryParams(HttpExchange exchange) throws InvalidQueryException {
-
-        String query = exchange.getRequestURI().getRawQuery();
-        JsonObject payload = new JsonObject();
-        JsonParser parser = new JsonParser();
-
-        if (query == null) {
-            throw new InvalidQueryException();
-        }
-
-        for (String kv : query.split("&")) {
-            String[] parts = kv.split("=");
-
-            if (parts.length != 2) {
-                throw new InvalidQueryException();
-            }
-
-            String optName = parts[0];
-            JsonElement optVal;
-            try {
-                 optVal = parser.parse(URLDecoder.decode(parts[1], "UTF-8"));
-            } catch (UnsupportedEncodingException e) {
-                throw new InvalidQueryException();
-            }
-
-            payload.add(optName, optVal);
-        }
-
-        return payload;
-    }
-
     /**
      * Sends a help text with the provided code
-     * @param exchange The exchange to send the text to
+     * @param response The response
      * @param code The HTTP status code to be used in the response
      */
-    private static void sendHelpText(HttpExchange exchange, int code) throws IOException {
-
-        byte[] ret = MockHelpCommandHandler.getIndentedHelp().getBytes();
-        exchange.sendResponseHeaders(code, ret.length);
-        exchange.getResponseBody().write(ret);
+    private static void sendHelpText(HttpResponse response, int code) throws IOException {
+        HandlerUtil.makeStringResponse(response, MockHelpCommandHandler.getIndentedHelp());
+        response.setStatusCode(code);
     }
-
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
-        try {
-            _handle(exchange);
-
-        } catch (IOException e) {
-            throw e;
-
-        } catch (RuntimeException e) {
-            e.printStackTrace();
-            throw e;
-        }
-    }
-
-
-    private void _handle(HttpExchange exchange) throws IOException {
-        String path = exchange.getRequestURI().getPath();
+    public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
+        URL url = HandlerUtil.getUrl(request);
+        String path = url.getPath();
         path = path.replaceFirst("^/+", "");
         String[] components = path.split("/");
-        OutputStream body = exchange.getResponseBody();
-        exchange.getResponseHeaders().set("Content-Type", "application/json");
 
         try {
 
@@ -119,29 +68,25 @@ public class ControlHandler implements HttpHandler {
                 throw new WantHelpException();
             }
 
-            JsonObject payload = parseQueryParams(exchange);
+            JsonObject payload = HandlerUtil.getJsonQuery(url);
             String cmdStr = URLDecoder.decode(components[1], "UTF-8");
-            byte[] response = dispatcher.dispatch(cmdStr, payload).toString().getBytes();
-
-            exchange.sendResponseHeaders(200, response.length);
-            body.write(response);
+            String rStr = dispatcher.dispatch(cmdStr, payload).toString();
+            HandlerUtil.makeJsonResponse(response, rStr);
 
         } catch (WantHelpException e) {
-            sendHelpText(exchange, 200);
+            sendHelpText(response, 200);
 
         } catch (CommandNotFoundException e) {
-            sendHelpText(exchange, 404);
-
-        } catch (InvalidQueryException e) {
-            sendHelpText(exchange, 400);
+            sendHelpText(response, 404);
 
         } catch (RuntimeException e) {
-            exchange.sendResponseHeaders(500, -1);
-            e.printStackTrace(new PrintWriter(body));
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(new PrintWriter(pw));
+            HandlerUtil.makeStringResponse(response, sw.toString());
+            HandlerUtil.bailResponse(context, response);
             throw e;
 
-        } finally {
-            body.close();
         }
     }
 }

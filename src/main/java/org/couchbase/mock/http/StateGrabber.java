@@ -20,10 +20,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
 import org.couchbase.mock.Bucket;
 import org.couchbase.mock.CouchbaseMock;
+import org.couchbase.mock.JsonUtils;
 
 /**
  * Utility class to extract a consistent state for various configuration
@@ -50,15 +49,16 @@ class StateGrabber {
         retObj.put("pools", pools);
         retObj.put("isAdminCreds", Boolean.TRUE);
         retObj.put("implementationVersion", "CouchbaseMock");
-        return JSONObject.fromObject(retObj).toString();
+        return JsonUtils.encode(retObj);
     }
 
     static String getPoolInfoJSON(CouchbaseMock mock) {
         Map<String, Object> poolInfo = new HashMap<String, Object>();
         HashMap<String, Object> buckets = new HashMap<String, Object>();
+
         poolInfo.put("buckets", buckets);
         buckets.put("uri", "/pools/" + mock.getPoolName() + "/buckets");
-        return JSONObject.fromObject(poolInfo).toString();
+        return JsonUtils.encode(poolInfo);
     }
 
     static String getBucketJSON(Bucket bucket) {
@@ -73,10 +73,10 @@ class StateGrabber {
     }
 
     static String getAllBucketsJSON(List<Bucket> allowedBuckets) {
-        JSONArray bucketsJSON = new JSONArray();
+        List<Map> bucketsJSON = new ArrayList<Map>();
         for (Bucket bucket : allowedBuckets) {
-            bucketsJSON.add(getBucketJSON(bucket));
+            bucketsJSON.add(bucket.getConfigMap());
         }
-        return bucketsJSON.toString();
+        return JsonUtils.encode(bucketsJSON);
     }
 }

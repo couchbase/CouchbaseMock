@@ -19,6 +19,7 @@ package org.couchbase.mock.memcached;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 /**
  *
@@ -29,6 +30,7 @@ public class VBucketInfo {
     private final int REPLICAS_MAX = 3;
     private MemcachedServer owner;
     private final List<MemcachedServer> replicas = new ArrayList<MemcachedServer>();
+    private volatile long uuid;
 
     public VBucketInfo(MemcachedServer owner) {
         this.owner = owner;
@@ -36,6 +38,7 @@ public class VBucketInfo {
 
     public VBucketInfo() {
         this.owner = null;
+        regenerateUuid();
     }
 
     public synchronized void setOwner(MemcachedServer server) {
@@ -76,5 +79,14 @@ public class VBucketInfo {
             }
         }
         return false;
+    }
+
+    /* Used by Bucket */
+    public void regenerateUuid() {
+        uuid = new Random().nextLong();
+    }
+
+    public long getUuid() {
+        return uuid;
     }
 }

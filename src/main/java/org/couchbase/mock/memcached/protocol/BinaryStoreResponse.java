@@ -16,6 +16,9 @@
  */
 package org.couchbase.mock.memcached.protocol;
 
+import org.couchbase.mock.memcached.MutationInfoWriter;
+import org.couchbase.mock.memcached.MutationStatus;
+
 /**
  * @author Trond Norbye <trond.norbye@gmail.com>
  */
@@ -23,6 +26,11 @@ public class BinaryStoreResponse extends BinaryResponse {
 
     public BinaryStoreResponse(BinaryStoreCommand command, ErrorCode errorCode, long cas) {
         super(command, errorCode);
+        buffer.putLong(16, cas);
+        buffer.rewind();
+    }
+    public BinaryStoreResponse(BinaryStoreCommand command, MutationStatus ms, MutationInfoWriter miw, long cas) {
+        super(command, ms, miw, cas);
         buffer.putLong(16, cas);
         buffer.rewind();
     }

@@ -21,8 +21,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.sf.json.JSONObject;
+import org.couchbase.mock.memcached.Item;
 import org.couchbase.mock.memcached.MemcachedServer;
+import org.couchbase.mock.memcached.protocol.ErrorCode;
 
 /**
  * Representation of a CacheBucket (aka memcached)
@@ -37,8 +38,8 @@ public class MemcachedBucket extends Bucket {
     }
 
     @Override
-    public String getJSON() {
-        Map<String, Object> map = new HashMap<String, Object>();
+    public Map<String,Object> getConfigMap() {
+        Map<String, Object> map = getCommonConfig();
 
         map.put("name", name);
         map.put("authType", "sasl");
@@ -52,17 +53,21 @@ public class MemcachedBucket extends Bucket {
         map.put("streamingUri", "/pools/" + poolName + "/bucketsStreaming/" + name);
         map.put("uri", "/pools/" + poolName + "/buckets/" + name);
 
-        List<String> nodes = new ArrayList<String>();
+        List<Object> nodes = new ArrayList<Object>();
         for (MemcachedServer server : activeServers()) {
-            nodes.add(server.toString());
+            nodes.add(server.toNodeConfigInfo());
         }
         map.put("nodes", nodes);
-
-        return JSONObject.fromObject(map).toString();
+        return map;
     }
 
     @Override
     public BucketType getType() {
         return BucketType.MEMCACHED;
+    }
+
+    @Override
+    public ErrorCode storeItem(String key, byte[] value) {
+        throw new UnsupportedOperationException("Storing items not yet supported for memcached buckets!");
     }
 }

@@ -21,8 +21,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.CRC32;
-import net.sf.json.JSONObject;
-import org.couchbase.mock.memcached.MemcachedServer;
+
+import org.couchbase.mock.memcached.*;
+import org.couchbase.mock.memcached.protocol.ErrorCode;
 
 /**
  * Representation of a membase bucket
@@ -46,8 +47,8 @@ public class CouchbaseBucket extends Bucket {
     }
 
     @Override
-    public String getJSON() {
-        Map<String, Object> map = new HashMap<String, Object>();
+    public Map<String,Object> getConfigMap() {
+        Map<String, Object> map = getCommonConfig();
         List<MemcachedServer> active = activeServers();
         map.put("name", name);
         map.put("bucketType", "membase");
@@ -57,11 +58,18 @@ public class CouchbaseBucket extends Bucket {
         map.put("uri", "/pools/" + poolName + "/buckets/" + name);
         map.put("streamingUri", "/pools/" + poolName + "/bucketsStreaming/" + name);
         map.put("flushCacheUri", "/pools/" + poolName + "/buckets/" + name + "/controller/doFlush");
-        List<String> nodes = new ArrayList<String>();
+        List<Map> nodes = new ArrayList<Map>();
         for (MemcachedServer server : active) {
-            nodes.add(server.toString());
+            Map<String,Object> nodeInfo = server.toNodeConfigInfo();
+            if (cluster != null) {
+                // Add 'couchApiBase'
+                String capiBase = String.format("http://%s:%d/%s", cluster.getHttpHost(), cluster.getHttpPort(), name);
+                nodeInfo.put("couchApiBase", capiBase);
+            }
+            nodes.add(nodeInfo);
         }
         map.put("nodes", nodes);
+
 
         Map<String, String> stats = new HashMap<String, String>();
         stats.put("uri", "/pools/" + poolName + "/buckets/" + name + "/stats");
@@ -97,12 +105,21 @@ public class CouchbaseBucket extends Bucket {
         }
         vbm.put("vBucketMap", m);
         map.put("vBucketServerMap", vbm);
-        return JSONObject.fromObject(map).toString();
-
+        return map;
     }
 
     @Override
     public BucketType getType() {
         return BucketType.COUCHBASE;
+    }
+
+    @Override
+    public ErrorCode storeItem(String key, byte[] value) {
+        short vbIndex = getVbIndexForKey(key);
+        KeySpec ks = new KeySpec(key, vbIndex);
+        Item item = new Item(ks, 0, 0, value, 0);
+        MemcachedServer server = vbInfo[vbIndex].getOwner();
+        VBucketStore vbStore = server.getStorage().getCache(vbIndex);
+        return vbStore.set(item).getStatus();
     }
 }

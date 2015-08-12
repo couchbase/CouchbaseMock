@@ -15,136 +15,235 @@
  */
 package org.couchbase.mock.http;
 
-import com.sun.net.httpserver.Headers;
-import org.couchbase.mock.CouchbaseMock;
-import com.sun.net.httpserver.HttpExchange;
+import com.google.gson.JsonElement;
 import com.sun.net.httpserver.HttpHandler;
+import org.apache.http.*;
+import org.apache.http.protocol.HttpContext;
+import org.apache.http.protocol.HttpRequestHandler;
+import org.apache.http.util.EntityUtils;
+import org.couchbase.mock.*;
+import org.couchbase.mock.httpio.HandlerUtil;
+import org.couchbase.mock.httpio.HttpServer;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.couchbase.mock.Bucket;
-import org.couchbase.mock.memcached.MemcachedServer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Handler;
 
 /**
  * @author Sergey Avseyev
  */
-public class PoolsHandler implements HttpHandler {
-
+public class PoolsHandler {
     private final CouchbaseMock mock;
-
-    private class ResourceNotFoundException extends Throwable {
-    }
 
     public PoolsHandler(CouchbaseMock mock) {
         this.mock = mock;
     }
 
-    private List<Bucket> getAllowedBuckets(HttpExchange exchange) {
-        List<Bucket> bucketList = new LinkedList<Bucket>();
-        String httpUser = exchange.getPrincipal().getUsername();
-        String adminUser = mock.getAuthenticator().getAdminName();
+    private final HttpRequestHandler poolHandler = new HttpRequestHandler() {
+        @Override
+        public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
+            String payload = StateGrabber.getAllPoolsJSON(mock);
+            HandlerUtil.makeJsonResponse(response, payload);
+        }
+    };
 
-        for (Bucket bucket : mock.getBuckets().values()) {
-            if ( // Public
-                    (httpUser.isEmpty() && bucket.getPassword().isEmpty())
-                            || // Administrator
-                            adminUser.equals(httpUser)
-                            || // Protected
-                            bucket.getName().equals(httpUser)) {
-                bucketList.add(bucket);
+    private final HttpRequestHandler poolsDefaultHandler = new HttpRequestHandler() {
+        @Override
+        public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
+            String payload = StateGrabber.getPoolInfoJSON(mock);
+            HandlerUtil.makeJsonResponse(response, payload);
+        }
+    };
+
+    private final HttpRequestHandler sampleBucketsHandler = new HttpRequestHandler() {
+        @Override
+        public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
+            AuthContext authContext = HandlerUtil.getAuth(context, request);
+            if (!mock.getAuthenticator().isAdministrator(authContext)) {
+                response.setStatusCode(HttpStatus.SC_UNAUTHORIZED);
+                return;
+            }
+
+            if (!request.getRequestLine().getMethod().equals("POST")) {
+                HandlerUtil.makeResponse(response, "Not Found", HttpStatus.SC_NOT_FOUND);
+                return;
+            }
+
+            // Parse the JSON
+            if (! (request instanceof HttpEntityEnclosingRequest)) {
+                HandlerUtil.make400Response(response, "Must have body");
+                return;
+            }
+
+            String rawBody = EntityUtils.toString(((HttpEntityEnclosingRequest) request).getEntity());
+            JsonElement elem = JsonUtils.GSON.fromJson(rawBody, JsonElement.class);
+            if (!elem.isJsonArray()) {
+                HandlerUtil.make400Response(response, "Request must be JSON array");
+                return;
+            }
+            for (JsonElement mem : elem.getAsJsonArray()) {
+                if (!mem.isJsonPrimitive()) {
+                    HandlerUtil.make400Response(response, "Element must be string");
+                    return;
+                }
+
+                String s = mem.getAsString();
+                if (!s.equals("beer-sample")) {
+                    HandlerUtil.make400Response(response, String.format("[\"Sample %s is not a valid sample.\"]", s));
+                    return;
+                }
+
+                // Load the bucket!
+                try {
+                    BucketConfiguration newConfig = new BucketConfiguration(mock.getDefaultConfig());
+                    newConfig.name = "beer-sample";
+                    try {
+                        mock.createBucket(newConfig);
+                    } catch (BucketAlreadyExistsException ex) {
+                        HandlerUtil.make400Response(response, "[\"Sample beer-sample is already loaded.\"]");
+                        return;
+                    }
+                    DocumentLoader.loadBeerSample(mock);
+                } catch (IOException ex) {
+                    HandlerUtil.makeResponse(response, ex.toString(), HttpStatus.SC_INTERNAL_SERVER_ERROR);
+                }
             }
         }
-        return bucketList;
+    };
+
+    class CreateBucketBadParamsException extends Exception {
+        CreateBucketBadParamsException(String message) {
+            super(message);
+        }
     }
 
-    private byte[] extractPayload(HttpExchange exchange, String path)
-            throws ResourceNotFoundException, IOException {
-        byte[] payload = null;
+    private final HttpRequestHandler allBucketsHandler = new HttpRequestHandler() {
+        private void handleListBuckets(HttpRequest request, HttpResponse response, AuthContext authContext) throws HttpException, IOException{
+            List<Bucket> allowedBuckets = new ArrayList<Bucket>(mock.getBuckets().size());
+            Authenticator authenticator = mock.getAuthenticator();
 
-        if (path.matches("^/pools/?$")) {
-            // GET /pools
-            payload = StateGrabber.getAllPoolsJSON(mock).getBytes();
-
-        } else if (path.matches("^/pools/" + mock.getPoolName() + "$/?")) {
-            // GET /pools/:poolName
-            payload = StateGrabber.getPoolInfoJSON(mock).getBytes();
-
-        } else if (path.matches("^/pools/" + mock.getPoolName() + "/buckets/?$")) {
-            // GET /pools/:poolName/buckets
-            payload = StateGrabber.getAllBucketsJSON(
-                    getAllowedBuckets(exchange)).getBytes();
-
-        } else if (path.matches("^/pools/" + mock.getPoolName() + "/buckets/[^/]+/?$")) {
-            // GET /pools/:poolName/buckets/:bucketName
-            String[] tokens = path.split("/");
-            Bucket bucket = mock.getBuckets().get(tokens[tokens.length - 1]);
-            payload = StateGrabber.getBucketJSON(bucket).getBytes();
-
-        } else if (path.matches("^/pools/" + mock.getPoolName() + "/bucketsStreaming/[^/]+/?$")) {
-            // GET /pools/:poolName/bucketsStreaming/:bucketName
-            String[] tokens = path.split("/");
-            Bucket bucket = mock.getBuckets().get(tokens[tokens.length - 1]);
-            if (bucket == null) {
-                throw new ResourceNotFoundException();
+            for (Bucket bucket : mock.getBuckets().values()) {
+                if (authenticator.isAuthorizedForBucket(authContext, bucket)) {
+                    allowedBuckets.add(bucket);
+                }
             }
+            String payload = StateGrabber.getAllBucketsJSON(allowedBuckets);
+            HandlerUtil.makeJsonResponse(response, payload);
+        }
 
-            exchange.getResponseHeaders().set("Transfer-Encoding", "chunked");
-            exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, 0);
-            BucketsStreamingHandler streamingHandler =
-                    new BucketsStreamingHandler(mock.getMonitor(),
-                            bucket, exchange.getResponseBody());
-            try {
-                streamingHandler.startStreaming();
-            } catch (InterruptedException ex) {
-                Logger.getLogger(PoolsHandler.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        } else if (path.matches("^/pools/" + mock.getPoolName() + "/buckets/[\\w]+/controller/doFlush$")) {
-            String[] tokens = path.split("/");
-            Bucket bucket = mock.getBuckets().get(tokens[4]);
-            if (bucket == null) {
-                throw new ResourceNotFoundException();
-            }
-            for (MemcachedServer server : bucket.getServers()) {
-                server.flushAll();
-            }
+        @Override
+        public void handle(HttpRequest request, HttpResponse response, HttpContext context) throws HttpException, IOException {
+            String methodName = request.getRequestLine().getMethod();
+            AuthContext authContext = HandlerUtil.getAuth(context, request);
 
-            return new byte[0];
+            if (methodName.equals("GET")) {
+                handleListBuckets(request, response, authContext);
+            } else if (methodName.equals("POST")) {
+                if (!mock.getAuthenticator().isAdministrator(authContext)) {
+                    response.setStatusCode(HttpStatus.SC_UNAUTHORIZED);
+                } else {
+                    try {
+                        // Create new bucket
+                        handleCreateBucket(request, response, context);
+                    } catch (CreateBucketBadParamsException ex) {
+                        // The docs say 204, however when trying this out on my own, i get 500s all the time. ohwell
+                        HandlerUtil.makeResponse(response, ex.getMessage(), HttpStatus.SC_BAD_REQUEST);
+                    }
+                }
+            }
+        }
+    };
+
+    public void handleCreateBucket(HttpRequest request, HttpResponse response, HttpContext context)
+        throws HttpException, IOException, CreateBucketBadParamsException {
+        HttpEntityEnclosingRequest entRequest;
+        if (! (request instanceof HttpEntityEnclosingRequest)) {
+            throw new CreateBucketBadParamsException("Must provide bucket parameters");
+        }
+
+        BucketConfiguration config = new BucketConfiguration(mock.getDefaultConfig());
+
+        entRequest = (HttpEntityEnclosingRequest) request;
+        Map<String,String> params = HandlerUtil.getQueryParams(EntityUtils.toString(entRequest.getEntity()));
+
+        String name = params.get("name");
+        String authType = params.get("authType");
+
+        if (name == null || name.isEmpty()) {
+            throw new CreateBucketBadParamsException("Must provide bucket name");
+        }
+
+        config.name = name;
+
+        if (authType == null || authType.isEmpty()) {
+            throw new CreateBucketBadParamsException("authType must be specified");
+        } else if (authType.equals("none")) {
+            HandlerUtil.makeResponse(response, "Non-SASL auth not supported", HttpStatus.SC_INTERNAL_SERVER_ERROR);
+            return;
+        } else if (authType.equals("sasl")) {
+            // OK. but we handle this later
+            config.password = params.get("saslPassword");
+            if (config.password == null) {
+                config.password = "";
+            }
         } else {
-
-            throw new ResourceNotFoundException();
+            throw new CreateBucketBadParamsException(
+                    "authType must be 'sasl' or 'none' (note 'none' is not supported, but is valid)");
         }
-
-        return payload;
-    }
-
-    @Override
-    public void handle(HttpExchange exchange) throws IOException {
-        String path = exchange.getRequestURI().getPath();
-        OutputStream body = exchange.getResponseBody();
-        Headers responseHeaders = exchange.getResponseHeaders();
-
-        responseHeaders.set("Server", "CouchbaseMock/1.0");
-
-        byte[] payload;
 
         try {
-            payload = extractPayload(exchange, path);
-            if (payload != null) {
-                responseHeaders.set("Content-Type", "application/json");
-                exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, payload.length);
-                body.write(payload);
-            } else {
-                exchange.sendResponseHeaders(HttpURLConnection.HTTP_INTERNAL_ERROR, -1);
+            String sReplicas = params.get("replicaNumber");
+            if (sReplicas != null) {
+                config.numReplicas = Integer.parseInt(sReplicas);
+                if (config.numReplicas > config.numNodes-1) {
+                    throw new CreateBucketBadParamsException("Not enough nodes for replicas");
+                }
             }
-        } catch (ResourceNotFoundException ex) {
-            exchange.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, -1);
-        } finally {
-            body.close();
+            String sQuota = params.get("ramQuotaMB");
+            if (sQuota == null) {
+                throw new CreateBucketBadParamsException("ramQuotaMB missing (but we ignore it)");
+            }
+            int iQuota = Integer.parseInt(sQuota);
+            if (iQuota < 100) {
+                throw new CreateBucketBadParamsException("Ram quota must be greater than 100");
+            }
+        } catch (NumberFormatException ex) {
+            throw new CreateBucketBadParamsException("Bad numeric value");
         }
+
+        try {
+            mock.createBucket(config);
+            response.setStatusCode(HttpStatus.SC_ACCEPTED);
+        } catch (BucketAlreadyExistsException ex) {
+            HandlerUtil.makeResponse(response, ex.getMessage(), HttpStatus.SC_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public void handleDeleteBucket(HttpRequest request, HttpResponse response, HttpContext context, Bucket bucket)
+            throws HttpException, IOException {
+
+        AuthContext authContext = HandlerUtil.getAuth(context, request);
+        Authenticator authenticator = mock.getAuthenticator();
+        if (!authenticator.isAdministrator(authContext)) {
+            response.setStatusCode(HttpStatus.SC_UNAUTHORIZED);
+            return;
+        }
+
+        try {
+            mock.removeBucket(bucket.getName());
+        } catch (FileNotFoundException ex) {
+            response.setStatusCode(HttpStatus.SC_NOT_FOUND);
+        }
+    }
+
+    public void register(HttpServer server) {
+        server.register("/pools", poolHandler);
+        server.register(String.format("/pools/%s", mock.getPoolName()), poolsDefaultHandler);
+        server.register(String.format("/pools/%s/buckets", mock.getPoolName()), allBucketsHandler);
+        server.register("/sampleBuckets/install", sampleBucketsHandler);
     }
 }

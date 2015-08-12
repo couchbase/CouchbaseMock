@@ -17,18 +17,13 @@
 package org.couchbase.mock.memcached;
 
 import java.security.AccessControlException;
-import org.couchbase.mock.memcached.protocol.CommandCode;
-import org.couchbase.mock.memcached.protocol.ErrorCode;
-import org.couchbase.mock.memcached.protocol.BinaryCommand;
-import org.couchbase.mock.memcached.protocol.BinaryGetCommand;
-import org.couchbase.mock.memcached.protocol.BinaryGetResponse;
+
+import org.couchbase.mock.memcached.protocol.*;
 
 /**
  * @author Trond Norbye <trond.norbye@gmail.com>
  */
 public class GetCommandExecutor implements CommandExecutor {
-    static final int DEFAULT_EXPIRY_TIME = 15;
-    static final int MAXIMUM_EXPIRY_TIME = 29;
 
     @Override
     public void execute(BinaryCommand command, MemcachedServer server, MemcachedConnection client) {
@@ -55,21 +50,17 @@ public class GetCommandExecutor implements CommandExecutor {
         }
 
         if (cc == CommandCode.GETL) {
-            if (item.isLocked()) {
-                client.sendResponse(new BinaryGetResponse(cmd, ErrorCode.ETMPFAIL));
+            ErrorCode ec = cache.lock(item, cmd.getExpiration());
+            if (ec != ErrorCode.SUCCESS) {
+                client.sendResponse(new BinaryResponse(cmd, ec));
                 return;
-
-            } else {
-                int lockExpiryTime = cmd.getExpiration();
-                if (lockExpiryTime == 0 || lockExpiryTime > MAXIMUM_EXPIRY_TIME) {
-                    lockExpiryTime = DEFAULT_EXPIRY_TIME;
-                }
-                item.setLockExpiryTime(lockExpiryTime);
-                cache.onItemMutated.onAction(cache, item);
             }
         } else if (cc == CommandCode.TOUCH || cc == CommandCode.GAT || cc == CommandCode.GATQ) {
-            item.setExpiryTime(cmd.getExpiration());
-            cache.onItemMutated.onAction(cache, item);
+            ErrorCode ec = cache.touch(item, cmd.getExpiration());
+            if (ec != ErrorCode.SUCCESS) {
+                client.sendResponse(new BinaryResponse(cmd, ec));
+                return;
+            }
         }
 
         if (cc == CommandCode.TOUCH) {

@@ -15,10 +15,10 @@
  */
 package org.couchbase.mock.memcached;
 
-import net.sf.json.JSONObject;
 import org.couchbase.mock.Bucket;
 import org.couchbase.mock.Bucket.BucketType;
 import org.couchbase.mock.CouchbaseMock;
+import org.couchbase.mock.Info;
 import org.couchbase.mock.memcached.protocol.BinaryCommand;
 import org.couchbase.mock.memcached.protocol.BinaryConfigResponse;
 import org.couchbase.mock.memcached.protocol.BinaryResponse;
@@ -28,6 +28,7 @@ import org.couchbase.mock.memcached.protocol.ErrorCode;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
@@ -49,7 +50,7 @@ import java.util.logging.Logger;
  *
  * @author Trond Norbye
  */
-public class MemcachedServer implements Runnable, BinaryProtocolHandler {
+public class MemcachedServer extends Thread implements BinaryProtocolHandler {
     private final Storage storage;
     private final long bootTime;
     private final String hostname;
@@ -91,7 +92,7 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
      * Create a new new memcached server.
      *
      * @param bucket    The bucket owning all of the stores
-     * @param hostname  The hostname to bind to (null == any)
+     * @param hostname  The hostname to connect to (null == any)
      * @param port      The port this server should listen to (0 to choose an
      *                  ephemeral port)
      * @throws IOException If we fail to create the server socket
@@ -145,6 +146,8 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         executors[CommandCode.OBSERVE.cc()] = new ObserveCommandExecutor();
         executors[CommandCode.EVICT.cc()] = new EvictCommandExecutor();
         executors[CommandCode.GET_CLUSTER_CONFIG.cc()] = new ConfigCommandExecutor();
+        executors[CommandCode.HELLO.cc()] = new HelloCommandExecutor();
+        executors[CommandCode.OBSERVE_SEQNO.cc()] = new ObserveSeqnoCommandExecutor();
 
         bootTime = System.currentTimeMillis() / 1000;
         selector = Selector.open();
@@ -181,8 +184,7 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
     }
 
     @SuppressWarnings("SpellCheckingInspection")
-    @Override
-    public String toString() {
+    public Map<String,Object> toNodeConfigInfo() {
         Map<String, Object> map = new HashMap<String, Object>();
         long now = System.currentTimeMillis() / 1000;
         long uptime = now - bootTime;
@@ -204,11 +206,11 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         ports.put("direct", port);
         ports.put("proxy", 0); //todo this should be fixed (Vitaly.R)
         map.put("ports", ports);
-        return JSONObject.fromObject(map).toString();
+        return map;
     }
 
     @SuppressWarnings("SpellCheckingInspection")
-    public Map<String, String> getStats() {
+    private Map<String,String> getDefaultStats() {
         HashMap<String, String> stats = new HashMap<String, String>();
         stats.put("pid", Long.toString(Thread.currentThread().getId()));
         stats.put("time", Long.toString(new Date().getTime()));
@@ -227,6 +229,31 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
         stats.put("mem_used", "100000000000000000000");
         stats.put("curr_connections", "-1");
         return stats;
+    }
+
+    @SuppressWarnings("SpellCheckingInspection")
+    public Map<String, String> getStats(String about) {
+        if (about == null || about.isEmpty()) {
+            return getDefaultStats();
+        } else if (about.equals("memory")) {
+            Map<String, String> memStats = new HashMap<String, String>();
+            Runtime rt = Runtime.getRuntime();
+            memStats.put("mem_used", Long.toString(rt.totalMemory()));
+            memStats.put("mem_free", Long.toString(rt.freeMemory()));
+            memStats.put("mem_max", Long.toString(rt.maxMemory()));
+            return memStats;
+        } else if (about.equals("tap")) {
+            Map<String, String> tapStats = new HashMap<String, String>();
+            tapStats.put("ep_tap_count", "0");
+            return tapStats;
+        } else if (about.equals("__MOCK__")) {
+            Map<String,String> mockInfo = new HashMap<String, String>();
+            mockInfo.put("implementation", "java");
+            mockInfo.put("version", Info.getVersion());
+            return mockInfo;
+        } else {
+            return null;
+        }
     }
 
     public String getSocketName() {
@@ -515,5 +542,19 @@ public class MemcachedServer implements Runnable, BinaryProtocolHandler {
      */
     public BucketType getType() {
         return bucket.getType();
+    }
+
+    public MemcachedConnection findConnection(SocketAddress address) throws IOException {
+        for (SelectionKey key : selector.keys()) {
+            Object o = key.attachment();
+            if (o == null || !(o instanceof MemcachedConnection)) {
+                continue;
+            }
+            SocketChannel ch = (SocketChannel) key.channel();
+            if (ch.socket().getRemoteSocketAddress().equals(address)) {
+                return (MemcachedConnection) o;
+            }
+        }
+        return null;
     }
 }

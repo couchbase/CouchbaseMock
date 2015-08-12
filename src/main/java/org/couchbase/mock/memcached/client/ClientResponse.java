@@ -37,6 +37,10 @@ public class ClientResponse {
         return new String(value.array());
     }
 
+    public ByteBuffer getRawValue() {
+        return value.asReadOnlyBuffer();
+    }
+
     public byte[] getExtras() {
         return extras.array();
     }
@@ -44,6 +48,8 @@ public class ClientResponse {
     public ErrorCode getStatus() {
         return status;
     }
+
+    public boolean success() { return status == ErrorCode.SUCCESS; }
 
 
     public static ClientResponse read(InputStream input) throws IOException {

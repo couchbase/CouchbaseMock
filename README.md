@@ -22,8 +22,14 @@ Typically the mock is spawned by passing a `--port` argument as the REST port to
 listen on, and a list of _bucket specifications_ separated by commas. Passing
 `--help` to the CouchbaseMock should show example usage.
 
-Once spawned, it may be used like a normal Couchbase Server. The following commands
-are currently implemented
+By default, the mock will be up and running with the `default` bucket.
+
+Once the mock has been started, it may be used like a normal Couchbase server,
+with clients bootstrapping over HTTP using the port specified as `--port`.
+
+## Supported Couchbase Operations
+
+### Memcached (Key-Value)
 
 * GET
 * GETQ
@@ -45,7 +51,84 @@ are currently implemented
 * VERSION
 * VERBOSITY
 
-A _views_ implementation is in progress.
+### Administrative REST API
+
+These standard REST API endpoints are supported. See the Couchbase Administration
+manual for how to use these endpoints. These behave exactly as they would
+against a real Couchbase cluster.
+
+The username and password are hard-coded into the mock as `Administrator` and
+`password` respectively.
+
+* `/pools` (GET)
+* `/pools/default` (GET)
+* `/pools/default/buckets` (GET, POST) - allows for bucket creation
+* `/pools/default/buckets/$bucket` (GET, DELETE) - allows for bucket deletion
+* `/pools/default/buckets/$bucket/ddocs` (GET) - allows for listing design documents
+* `/pools/default/bucketsStreaming/$bucket` (GET) - streaming config URI
+* `/sampleBuckets/install` (POST) - allows loading the `beer-sample` bucket.
+  Note that this endpoint seems to be undocumented.
+
+Note that only SASL-auth buckets may be created. This does not necessarily
+mean that your bucket must have a password. For example:
+
+    curl -XPOST -u Administrator:password \
+        localhost:8091/pools/default/buckets \
+        -d bucketType=couchbase \
+        -d name=newbucket \
+        -d authType=sasl \
+        -d ramQuotaMB=200
+
+Will create a bucket without a password.
+
+Additionally note that the `ramQuotaMB` must be specified, though other than
+being necessary for conforming to server behavior, has no effect.
+
+### Views (Map-Reduce)
+
+The following rest endpoints are supported. Note that the view query port
+(e.g. the _capi_ port) is the same as the administrative port. This should
+not matter for conforming clients which determine this information from
+the cluster configuration endpoint.
+
+Both `map` and `reduce` functions are supported. Javascript support is provided
+using Rhino, so view functions which depend on V8-specific functionality
+may fail.
+
+The `beer-sample` bucket is available in the mock and may be loaded by passing
+the `-S` option on the commandline. It may also be loaded in-situ by using
+the `/sampleBuckets/install` REST API, for example:
+
+    curl -u Administrator:password localhost:8091/sampleBuckets/install \
+        -X POST \
+        -H "Content-Type: application/json" \
+        -d '["beer-sample"]'
+
+Accessing views may be done by the following endpoints:
+
+* `/$bucket/_design/$ddoc` (PUT, GET, DELETE) - used to create or remove design
+  documents
+* `/$bucket/_design/$ddoc/_view/$view` - to query a view
+
+The following view parameters are recognized and have effect
+
+* skip
+* limit
+* reduce
+* group
+* group\_level
+* startkey
+* startkey\_docid
+* endkey
+* endkey\_docid
+* key
+* keys
+* inclusive\_start (NOTE: not in Couchbase)
+* inclusive\_end
+* descending
+* debug (returns dummy debug info)
+
+The `full_set` and `stale` options are ignored.
 
 ## Out-of-band Commands
 

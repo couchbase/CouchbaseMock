@@ -15,14 +15,9 @@
  */
 package org.couchbase.mock;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.*;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,15 +25,13 @@ import junit.framework.TestCase;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
-import java.util.HashMap;
 import java.util.Map;
 
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
-import net.sf.json.JSONSerializer;
+
 import org.couchbase.mock.client.*;
 import org.couchbase.mock.util.Base64;
 import org.couchbase.mock.harakiri.HarakiriMonitor;
+import org.couchbase.mock.util.ReaderUtils;
 
 
 /**
@@ -172,9 +165,9 @@ public class JMembaseTest extends TestCase {
             while ((line = in.readLine()) != null) {
                 sb.append(line);
             }
-            JSONArray json = (JSONArray) JSONSerializer.toJSON(sb.toString());
+            List json = JsonUtils.decodeAsList(sb.toString());
             assertEquals(1, json.size());
-            JSONObject bucket = (JSONObject) json.get(0);
+            Map<String,Object> bucket = (Map<String,Object>)json.get(0);
             assertEquals("default", bucket.get("name"));
         } catch (Exception ex) {
             fail(ex.getMessage());
@@ -280,7 +273,8 @@ public class JMembaseTest extends TestCase {
     @SuppressWarnings("UnusedAssignment")
     public void testHarakiriMonitorInvalidPort() throws IOException {
         try {
-            HarakiriMonitor m = new HarakiriMonitor(null, 0, false, instance.getDispatcher());
+            HarakiriMonitor m = new HarakiriMonitor(instance.getDispatcher());
+            m.connect(null, 0);
             fail("I was not expecting to be able to connect to port 0");
         } catch (Throwable t) {
         }
@@ -289,7 +283,8 @@ public class JMembaseTest extends TestCase {
     public void testHarakiriMonitor() throws IOException {
         ServerSocket server = new ServerSocket(0);
         HarakiriMonitor m;
-        m = new HarakiriMonitor(null, server.getLocalPort(), false, instance.getDispatcher());
+        m = new HarakiriMonitor(instance.getDispatcher());
+        m.connect(null, server.getLocalPort());
 
         Thread t = new Thread(m);
         t.start();
@@ -349,7 +344,7 @@ public class JMembaseTest extends TestCase {
     @SuppressWarnings("SpellCheckingInspection")
     public void testConfigStreaming() throws IOException {
         MockClient mock = new MockClient(new InetSocketAddress("localhost", 0));
-        instance.setupHarakiriMonitor("localhost:" + mock.getPort(), false);
+        instance.startHarakiriMonitor("localhost:" + mock.getPort(), false);
         mock.negotiate();
 
         Bucket bucket = instance.getBuckets().get("protected");
@@ -383,7 +378,7 @@ public class JMembaseTest extends TestCase {
 
     public void testIllegalMockCommand() throws IOException {
         ServerSocket server = new ServerSocket(0);
-        instance.setupHarakiriMonitor("localhost:" + server.getLocalPort(), false);
+        instance.startHarakiriMonitor("localhost:" + server.getLocalPort(), false);
         Socket client = server.accept();
         InputStream input = client.getInputStream();
         OutputStream output = client.getOutputStream();
@@ -395,7 +390,7 @@ public class JMembaseTest extends TestCase {
 
     public void testUnknownMockCommand() throws IOException {
         MockClient mock = new MockClient(new InetSocketAddress("localhost", 0));
-        instance.setupHarakiriMonitor("localhost:" + mock.getPort(), false);
+        instance.startHarakiriMonitor("localhost:" + mock.getPort(), false);
         mock.negotiate();
         MockRequest request = MockRequest.build("foo");
         MockResponse resp = mock.request(request);
@@ -414,6 +409,36 @@ public class JMembaseTest extends TestCase {
         } catch (Exception ex) {
             fail(ex.getMessage());
         }
+    }
+
+    final static String DDOC = "{"
+            + "  \"_id\": \"_design/beer\","
+            + "  \"language\": \"javascript\","
+            + "  \"views\": {"
+            + "    \"all\": {"
+            + "      \"map\": \"function(doc){ emit(doc.id, null); }\""
+            + "    }"
+            + "  }"
+            + "}";
+
+
+    public void testDesignManagement() throws Exception {
+        URL url = new URL("http://localhost:"+instance.getHttpPort()+"/default/_design/beer");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setDoOutput(true);
+
+        conn.setRequestMethod("PUT");
+        conn.setRequestProperty("Content-Type", "application/json");
+        OutputStreamWriter osw = new OutputStreamWriter(conn.getOutputStream());
+        osw.write(DDOC);
+        osw.flush();
+        osw.close();
+        conn.getInputStream().close();
+
+        // Get it back
+        conn = (HttpURLConnection) url.openConnection();
+        String s = ReaderUtils.fromStream(conn.getInputStream());
+        assertEquals(s, DDOC);
     }
 
 

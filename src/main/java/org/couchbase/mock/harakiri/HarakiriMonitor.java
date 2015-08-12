@@ -21,6 +21,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Observable;
+import java.util.concurrent.Callable;
 
 import org.couchbase.mock.CouchbaseMock;
 import org.couchbase.mock.control.MockCommandDispatcher;
@@ -34,28 +35,42 @@ import org.couchbase.mock.control.MockCommandDispatcher;
  * connection, which sort of made the name misleading...
  */
 public class HarakiriMonitor extends Observable implements Runnable {
+    private final MockCommandDispatcher dispatcher;
+    private Callable onTerminate = null;
 
-    private final boolean terminate;
-    private BufferedReader input;
+    private BufferedReader input = null;
     private OutputStream output;
     private Thread thread;
-    private final MockCommandDispatcher dispatcher;
 
-    public HarakiriMonitor(String host, int port, boolean terminate, MockCommandDispatcher dispatcher) throws IOException {
+    public HarakiriMonitor(MockCommandDispatcher dispatcher) throws IOException {
         this.dispatcher = dispatcher;
-        this.terminate = terminate;
+    }
+
+    public void connect(String host, int port) throws IOException {
+        if (input != null) {
+            throw new IOException("Already have socket");
+        }
+
         Socket sock = new Socket(host, port);
         input = new BufferedReader(new InputStreamReader(sock.getInputStream()));
         output = sock.getOutputStream();
     }
 
     public void start() {
+        if (input == null) {
+            throw new IllegalStateException("Not bound yet");
+        }
+
         thread = new Thread(this, "HarakiriMonitor");
         thread.start();
     }
 
     public void stop() {
         thread.interrupt();
+    }
+
+    public void setTemrinateAction(Callable action) {
+        this.onTerminate = action;
     }
 
     @Override
@@ -94,8 +109,12 @@ public class HarakiriMonitor extends Observable implements Runnable {
             }
         }
 
-        if (terminate) {
-            System.exit(1);
+        if (onTerminate != null) {
+            try {
+                onTerminate.call();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
     }
 }

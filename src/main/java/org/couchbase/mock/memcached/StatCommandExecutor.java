@@ -21,6 +21,7 @@ import org.couchbase.mock.memcached.protocol.BinaryResponse;
 import org.couchbase.mock.memcached.protocol.BinaryStatResponse;
 import org.couchbase.mock.memcached.protocol.ErrorCode;
 
+import java.util.Map;
 import java.util.Map.Entry;
 
 /**
@@ -79,15 +80,19 @@ public class StatCommandExecutor implements CommandExecutor {
             }
             return;
         }
+
         if ("uuid".equals(key)) {
             client.sendResponse(new BinaryStatResponse(cmd, "uuid", server.getBucket().getUUID()));
+
         } else {
-            for (MemcachedServer ss : server.getBucket().activeServers()) {
-                for (Entry<String, String> stat : ss.getStats().entrySet()) {
-                    if (key == null || key.equals(stat.getKey())) {
-                        client.sendResponse(new BinaryStatResponse(cmd, stat.getKey(), stat.getValue()));
-                    }
-                }
+            Map<String,String> myStats = server.getStats(key);
+            if (myStats == null) {
+                client.sendResponse(new BinaryResponse(cmd, ErrorCode.KEY_ENOENT));
+                return;
+            }
+
+            for (Entry<String, String> stat : myStats.entrySet()) {
+                client.sendResponse(new BinaryStatResponse(cmd, stat.getKey(), stat.getValue()));
             }
         }
         client.sendResponse(new BinaryResponse(cmd, ErrorCode.SUCCESS));

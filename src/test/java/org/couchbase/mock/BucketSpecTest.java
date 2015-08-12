@@ -40,16 +40,16 @@ public class BucketSpecTest extends TestCase {
 
     public void testDefaults() throws Exception {
         CouchbaseMock mock = new CouchbaseMock(null, 8091, numNodes, numVBuckets);
-        Map<String, Bucket> buckets = mock.getBuckets();
+        Map<String, BucketConfiguration> buckets = mock.getInitialConfigs();
         assertEquals(1, buckets.size());
         assert(buckets.containsKey("default"));
         assertEquals("", buckets.get("default").getPassword());
-        assertEquals(CouchbaseBucket.class, buckets.get("default").getClass());
+        assertEquals(Bucket.BucketType.COUCHBASE, buckets.get("default").getType());
     }
 
     public void testPasswords() throws Exception {
         CouchbaseMock mock = new CouchbaseMock(null, 8091, numNodes, numVBuckets, "xxx:,yyy:pass,zzz");
-        Map<String, Bucket> buckets = mock.getBuckets();
+        Map<String, BucketConfiguration> buckets = mock.getInitialConfigs();
         assertEquals(3, buckets.size());
         assert(buckets.containsKey("xxx"));
         assert(buckets.containsKey("yyy"));
@@ -61,28 +61,28 @@ public class BucketSpecTest extends TestCase {
 
     public void testTypes() throws Exception {
         CouchbaseMock mock = new CouchbaseMock(null, 8091, numNodes, numVBuckets, "xxx::,yyy::memcache,zzz,kkk::couchbase,aaa::unknown");
-        Map<String, Bucket> buckets = mock.getBuckets();
+        Map<String, BucketConfiguration> buckets = mock.getInitialConfigs();
         assertEquals(5, buckets.size());
         assert(buckets.containsKey("xxx"));
         assert(buckets.containsKey("yyy"));
         assert(buckets.containsKey("zzz"));
         assert(buckets.containsKey("kkk"));
         assert(buckets.containsKey("aaa"));
-        assertEquals(CouchbaseBucket.class, buckets.get("xxx").getClass());
-        assertEquals(MemcachedBucket.class, buckets.get("yyy").getClass());
-        assertEquals(CouchbaseBucket.class, buckets.get("zzz").getClass());
-        assertEquals(CouchbaseBucket.class, buckets.get("kkk").getClass());
-        assertEquals(CouchbaseBucket.class, buckets.get("aaa").getClass());
+        assertEquals(Bucket.BucketType.COUCHBASE, buckets.get("xxx").getType());
+        assertEquals(Bucket.BucketType.MEMCACHED, buckets.get("yyy").getType());
+        assertEquals(Bucket.BucketType.COUCHBASE, buckets.get("zzz").getType());
+        assertEquals(Bucket.BucketType.COUCHBASE, buckets.get("kkk").getType());
+        assertEquals(Bucket.BucketType.COUCHBASE, buckets.get("aaa").getType());
     }
 
     public void testMixed() throws Exception {
         CouchbaseMock mock = new CouchbaseMock(null, 8091, numNodes, numVBuckets, "xxx:pass:memcache,yyy:secret:couchbase");
-        Map<String, Bucket> buckets = mock.getBuckets();
+        Map<String, BucketConfiguration> buckets = mock.getInitialConfigs();
         assertEquals(2, buckets.size());
         assert(buckets.containsKey("xxx"));
         assert(buckets.containsKey("yyy"));
-        assertEquals(MemcachedBucket.class, buckets.get("xxx").getClass());
-        assertEquals(CouchbaseBucket.class, buckets.get("yyy").getClass());
+        assertEquals(Bucket.BucketType.MEMCACHED, buckets.get("xxx").getType());
+        assertEquals(Bucket.BucketType.COUCHBASE, buckets.get("yyy").getType());
         assertEquals("pass", buckets.get("xxx").getPassword());
         assertEquals("secret", buckets.get("yyy").getPassword());
     }

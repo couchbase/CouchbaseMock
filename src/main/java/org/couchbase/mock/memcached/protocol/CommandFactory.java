@@ -67,6 +67,12 @@ public class CommandFactory {
             case OBSERVE:
                 return new BinaryObserveCommand(header);
 
+            case HELLO:
+                return new BinaryHelloCommand(header);
+
+            case OBSERVE_SEQNO:
+                return new BinaryObserveSeqnoCommand(header);
+
             default:
                 return new BinaryCommand(header);
         }

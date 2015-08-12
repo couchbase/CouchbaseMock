@@ -29,10 +29,11 @@ public class DeleteCommandExecutor implements CommandExecutor {
     @Override
     public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
         VBucketStore cache = server.getStorage().getCache(server, cmd.getVBucketId());
-        ErrorCode err = cache.delete(cmd.getKeySpec(), cmd.getCas());
+        MutationStatus ms = cache.delete(cmd.getKeySpec(), cmd.getCas());
+        ErrorCode err = ms.getStatus();
 
         if (!(cmd.getComCode() == CommandCode.DELETEQ && err == ErrorCode.SUCCESS)) {
-            client.sendResponse(new BinaryResponse(cmd, err));
+            client.sendResponse(new BinaryResponse(cmd, ms, client.getMutinfoWriter(), 0));
         }
     }
 }
