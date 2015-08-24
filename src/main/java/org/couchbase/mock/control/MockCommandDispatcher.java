@@ -64,6 +64,7 @@ public class MockCommandDispatcher {
         registerClass(MockCommand.Command.SET_CCCP, CCCPCommandHandler.class);
         registerClass(MockCommand.Command.GET_MCPORTS, GetMCPortsHandler.class);
         registerClass(MockCommand.Command.REGEN_VBCOORDS, RegenCoordsHandler.class);
+        registerClass(MockCommand.Command.RESET_QUERYSTATE, ResetQueryStateHandler.class);
     }
 
 

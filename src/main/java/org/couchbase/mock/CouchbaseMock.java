@@ -21,6 +21,7 @@ import org.couchbase.mock.control.MockCommandDispatcher;
 import org.couchbase.mock.harakiri.HarakiriMonitor;
 import org.couchbase.mock.http.*;
 import org.couchbase.mock.http.capi.CAPIServer;
+import org.couchbase.mock.http.query.QueryServer;
 import org.couchbase.mock.httpio.HttpServer;
 import org.couchbase.mock.util.Getopt;
 import org.couchbase.mock.util.Getopt.CommandLineOption;
@@ -240,6 +241,7 @@ public class CouchbaseMock {
         poolsHandler = new PoolsHandler(this);
         poolsHandler.register(httpServer);
         httpServer.register("/mock/*", new ControlHandler(controlDispatcher));
+        httpServer.register("/query/*", new QueryServer());
     }
 
     /**

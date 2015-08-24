@@ -65,7 +65,8 @@ public abstract class MockCommand {
         OPFAIL,
         SET_CCCP,
         GET_MCPORTS,
-        REGEN_VBCOORDS
+        REGEN_VBCOORDS,
+        RESET_QUERYSTATE
     }
 
     /**
