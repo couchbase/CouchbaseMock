@@ -28,7 +28,9 @@ var SORT_ORDER = function() {
  * @return The numeric sorting index
  */
 function getSortIndex(v) {
-  if (typeof v === 'string') {
+  if (v === null) {
+    return SORT_ORDER['null'];
+  } else if (typeof v === 'string') {
     return SORT_ORDER['string'];
   } else if (typeof v === 'number') {
     return SORT_ORDER['number'];
