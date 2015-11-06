@@ -148,6 +148,18 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
         executors[CommandCode.GET_CLUSTER_CONFIG.cc()] = new ConfigCommandExecutor();
         executors[CommandCode.HELLO.cc()] = new HelloCommandExecutor();
         executors[CommandCode.OBSERVE_SEQNO.cc()] = new ObserveSeqnoCommandExecutor();
+        executors[CommandCode.SUBDOC_GET.cc()] = new SubdocCommandExecutor();
+        executors[CommandCode.SUBDOC_EXISTS.cc()] = new SubdocCommandExecutor();
+        executors[CommandCode.SUBDOC_DICT_ADD.cc()] = new SubdocCommandExecutor();
+        executors[CommandCode.SUBDOC_DICT_UPSERT.cc()] = new SubdocCommandExecutor();
+        executors[CommandCode.SUBDOC_DELETE.cc()] = new SubdocCommandExecutor();
+        executors[CommandCode.SUBDOC_REPLACE.cc()] = new SubdocCommandExecutor();
+        executors[CommandCode.SUBDOC_ARRAY_PUSH_LAST.cc()] = new SubdocCommandExecutor();
+        executors[CommandCode.SUBDOC_ARRAY_PUSH_FIRST.cc()] = new SubdocCommandExecutor();
+        executors[CommandCode.SUBDOC_ARRAY_ADD_UNIQUE.cc()] = new SubdocCommandExecutor();
+        executors[CommandCode.SUBDOC_COUNTER.cc()] = new SubdocCommandExecutor();
+        executors[CommandCode.SUBDOC_MULTI_MUTATION.cc()] = new SubdocMultiCommandExecutor();
+        executors[CommandCode.SUBDOC_MULTI_LOOKUP.cc()] = new SubdocMultiCommandExecutor();
 
         bootTime = System.currentTimeMillis() / 1000;
         selector = Selector.open();

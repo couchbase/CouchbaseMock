@@ -25,6 +25,8 @@ import org.couchbase.mock.Bucket;
 import org.couchbase.mock.Bucket.BucketType;
 import org.couchbase.mock.BucketConfiguration;
 import org.couchbase.mock.CouchbaseMock;
+import org.couchbase.mock.memcached.Item;
+import org.couchbase.mock.memcached.KeySpec;
 import org.couchbase.mock.memcached.MemcachedServer;
 import org.couchbase.mock.memcached.VBucketInfo;
 import org.couchbase.mock.memcached.client.MemcachedClient;
@@ -156,5 +158,10 @@ public abstract class ClientBaseTest extends TestCase {
             }
         }
         return -1;
+    }
+
+    protected Item getItem(String key, short vbId) {
+        MemcachedServer server = getBucket().getVBucketInfo()[vbId].getOwner();
+        return server.getStorage().getCached(new KeySpec(key, vbId));
     }
 }

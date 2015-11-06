@@ -24,7 +24,7 @@ import org.couchbase.mock.memcached.Item;
  * @author Trond Norbye
  */
 public class BinaryStoreCommand extends BinaryCommand {
-    BinaryStoreCommand(ByteBuffer header) throws ProtocolException {
+    public BinaryStoreCommand(ByteBuffer header) throws ProtocolException {
         super(header);
     }
 

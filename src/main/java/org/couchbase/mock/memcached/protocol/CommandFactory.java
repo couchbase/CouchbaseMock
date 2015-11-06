@@ -29,7 +29,7 @@ public class CommandFactory {
         header.rewind();
         if (header.get() != (byte) 0x80) {
             // create a better one... this is an illegal command
-            throw new ProtocolException("Illegal magic");
+            throw new ProtocolException("Illegal magic: " + header.get(0));
         }
 
         CommandCode cc = CommandCode.valueOf(header.get());
@@ -72,6 +72,23 @@ public class CommandFactory {
 
             case OBSERVE_SEQNO:
                 return new BinaryObserveSeqnoCommand(header);
+
+            case SUBDOC_EXISTS:
+            case SUBDOC_GET:
+            case SUBDOC_COUNTER:
+            case SUBDOC_ARRAY_ADD_UNIQUE:
+            case SUBDOC_ARRAY_INSERT:
+            case SUBDOC_ARRAY_PUSH_FIRST:
+            case SUBDOC_ARRAY_PUSH_LAST:
+            case SUBDOC_DELETE:
+            case SUBDOC_REPLACE:
+            case SUBDOC_DICT_ADD:
+            case SUBDOC_DICT_UPSERT:
+                return new BinarySubdocCommand(header);
+            case SUBDOC_MULTI_LOOKUP:
+                return new BinarySubdocMultiLookupCommand(header);
+            case SUBDOC_MULTI_MUTATION:
+                return new BinarySubdocMultiMutationCommand(header);
 
             default:
                 return new BinaryCommand(header);

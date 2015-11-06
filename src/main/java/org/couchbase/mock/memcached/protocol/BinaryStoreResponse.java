@@ -24,14 +24,12 @@ import org.couchbase.mock.memcached.MutationStatus;
  */
 public class BinaryStoreResponse extends BinaryResponse {
 
-    public BinaryStoreResponse(BinaryStoreCommand command, ErrorCode errorCode, long cas) {
+    public BinaryStoreResponse(BinaryCommand command, ErrorCode errorCode, long cas) {
         super(command, errorCode);
-        buffer.putLong(16, cas);
         buffer.rewind();
     }
-    public BinaryStoreResponse(BinaryStoreCommand command, MutationStatus ms, MutationInfoWriter miw, long cas) {
+    public BinaryStoreResponse(BinaryCommand command, MutationStatus ms, MutationInfoWriter miw, long cas) {
         super(command, ms, miw, cas);
-        buffer.putLong(16, cas);
         buffer.rewind();
     }
 }

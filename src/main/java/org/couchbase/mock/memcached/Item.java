@@ -17,7 +17,6 @@
 package org.couchbase.mock.memcached;
 
 import org.couchbase.mock.util.Base64;
-import sun.nio.cs.StandardCharsets;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;

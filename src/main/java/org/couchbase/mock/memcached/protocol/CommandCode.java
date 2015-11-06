@@ -39,7 +39,16 @@ public enum CommandCode {
     GET_REPLICA(0x83), OBSERVE(0x92), EVICT(0x93),
     GETL(0x94), UNL(0x95),
     GET_CLUSTER_CONFIG(0xb5), HELLO(0x1f), ILLEGAL(0xff),
-    OBSERVE_SEQNO(0x91);
+    OBSERVE_SEQNO(0x91),
+
+    // Subdoc
+    SUBDOC_GET(0xC5), SUBDOC_EXISTS(0xC6),
+    SUBDOC_DICT_ADD(0xC7), SUBDOC_DICT_UPSERT(0xC8),
+    SUBDOC_DELETE(0xC9), SUBDOC_REPLACE(0xCA),
+    SUBDOC_ARRAY_PUSH_LAST(0xCB), SUBDOC_ARRAY_PUSH_FIRST(0xCC),
+    SUBDOC_ARRAY_INSERT(0xCD), SUBDOC_ARRAY_ADD_UNIQUE(0xCE),
+    SUBDOC_COUNTER(0xCF),
+    SUBDOC_MULTI_LOOKUP(0xD0), SUBDOC_MULTI_MUTATION(0xD1);
 
 
 
@@ -139,6 +148,33 @@ public enum CommandCode {
                 return HELLO;
             case (byte)0x91:
                 return OBSERVE_SEQNO;
+            case (byte)0xc5:
+                return SUBDOC_GET;
+            case (byte)0xc6:
+                return SUBDOC_EXISTS;
+            case (byte)0xc7:
+                return SUBDOC_DICT_ADD;
+            case (byte)0xc8:
+                return SUBDOC_DICT_UPSERT;
+            case (byte)0xc9:
+                return SUBDOC_DELETE;
+            case (byte)0xca:
+                return SUBDOC_REPLACE;
+            case (byte)0xcb:
+                return SUBDOC_ARRAY_PUSH_LAST;
+            case (byte)0xcc:
+                return SUBDOC_ARRAY_PUSH_FIRST;
+            case (byte)0xcd:
+                return SUBDOC_ARRAY_INSERT;
+            case (byte)0xce:
+                return SUBDOC_ARRAY_ADD_UNIQUE;
+            case (byte)0xcf:
+                return SUBDOC_COUNTER;
+            case (byte)0xd0:
+                return SUBDOC_MULTI_LOOKUP;
+            case (byte)0xd1:
+                return SUBDOC_MULTI_MUTATION;
+
             default:
                 return ILLEGAL;
         }
@@ -232,6 +268,10 @@ public enum CommandCode {
                 return "hello";
             case OBSERVE_SEQNO:
                 return "observe_seqno";
+            case SUBDOC_GET:
+                return "subdoc_get";
+            case SUBDOC_EXISTS:
+                return "subdoc_exists";
             default:
                 return "unknown";
 

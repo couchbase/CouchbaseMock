@@ -146,7 +146,7 @@
     <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
-      <version>2.2.4</version>
+      <version>2.3.1</version>
     </dependency>
     <dependency>
       <groupId>org.tukaani</groupId>
@@ -163,6 +163,11 @@
       <groupId>org.mozilla</groupId>
       <artifactId>rhino</artifactId>
       <version>1.7R4</version>
+    </dependency>
+    <dependency>
+      <groupId>com.googlecode.json-simple</groupId>
+      <artifactId>json-simple</artifactId>
+      <version>1.1.1</version>
     </dependency>
   </dependencies>
   <properties>

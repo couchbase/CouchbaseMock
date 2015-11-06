@@ -26,10 +26,10 @@ import org.couchbase.mock.memcached.KeySpec;
 public class BinaryCommand {
 
     private final CommandCode cc;
-    private final short keyLength;
-    final byte extraLength;
+    protected final short keyLength;
+    protected final byte extraLength;
     private final short vbucket;
-    private final int bodyLength;
+    protected final int bodyLength;
     private final int opaque;
     final long cas;
     final ByteBuffer bodyBuffer;

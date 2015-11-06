@@ -42,16 +42,46 @@ public class BinaryResponse {
     }
 
     public BinaryResponse(BinaryCommand command, MutationStatus ms, MutationInfoWriter miw, long cas) {
+        this(command, ms, miw, cas, null);
+    }
+
+    public static BinaryResponse createWithValue(BinaryCommand command, byte[] value, long cas) {
+        return createWithValue(ErrorCode.SUCCESS, command, value, cas);
+    }
+
+    public static BinaryResponse createWithValue(ErrorCode ec, BinaryCommand command, byte[] value, long cas) {
+        int vallen = value == null ? 0 : value.length;
+        BinaryResponse resp = new BinaryResponse(command, ec, 0, 0, vallen, cas);
+        if (vallen > 0) {
+            resp.buffer.position(24);
+            resp.buffer.put(value);
+        }
+        resp.buffer.rewind();
+        return resp;
+    }
+
+    public BinaryResponse(BinaryCommand command, MutationStatus ms, MutationInfoWriter miw, long cas, byte[] value) {
         int extlen = 0;
+        int valLen = 0;
+        if (value != null) {
+            valLen = value.length;
+        }
         boolean shouldWrite = false;
         if (ms.getStatus().value() == ErrorCode.SUCCESS.value()) {
             extlen = miw.extrasLength();
             shouldWrite = true;
         }
-        buffer = createAndRewind(command, ms.getStatus(), extlen, 0, 0, cas);
-        if (shouldWrite) {
+
+        buffer = createAndRewind(command, ms.getStatus(), extlen, 0, valLen, cas);
+        buffer.position(24);
+        if (shouldWrite && extlen != 0) {
             miw.write(buffer, ms.getCoords());
         }
+        if (value != null) {
+            buffer.position(extlen + 24);
+            buffer.put(value);
+        }
+        buffer.rewind();
     }
 
     private static ByteBuffer createAndRewind(BinaryCommand command, ErrorCode errorCode, int extraLength, int keyLength, int dataLength, long cas) {
