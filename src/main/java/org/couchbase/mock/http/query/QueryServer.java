@@ -54,13 +54,16 @@ public class QueryServer implements HttpRequestHandler {
         HandlerUtil.makeJsonResponse(response, json);
     }
 
-    static private String encodeResult(Map<String,Object> row) {
+    static private Map<String,Object> resultMeta() {
         Map<String,Object> payload = new HashMap<String, Object>();
-        List<Object> ll = new ArrayList<Object>();
-        ll.add(row);
-        payload.put("results", ll);
         payload.put("status", "success");
-        return JsonUtils.encode(payload);
+        payload.put("results", new ArrayList<Object>());
+        return payload;
+    }
+
+    static private void addResult(Map<String,Object> meta, Map<String,Object> row) {
+        List<Object> results = (List)meta.get("results");
+        results.add(row);
     }
 
     private static Map<String,Object> okRow() {
@@ -81,7 +84,7 @@ public class QueryServer implements HttpRequestHandler {
             }
 
             // Return the plan and the encoded form...
-            Map<String,Object> mm = new HashMap<String, Object>();
+            Map<String, Object> mm = new HashMap<String, Object>();
 
             // This is our "plan"
             mm.put("randomNumber", randNumber);
@@ -89,13 +92,20 @@ public class QueryServer implements HttpRequestHandler {
             mm.put("encoded_plan", encoded);
             mm.put("name", "blah-blah-" + new Random().nextLong());
             result = mm;
-        } else if (!query.equals("select mockrow")) {
+        } else if (query.equals("select mockrow")) {
+            result = okRow();
+        } else if (query.equals("select emptyrow")) {
+            // No rows!
+            result = null;
+        } else {
             doError(response, "keyspace not found", 12003);
             return;
-        } else {
-            result = okRow();
         }
-        String resStr = encodeResult(result);
+        Map<String,Object> payload = resultMeta();
+        if (result != null) {
+            addResult(payload, result);
+        }
+        String resStr = JsonUtils.encode(payload);
         HandlerUtil.makeJsonResponse(response, resStr);
     }
     private void handlePrepared(Map<String,Object> body, HttpResponse response) {
@@ -115,7 +125,9 @@ public class QueryServer implements HttpRequestHandler {
         Map<String,Object> mm = JsonUtils.decodeAsMap(decoded);
         int randNum = ((Number) mm.get("randomNumber")).intValue();
         if (randNum == randNumber) {
-            String resStr = encodeResult(okRow());
+            Map<String,Object> payload = resultMeta();
+            addResult(payload, okRow());
+            String resStr = JsonUtils.encode(payload);
             HandlerUtil.makeJsonResponse(response, resStr);
         } else {
             doError(response, "index deleted or node hosting the index is down - cause: queryport.indexNotFound", 5000);
