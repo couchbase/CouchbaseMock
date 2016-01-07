@@ -410,10 +410,11 @@ public class CouchbaseMock {
         o.printf("Options are:%n");
         o.printf("-h --host             The hostname for the REST port. Default=8091%n");
         o.printf("-b --buckets          (See description below%n");
-        o.printf("-p --nodes            The number of nodes each bucket should contain. Default=%d%n", defaultConfig.numNodes);
+        o.printf("-n --nodes            The number of nodes each bucket should contain. Default=%d%n", defaultConfig.numNodes);
         o.printf("-v --vbuckets         The number of vbuckets each bucket should contain. Default=%d%n", defaultConfig.numVBuckets);
         o.printf("-R --replicas         The number of replica nodes for each bucket. Default=%d%n", defaultConfig.numReplicas);
         o.printf("   --harakiri-monitor The host:port on which the control socket should connect to%n");
+        o.printf("-p --port             The REST port to listen on. If 0, port will be sent via --harakiri-monitor%n");
         o.printf("-S --with-beer-sample Initialize the cluster with the `beer-sample` bucket active%n");
         o.printf("-D --docs             Specify a ZIP file that should contain documents to be loaded%n");
         o.printf("                      into the `default` bucket%n");
