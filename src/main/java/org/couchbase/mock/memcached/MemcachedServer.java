@@ -198,10 +198,9 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
     @SuppressWarnings("SpellCheckingInspection")
     public Map<String,Object> toNodeConfigInfo() {
         Map<String, Object> map = new HashMap<String, Object>();
-        long now = System.currentTimeMillis() / 1000;
-        long uptime = now - bootTime;
         CouchbaseMock mock = bucket.getCluster();
-        map.put("uptime", uptime);
+
+        map.put("uptime", Long.toString(System.currentTimeMillis() - bootTime));
         map.put("replication", 1);
         map.put("clusterMembership", "active");
         map.put("status", "healthy");
