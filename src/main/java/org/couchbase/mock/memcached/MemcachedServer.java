@@ -130,12 +130,9 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
         executors[CommandCode.GETQ.cc()] = executors[CommandCode.GET.cc()];
         executors[CommandCode.GETK.cc()] = executors[CommandCode.GET.cc()];
         executors[CommandCode.GETKQ.cc()] = executors[CommandCode.GET.cc()];
-        executors[CommandCode.GETL.cc()] = executors[CommandCode.GET.cc()];
-        executors[CommandCode.GET_REPLICA.cc()] = executors[CommandCode.GET.cc()];
         executors[CommandCode.TOUCH.cc()] = executors[CommandCode.GET.cc()];
         executors[CommandCode.GAT.cc()] = executors[CommandCode.GET.cc()];
         executors[CommandCode.GATQ.cc()] = executors[CommandCode.GET.cc()];
-        executors[CommandCode.UNL.cc()] = new UnlockCommandExecutor();
         executors[CommandCode.INCREMENT.cc()] = new ArithmeticCommandExecutor();
         executors[CommandCode.INCREMENTQ.cc()] = executors[CommandCode.INCREMENT.cc()];
         executors[CommandCode.DECREMENT.cc()] = executors[CommandCode.INCREMENT.cc()];
@@ -143,11 +140,10 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
         executors[CommandCode.SASL_LIST_MECHS.cc()] = new SaslCommandExecutor();
         executors[CommandCode.SASL_AUTH.cc()] = executors[CommandCode.SASL_LIST_MECHS.cc()];
         executors[CommandCode.SASL_STEP.cc()] = executors[CommandCode.SASL_LIST_MECHS.cc()];
-        executors[CommandCode.OBSERVE.cc()] = new ObserveCommandExecutor();
         executors[CommandCode.EVICT.cc()] = new EvictCommandExecutor();
-        executors[CommandCode.GET_CLUSTER_CONFIG.cc()] = new ConfigCommandExecutor();
         executors[CommandCode.HELLO.cc()] = new HelloCommandExecutor();
-        executors[CommandCode.OBSERVE_SEQNO.cc()] = new ObserveSeqnoCommandExecutor();
+
+        // Sub-Document
         executors[CommandCode.SUBDOC_GET.cc()] = new SubdocCommandExecutor();
         executors[CommandCode.SUBDOC_EXISTS.cc()] = new SubdocCommandExecutor();
         executors[CommandCode.SUBDOC_DICT_ADD.cc()] = new SubdocCommandExecutor();
@@ -160,6 +156,16 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
         executors[CommandCode.SUBDOC_COUNTER.cc()] = new SubdocCommandExecutor();
         executors[CommandCode.SUBDOC_MULTI_MUTATION.cc()] = new SubdocMultiCommandExecutor();
         executors[CommandCode.SUBDOC_MULTI_LOOKUP.cc()] = new SubdocMultiCommandExecutor();
+
+        // Couchbase buckets only
+        if (bucket.getType() == BucketType.COUCHBASE) {
+            executors[CommandCode.GETL.cc()] = executors[CommandCode.GET.cc()];
+            executors[CommandCode.UNL.cc()] = new UnlockCommandExecutor();
+            executors[CommandCode.GET_CLUSTER_CONFIG.cc()] = new ConfigCommandExecutor();
+            executors[CommandCode.GET_REPLICA.cc()] = executors[CommandCode.GET.cc()];
+            executors[CommandCode.OBSERVE.cc()] = new ObserveCommandExecutor();
+            executors[CommandCode.OBSERVE_SEQNO.cc()] = new ObserveSeqnoCommandExecutor();
+        }
 
         bootTime = System.currentTimeMillis() / 1000;
         selector = Selector.open();
