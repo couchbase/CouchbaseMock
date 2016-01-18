@@ -258,6 +258,10 @@ public class Storage {
         return cacheStore;
     }
 
+    public Item getRandomItem() {
+        return cacheStore.getRandom();
+    }
+
     public long getPersistedSeqno(short vBucketId) {
         return persistStore.getCoords(vBucketId).getSeqno();
     }

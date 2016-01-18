@@ -241,6 +241,30 @@ public class VBucketStore {
         return lookup(ks);
     }
 
+    public Item getRandom() {
+        Random r = new Random();
+        while (!kv.isEmpty()) {
+            Collection<Item> c = kv.values();
+            int max = r.nextInt(c.size());
+            Iterator<Item> iter = c.iterator();
+            for (int i = 0; i < max - 1; i++) {
+                if (!iter.hasNext()) {
+                    break;
+                }
+                iter.next();
+            }
+
+            if (!iter.hasNext()) {
+                continue;
+            }
+            Item itm = lookup(iter.next().getKeySpec());
+            if (itm != null) {
+                return itm;
+            }
+        }
+        return null;
+    }
+
     private void forceMutation(int vbid, Item itm, VBucketCoordinates coords, boolean isDelete) {
         StorageVBucketCoordinates cur;
         synchronized (vbCoords) {

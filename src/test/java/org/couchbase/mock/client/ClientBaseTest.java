@@ -38,6 +38,7 @@ import java.net.Socket;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -60,6 +61,29 @@ public abstract class ClientBaseTest extends TestCase {
     protected MemcachedNode getMasterForKey(String key) {
         VBucketNodeLocator locator = (VBucketNodeLocator) client.getNodeLocator();
         return locator.getPrimary(key);
+    }
+
+    /**
+     * Gets a key which is valid for a given server
+     * @param ix The server for which the key should be valid
+     * @return The key which may map to the server
+     */
+    protected String getValidKeyFor(int ix) {
+        Random r = new Random();
+        Bucket bucket = getBucket();
+        VBucketInfo[] vbi = bucket.getVBucketInfo();
+        MemcachedServer server = getServer(ix);
+
+        while (true) {
+            String candidate = "Key_" + Integer.toString(r.nextInt());
+            short vbid = bucket.getVbIndexForKey(candidate);
+            if (vbid < 0 || vbid >= vbi.length) {
+                throw new IllegalArgumentException("Can't use this function on memcached buckets!");
+            }
+            if (vbi[vbid].getOwner() == server) {
+                return candidate;
+            }
+        }
     }
 
     // Don't make the client flood the screen with log messages..

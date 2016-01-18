@@ -41,6 +41,8 @@ public enum CommandCode {
     GET_CLUSTER_CONFIG(0xb5), HELLO(0x1f), ILLEGAL(0xff),
     OBSERVE_SEQNO(0x91),
 
+    GET_RANDOM(0xb6),
+
     // Subdoc
     SUBDOC_GET(0xC5), SUBDOC_EXISTS(0xC6),
     SUBDOC_DICT_ADD(0xC7), SUBDOC_DICT_UPSERT(0xC8),
@@ -174,7 +176,8 @@ public enum CommandCode {
                 return SUBDOC_MULTI_LOOKUP;
             case (byte)0xd1:
                 return SUBDOC_MULTI_MUTATION;
-
+            case (byte)0xb6:
+                return GET_RANDOM;
             default:
                 return ILLEGAL;
         }
@@ -272,6 +275,8 @@ public enum CommandCode {
                 return "subdoc_get";
             case SUBDOC_EXISTS:
                 return "subdoc_exists";
+            case GET_RANDOM:
+                return "get_random";
             default:
                 return "unknown";
 

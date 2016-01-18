@@ -165,6 +165,7 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
             executors[CommandCode.GET_REPLICA.cc()] = executors[CommandCode.GET.cc()];
             executors[CommandCode.OBSERVE.cc()] = new ObserveCommandExecutor();
             executors[CommandCode.OBSERVE_SEQNO.cc()] = new ObserveSeqnoCommandExecutor();
+            executors[CommandCode.GET_RANDOM.cc()] = new GetRandomCommandExecutor();
         }
 
         bootTime = System.currentTimeMillis() / 1000;

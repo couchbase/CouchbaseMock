@@ -16,7 +16,10 @@
 
 package org.couchbase.mock.client;
 
+import net.spy.memcached.internal.OperationFuture;
 import org.couchbase.mock.memcached.client.ClientResponse;
+import org.couchbase.mock.memcached.client.CommandBuilder;
+import org.couchbase.mock.memcached.client.MemcachedClient;
 import org.couchbase.mock.memcached.protocol.CommandCode;
 import org.couchbase.mock.memcached.protocol.ErrorCode;
 
@@ -42,4 +45,45 @@ public class ClientMiscTest extends ClientBaseTest {
         assertEquals(ErrorCode.UNKNOWN_COMMAND, resp.getStatus());
 
     }
+
+
+    public void testGetRandomEmpty() throws Exception {
+        ClientResponse resp;
+        for (int i = 0; i < bucketConfiguration.numNodes; i++) {
+            MemcachedClient binClient = getBinClient(i);
+
+            // Ensure it's flushed
+            resp = binClient.sendRequest((new CommandBuilder(CommandCode.FLUSH).build()));
+            assertTrue(resp.success());
+
+            byte[] req = (new CommandBuilder(CommandCode.GET_RANDOM).build());
+            resp = binClient.sendRequest(req);
+            assertFalse(resp.success());
+            assertEquals(ErrorCode.KEY_ENOENT, resp.getStatus());
+        }
+    }
+
+    public void testGetRandom() throws Exception {
+        ClientResponse resp;
+        CommandBuilder cb = new CommandBuilder(CommandCode.GET_RANDOM);
+        String value = "value";
+        for (int i = 0; i < bucketConfiguration.numNodes; i++) {
+            // Ensure it's flushed
+            MemcachedClient binClient = getBinClient(i);
+            resp = binClient.sendRequest((new CommandBuilder(CommandCode.FLUSH).build()));
+            assertTrue(resp.success());
+
+            String key = getValidKeyFor(i);
+            OperationFuture ft = client.set(key, value);
+            ft.get();
+            assertTrue(ft.getStatus().isSuccess());
+
+            resp = binClient.sendRequest(cb.build());
+            assertTrue(resp.success());
+            assertEquals(key, resp.getKey());
+            assertEquals(value, resp.getValue());
+            assertEquals(ft.getCas(), new Long(resp.getCas()));
+        }
+    }
+
 }

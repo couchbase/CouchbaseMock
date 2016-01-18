@@ -34,14 +34,21 @@ public class BinaryGetResponse extends BinaryResponse {
 
     private static ByteBuffer create(BinaryCommand command, Item item) {
         int keySize;
+        byte[] keyBytes;
         switch (command.getComCode()) {
             case GETK:
             case GETKQ:
             case GET_REPLICA:
+                keyBytes = command.getKey().getBytes();
                 keySize = command.getKey().length();
+                break;
+            case GET_RANDOM:
+                keyBytes = item.getKeySpec().key.getBytes();
+                keySize = item.getKeySpec().key.length();
                 break;
             default:
                 keySize = 0;
+                keyBytes = null;
         }
         final ByteBuffer message = BinaryResponse.create(command, ErrorCode.SUCCESS,
                 4 /* flags */,
@@ -49,7 +56,7 @@ public class BinaryGetResponse extends BinaryResponse {
                 item.getValue().length, item.getCas());
         message.putInt(item.getFlags());
         if (keySize > 0) {
-            message.put(command.getKey().getBytes());
+            message.put(keyBytes);
         }
         message.put(item.getValue());
         message.rewind();
