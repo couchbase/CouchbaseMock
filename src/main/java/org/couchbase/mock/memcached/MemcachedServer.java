@@ -58,6 +58,7 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
     private Selector selector;
     private final int port;
     private final CommandExecutor[] executors = new CommandExecutor[0xff];
+    private static final CommandExecutor unknownHandler = new UnknownCommandExecutor();
     private final Bucket bucket;
     private boolean active = true;
     private int hiccupTime = 0;
@@ -101,7 +102,6 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
         this.bucket = bucket;
         this.storage = new Storage(vbi, this);
 
-        UnknownCommandExecutor unknownHandler = new UnknownCommandExecutor();
         for (int ii = 0; ii < executors.length; ++ii) {
             executors[ii] = unknownHandler;
         }
@@ -451,6 +451,13 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
         }
     }
 
+    private CommandExecutor getExecutor(CommandCode code) {
+        if (code == CommandCode.ILLEGAL) {
+            return unknownHandler;
+        }
+        return executors[code.cc()];
+    }
+
     @Override
     public void execute(BinaryCommand cmd, MemcachedConnection client)
             throws IOException {
@@ -460,7 +467,7 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
             if (failcode != ErrorCode.SUCCESS) {
                 client.sendResponse(new BinaryResponse(cmd, failcode));
             } else if (authOk(cmd, client)) {
-                executors[cmd.getComCode().cc()].execute(cmd, this, client);
+                getExecutor(cmd.getComCode()).execute(cmd, this, client);
             } else {
                 client.sendResponse(new BinaryResponse(cmd, ErrorCode.AUTH_ERROR));
             }

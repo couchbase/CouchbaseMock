@@ -18,6 +18,7 @@ public class ClientResponse {
     private ByteBuffer value;
     private byte[] body;
     private int opaque;
+    private byte opcode;
 
     long cas;
 
@@ -49,6 +50,14 @@ public class ClientResponse {
         return status;
     }
 
+    public byte getOpcode() {
+        return opcode;
+    }
+
+    public CommandCode getComCode() {
+        return code;
+    }
+
     public boolean success() { return status == ErrorCode.SUCCESS; }
 
 
@@ -75,11 +84,8 @@ public class ClientResponse {
         }
 
         ClientResponse ret = new ClientResponse();
-        ret.code = CommandCode.valueOf(buf.get());
-        if (ret.code == CommandCode.ILLEGAL) {
-            throw new IOException("Illegal command");
-        }
-
+        ret.opcode = buf.get();
+        ret.code = CommandCode.valueOf(ret.opcode);
 
         short keylen = buf.getShort();
         byte extlen = buf.get();

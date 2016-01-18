@@ -93,7 +93,7 @@ public class BinaryResponse {
     static ByteBuffer create(BinaryCommand command, ErrorCode errorCode, int extraLength, int keyLength, int dataLength, long cas) {
         ByteBuffer message = ByteBuffer.allocate(24 + extraLength + keyLength + dataLength);
            message.put(MAGIC);
-           message.put((byte)command.getComCode().cc());
+           message.put(command.getOpcode());
            message.putShort((short)keyLength);
            message.put((byte)extraLength);
            message.put(DATA_TYPE);

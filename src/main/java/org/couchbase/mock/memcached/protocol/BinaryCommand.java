@@ -28,6 +28,7 @@ public class BinaryCommand {
     private final CommandCode cc;
     protected final short keyLength;
     protected final byte extraLength;
+    protected final byte opcode;
     private final short vbucket;
     protected final int bodyLength;
     private final int opaque;
@@ -37,7 +38,8 @@ public class BinaryCommand {
     BinaryCommand(ByteBuffer header) throws ProtocolException {
         header.rewind();
         header.get(); // magic already validated
-        cc = CommandCode.valueOf(header.get());
+        opcode = header.get();
+        cc = CommandCode.valueOf(opcode);
         keyLength = header.getShort();
         extraLength = header.get();
         if (header.get() != 0) {
@@ -61,6 +63,8 @@ public class BinaryCommand {
     public CommandCode getComCode() {
         return cc;
     }
+
+    public byte getOpcode() { return opcode; }
 
     public int getOpaque() {
         return opaque;
