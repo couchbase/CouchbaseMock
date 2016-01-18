@@ -6,6 +6,7 @@ import org.couchbase.mock.memcached.protocol.ErrorCode;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 /**
  * Created by mnunberg on 1/15/14.
@@ -13,9 +14,9 @@ import java.nio.ByteBuffer;
 public class ClientResponse {
     private CommandCode code;
     private ErrorCode status;
-    private ByteBuffer extras;
-    private ByteBuffer key;
-    private ByteBuffer value;
+    private byte[] extras;
+    private byte[] key;
+    private byte[] value;
     private byte[] body;
     private int opaque;
     private byte opcode;
@@ -31,19 +32,19 @@ public class ClientResponse {
     }
 
     public String getKey() {
-        return new String(key.array());
+        return new String(key);
     }
 
     public String getValue() {
-        return new String(value.array());
+        return new String(value);
     }
 
     public ByteBuffer getRawValue() {
-        return value.asReadOnlyBuffer();
+        return ByteBuffer.wrap(value);
     }
 
     public byte[] getExtras() {
-        return extras.array();
+        return extras;
     }
 
     public ErrorCode getStatus() {
@@ -96,9 +97,6 @@ public class ClientResponse {
         ret.opaque = buf.getInt();
         ret.cas = buf.getLong();
         ret.body = new byte[totalLen];
-        ret.extras = ByteBuffer.wrap(ret.body, 0, extlen);
-        ret.key = ByteBuffer.wrap(ret.body, extlen, keylen);
-        ret.value = ByteBuffer.wrap(ret.body, extlen+keylen, totalLen - (extlen + keylen));
 
         remaining = ret.body.length;
         while (remaining > 0) {
@@ -109,6 +107,9 @@ public class ClientResponse {
             remaining -= nr;
         }
 
+        ret.extras = Arrays.copyOfRange(ret.body, 0, extlen);
+        ret.key = Arrays.copyOfRange(ret.body, extlen, extlen + keylen);
+        ret.value = Arrays.copyOfRange(ret.body, extlen + keylen, ret.body.length);
         return ret;
     }
 }
