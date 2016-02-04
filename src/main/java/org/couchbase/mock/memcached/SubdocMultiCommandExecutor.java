@@ -28,13 +28,16 @@ import java.util.List;
 
 public class SubdocMultiCommandExecutor implements CommandExecutor {
     static class SpecResult {
+        final int index;
         final ErrorCode ec;
         final String value;
-        SpecResult(ErrorCode ec) {
+        SpecResult(int index, ErrorCode ec) {
+            this.index = index;
             this.ec = ec;
             this.value = null;
         }
-        SpecResult(String value) {
+        SpecResult(int index, String value) {
+            this.index = index;
             this.value = value;
             this.ec = ErrorCode.SUCCESS;
         }
@@ -63,10 +66,10 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
             results = new ArrayList<SpecResult>();
         }
 
-        private boolean handleLookupSpec(BinarySubdocMultiCommand.MultiSpec spec) {
+        private boolean handleLookupSpec(BinarySubdocMultiCommand.MultiSpec spec, int index) {
             Operation op = BinarySubdocCommand.toSubdocOpcode(spec.getOp());
             if (op == null) {
-                results.add(new SpecResult(ErrorCode.UNKNOWN_COMMAND));
+                results.add(new SpecResult(index, ErrorCode.UNKNOWN_COMMAND));
                 return true;
             }
             if (op != Operation.GET && op != Operation.EXISTS) {
@@ -77,9 +80,9 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
             switch (rsi.getStatus()) {
                 case SUCCESS:
                     if (op.returnsMatch()) {
-                        results.add(new SpecResult(rsi.getMatchString()));
+                        results.add(new SpecResult(index, rsi.getMatchString()));
                     } else {
-                        results.add(new SpecResult(ErrorCode.SUCCESS));
+                        results.add(new SpecResult(index, ErrorCode.SUCCESS));
                     }
                     return true;
                 case SUBDOC_DOC_NOTJSON:
@@ -87,15 +90,15 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
                     client.sendResponse(new BinaryResponse(command, rsi.getStatus()));
                     return false;
                 default:
-                    results.add(new SpecResult(rsi.getStatus()));
+                    results.add(new SpecResult(index, rsi.getStatus()));
                     return true;
             }
         }
 
         private boolean sendMutationError(ErrorCode ec, int index) {
             ByteBuffer bb = ByteBuffer.allocate(3);
-            bb.putShort(ec.value());
             bb.put((byte)index);
+            bb.putShort(ec.value());
             ErrorCode topLevelRc;
             if (ec == ErrorCode.SUBDOC_INVALID_COMBO) {
                 topLevelRc = ec;
@@ -124,6 +127,10 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
                 return sendMutationError(rsi.getStatus(), index);
             }
 
+            if (op.returnsMatch()) {
+                results.add(new SpecResult(index, rsi.getMatchString()));
+            }
+
             currentDoc = rsi.getNewDocString();
             return true;
         }
@@ -135,7 +142,7 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
                 if (isMutator()) {
                     result = handleMutationSpec(spec, i);
                 } else {
-                    result = handleLookupSpec(spec);
+                    result = handleLookupSpec(spec, i);
                 }
                 if (!result) {
                     // Assume response was sent.
@@ -152,7 +159,30 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
                         currentDoc.getBytes(),
                         command.getCas());
                 MutationStatus ms = cache.replace(newItem);
-                client.sendResponse(new BinaryResponse(command, ms, miw, newItem.getCas()));
+
+                ByteArrayOutputStream bao = new ByteArrayOutputStream();
+                for (SpecResult result : results) {
+                    int specLen = 3;
+
+                    if (result.ec == ErrorCode.SUCCESS) {
+                        specLen += 4;
+                        specLen += result.value.length();
+                    }
+
+                    ByteBuffer bb = ByteBuffer.allocate(specLen);
+                    bb.put((byte)result.index);
+                    bb.putShort(result.ec.value());
+                    if (result.ec == ErrorCode.SUCCESS) {
+                        bb.putInt(result.value.length());
+                        bb.put(result.value.getBytes());
+                    }
+                    try {
+                        bao.write(bb.array());
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+                client.sendResponse(new BinaryResponse(command, ms, miw, newItem.getCas(), bao.toByteArray()));
             } else {
                 ByteArrayOutputStream bao = new ByteArrayOutputStream();
                 boolean hasError = false;

@@ -19,31 +19,51 @@ package org.couchbase.mock.memcached.client;
 import org.couchbase.mock.memcached.protocol.ErrorCode;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by mnunberg on 10/12/15.
  */
 public class MultiMutationResult {
     final private ErrorCode status;
-    final private int errorIndex;
+    final private int index;
+    final private String value;
 
-    MultiMutationResult(ErrorCode status, int index) {
+    MultiMutationResult(ErrorCode status, int index, String value) {
         this.status = status;
-        this.errorIndex = index;
+        this.index = index;
+        this.value = value;
     }
 
     public ErrorCode getStatus() {
         return status;
     }
 
-    public int getErrorIndex() {
-        return errorIndex;
+    public int getIndex() {
+        return index;
     }
 
-    public static MultiMutationResult parse(ByteBuffer bb) {
+    public String getValue() {
+        return value;
+    }
+
+    public static List<MultiMutationResult> parse(ByteBuffer bb) {
         bb.rewind();
-        ErrorCode ec = ErrorCode.valueOf(bb.getShort());
-        int index = bb.get();
-        return new MultiMutationResult(ec, index);
+        List<MultiMutationResult> res = new ArrayList<MultiMutationResult>();
+        while (bb.hasRemaining()) {
+            int index = bb.get();
+            ErrorCode ec = ErrorCode.valueOf(bb.getShort());
+            String value = null;
+
+            if (ec.value() == 0) {
+                int valueLen = bb.getInt();
+                byte[] valueBuf = new byte[valueLen];
+                bb.get(valueBuf);
+                value = new String(valueBuf);
+            }
+            res.add(new MultiMutationResult(ec, index, value));
+        }
+        return res;
     }
 }

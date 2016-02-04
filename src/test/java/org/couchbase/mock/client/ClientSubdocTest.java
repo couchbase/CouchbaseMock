@@ -260,9 +260,31 @@ public class ClientSubdocTest extends ClientBaseTest {
         // Try with an error. Sending it again should be enough
         resp = client.sendRequest(cb);
         assertEquals(ErrorCode.SUBDOC_MULTI_FAILURE, resp.getStatus());
-        MultiMutationResult res = MultiMutationResult.parse(resp.getRawValue());
-        assertEquals(ErrorCode.SUBDOC_PATH_EEXISTS, res.getStatus());
-        assertEquals(1, res.getErrorIndex());
+        List<MultiMutationResult> res = MultiMutationResult.parse(resp.getRawValue());
+        assertEquals(1, res.size());
+        assertEquals(ErrorCode.SUBDOC_PATH_EEXISTS, res.get(0).getStatus());
+        assertEquals(1, res.get(0).getIndex());
+
+
+        // Test with counters..
+        cb.subdocMultiMutation(
+                new MultiMutationSpec(CommandCode.SUBDOC_COUNTER, "counter1", "50"),
+                new MultiMutationSpec(CommandCode.SUBDOC_DICT_UPSERT, "newField", "\"newValue\""),
+                new MultiMutationSpec(CommandCode.SUBDOC_ARRAY_PUSH_FIRST, "newArray", "123", true),
+                new MultiMutationSpec(CommandCode.SUBDOC_COUNTER, "counter2", "100")
+        );
+        resp = client.sendRequest(cb);
+        assertEquals(ErrorCode.SUCCESS, resp.getStatus());
+        res = MultiMutationResult.parse(resp.getRawValue());
+        assertEquals(2, res.size());
+
+        assertEquals(0, res.get(0).getIndex());
+        assertEquals("50", res.get(0).getValue());
+        assertEquals(ErrorCode.SUCCESS, res.get(0).getStatus());
+
+        assertEquals(3, res.get(1).getIndex());
+        assertEquals("100", res.get(1).getValue());
+        assertEquals(ErrorCode.SUCCESS, res.get(1).getStatus());
     }
 
     public void testInvalidMultiCombos() throws Exception {
