@@ -382,10 +382,10 @@ public class ExecutorTest {
     @Test
     public void testBadNumFormat() throws SubdocException {
         String doc = "{}";
-        assertRaisesPriv(CannotInsertException.class, doc, "pth", Operation.COUNTER, "bad", false);
-        assertRaisesPriv(CannotInsertException.class, doc, "pth", Operation.COUNTER, "3.14", false);
-        assertRaisesPriv(CannotInsertException.class, doc, "pth", Operation.COUNTER, "-", false);
-        assertRaisesPriv(CannotInsertException.class, doc, "pth", Operation.COUNTER, "43f", false);
+        assertRaisesPriv(BadNumberException.class, doc, "pth", Operation.COUNTER, "bad", false);
+        assertRaisesPriv(BadNumberException.class, doc, "pth", Operation.COUNTER, "3.14", false);
+        assertRaisesPriv(BadNumberException.class, doc, "pth", Operation.COUNTER, "-", false);
+        assertRaisesPriv(BadNumberException.class, doc, "pth", Operation.COUNTER, "43f", false);
         assertRaisesPriv(ZeroDeltaException.class, doc, "pth", Operation.COUNTER, "0", false);
     }
 

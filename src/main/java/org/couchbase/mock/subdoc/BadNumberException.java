@@ -16,7 +16,7 @@
 
 package org.couchbase.mock.subdoc;
 
-public class BadNumberException extends CannotInsertException {
+public class BadNumberException extends SubdocException {
     public BadNumberException(Throwable e) {
         super(e);
     }

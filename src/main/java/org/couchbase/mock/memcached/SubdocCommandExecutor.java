@@ -49,6 +49,8 @@ public class SubdocCommandExecutor implements CommandExecutor {
             ec = ErrorCode.SUBDOC_PATH_ENOENT;
         } catch (PathExistsException ex3) {
             ec = ErrorCode.SUBDOC_PATH_EEXISTS;
+        } catch (BadNumberException ex4_1) {
+            ec = ErrorCode.SUBDOC_DELTA_ERANGE;
         } catch (EmptyValueException ex4) {
             ec = ErrorCode.SUBDOC_VALUE_CANTINSERT;
         } catch (DocNotJsonException ex5) {

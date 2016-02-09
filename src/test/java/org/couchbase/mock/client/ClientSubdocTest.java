@@ -171,6 +171,13 @@ public class ClientSubdocTest extends ClientBaseTest {
         assertTrue(resp.success());
         resp = client.sendRequest(cb);
         assertEquals(ErrorCode.SUBDOC_NUM_ERANGE, resp.getStatus());
+
+        // Test with an invalid number
+        storeCb = new CommandBuilder(CommandCode.SUBDOC_COUNTER)
+                .key(docId, vbId)
+                .subdoc("counter", "bad number");
+        resp = client.sendRequest(storeCb);
+        assertEquals(ErrorCode.SUBDOC_DELTA_ERANGE, resp.getStatus());
     }
 
     public void testMultiLookups() throws Exception {

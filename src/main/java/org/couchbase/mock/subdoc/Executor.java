@@ -80,7 +80,11 @@ public class Executor {
                     isMultiValue = false;
                 }
             } catch (JsonSyntaxException ex) {
-                throw new CannotInsertException(ex);
+                if (code == Operation.COUNTER) {
+                    throw new BadNumberException(ex);
+                } else {
+                    throw new CannotInsertException(ex);
+                }
             }
         } else {
             value = null;
