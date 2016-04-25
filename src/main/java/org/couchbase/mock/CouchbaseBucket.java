@@ -52,6 +52,16 @@ public class CouchbaseBucket extends Bucket {
         List<MemcachedServer> active = activeServers();
         map.put("name", name);
         map.put("bucketType", "membase");
+        
+        Map<String, String> controllers = new HashMap<String, String>();
+        controllers.put("compactAll", "/pools/" + poolName + "/buckets/" + name + "/controller/compactBucket");
+        controllers.put("compactDB", "/pools/" + poolName + "/buckets/" + name + "/controller/compactDatabases");
+        controllers.put("purgeDeletes", "/pools/" + poolName + "/buckets/" + name + "/controller/unsafePurgeBucket");
+        controllers.put("startRecovery", "/pools/" + poolName + "/buckets/" + name + "/controller/startRecovery");
+        map.put("controllers", controllers);
+        
+        map.put("replicaIndex",false);
+        
         map.put("authType", "sasl");
         map.put("saslPassword", getPassword());
         map.put("proxyPort", 0);
