@@ -72,7 +72,7 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
                 results.add(new SpecResult(index, ErrorCode.UNKNOWN_COMMAND));
                 return true;
             }
-            if (op != Operation.GET && op != Operation.EXISTS) {
+            if (!op.isLookup()) {
                 client.sendResponse(new BinaryResponse(command, ErrorCode.SUBDOC_INVALID_COMBO));
                 return false;
             }
@@ -117,7 +117,7 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
                 return sendMutationError(ErrorCode.UNKNOWN_COMMAND, index);
             }
 
-            if (op == Operation.GET || op == Operation.EXISTS) {
+            if (!op.isMutator()) {
                 return sendMutationError(ErrorCode.SUBDOC_INVALID_COMBO, index);
             }
 

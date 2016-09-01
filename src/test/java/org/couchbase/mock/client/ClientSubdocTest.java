@@ -180,6 +180,18 @@ public class ClientSubdocTest extends ClientBaseTest {
         assertEquals(ErrorCode.SUBDOC_DELTA_ERANGE, resp.getStatus());
     }
 
+
+    public void testGetCount() throws Exception {
+        CommandBuilder cb = new CommandBuilder(CommandCode.SUBDOC_GET_COUNT)
+                .key(multiDocId, vbId)
+                .subdoc("".getBytes());
+
+        ClientResponse resp = client.sendRequest(cb);
+
+        assertTrue(resp.getStatus().toString(), resp.success());
+        assertEquals("3", resp.getValue());
+    }
+
     public void testMultiLookups() throws Exception {
         CommandBuilder cb = new CommandBuilder(CommandCode.SUBDOC_MULTI_LOOKUP)
                 .key(multiDocId, vbId)

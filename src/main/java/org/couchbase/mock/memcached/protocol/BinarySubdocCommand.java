@@ -42,6 +42,7 @@ public class BinarySubdocCommand extends BinaryCommand {
         opMap.put(CommandCode.SUBDOC_ARRAY_INSERT, Operation.ARRAY_INSERT);
         opMap.put(CommandCode.SUBDOC_ARRAY_ADD_UNIQUE, Operation.ADD_UNIQUE);
         opMap.put(CommandCode.SUBDOC_COUNTER, Operation.COUNTER);
+        opMap.put(CommandCode.SUBDOC_GET_COUNT, Operation.GET_COUNT);
     }
 
     BinarySubdocCommand(ByteBuffer header) throws ProtocolException {

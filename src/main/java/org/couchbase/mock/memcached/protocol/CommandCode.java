@@ -50,7 +50,8 @@ public enum CommandCode {
     SUBDOC_ARRAY_PUSH_LAST(0xCB), SUBDOC_ARRAY_PUSH_FIRST(0xCC),
     SUBDOC_ARRAY_INSERT(0xCD), SUBDOC_ARRAY_ADD_UNIQUE(0xCE),
     SUBDOC_COUNTER(0xCF),
-    SUBDOC_MULTI_LOOKUP(0xD0), SUBDOC_MULTI_MUTATION(0xD1);
+    SUBDOC_MULTI_LOOKUP(0xD0), SUBDOC_MULTI_MUTATION(0xD1),
+    SUBDOC_GET_COUNT(0xD2);
 
 
 
@@ -176,6 +177,8 @@ public enum CommandCode {
                 return SUBDOC_MULTI_LOOKUP;
             case (byte)0xd1:
                 return SUBDOC_MULTI_MUTATION;
+            case (byte)0xd2:
+                return SUBDOC_GET_COUNT;
             case (byte)0xb6:
                 return GET_RANDOM;
             default:
@@ -275,6 +278,8 @@ public enum CommandCode {
                 return "subdoc_get";
             case SUBDOC_EXISTS:
                 return "subdoc_exists";
+            case SUBDOC_GET_COUNT:
+                return "subdoc_get_count";
             case GET_RANDOM:
                 return "get_random";
             default:

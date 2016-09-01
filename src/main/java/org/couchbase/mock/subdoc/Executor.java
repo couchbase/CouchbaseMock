@@ -337,6 +337,16 @@ public class Executor {
         return ee.compareTo(longMax) <= 0;
     }
 
+    private static JsonElement getCount(JsonElement elem) throws SubdocException {
+        if (elem.isJsonObject()) {
+            return new JsonPrimitive(elem.getAsJsonObject().entrySet().size());
+        } else if (elem.isJsonArray()) {
+            return new JsonPrimitive(elem.getAsJsonArray().size());
+        } else {
+            throw new PathMismatchException("GET_COUNT must point to array or dictionary");
+        }
+    }
+
     private JsonElement counter() throws SubdocException {
         Long numres;
         Long delta;
@@ -412,10 +422,15 @@ public class Executor {
         switch (code) {
             case GET:
             case EXISTS:
+            case GET_COUNT:
                 if (!match.isFound()) {
                     throw new PathNotFoundException();
                 } else {
-                    return new Result(match.getMatch(), null);
+                    if (code == Operation.GET_COUNT) {
+                        return new Result(getCount(match.getMatch()), null);
+                    } else {
+                        return new Result(match.getMatch(), null);
+                    }
                 }
 
             case REPLACE:

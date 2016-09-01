@@ -75,6 +75,7 @@ public class CommandFactory {
 
             case SUBDOC_EXISTS:
             case SUBDOC_GET:
+            case SUBDOC_GET_COUNT:
             case SUBDOC_COUNTER:
             case SUBDOC_ARRAY_ADD_UNIQUE:
             case SUBDOC_ARRAY_INSERT:

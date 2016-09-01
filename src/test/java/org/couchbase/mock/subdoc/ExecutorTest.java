@@ -587,4 +587,25 @@ public class ExecutorTest {
         elem = Executor.executeGet(doc, "[1]");
         assertEquals("{\"key\":\"value\"}", elem.toString());
     }
+
+    @Test
+    public void testGetCount() throws SubdocException {
+        String doc = "{}";
+        JsonElement elem;
+
+        elem = Executor.execute(doc, "", Operation.GET_COUNT).getMatch();
+        assertEquals(0, elem.getAsInt());
+
+        doc = "[]";
+        elem = Executor.execute(doc, "", Operation.GET_COUNT).getMatch();
+        assertEquals(0, elem.getAsInt());
+
+        doc = "{\"hello\": \"world\"}";
+        elem = Executor.execute(doc, "", Operation.GET_COUNT).getMatch();
+        assertEquals(1, elem.getAsInt());
+        assertEquals("1", elem.toString());
+
+        assertRaisesPriv(PathMismatchException.class, doc, "hello", Operation.GET_COUNT, null, false);
+        assertRaisesPriv(PathNotFoundException.class, doc, "nonexist", Operation.GET_COUNT, null, false);
+    }
 }

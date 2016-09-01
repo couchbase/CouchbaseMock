@@ -20,7 +20,7 @@ package org.couchbase.mock.subdoc;
  * Opcodes for sub-document commands
  */
 public enum Operation {
-    GET(0xC5), EXISTS(0xC6), DICT_ADD(0xC7), DICT_UPSERT(0xC8), REMOVE(0xC9), REPLACE(0xCA),
+    GET(0xC5), EXISTS(0xC6), GET_COUNT(0xD2), DICT_ADD(0xC7), DICT_UPSERT(0xC8), REMOVE(0xC9), REPLACE(0xCA),
     ARRAY_PREPEND(0xCB), ARRAY_APPEND(0xCC), ARRAY_INSERT(0xCD), ADD_UNIQUE(0xCE), COUNTER(0xCD);
 
     private final int value;
@@ -38,6 +38,7 @@ public enum Operation {
             case GET:
             case EXISTS:
             case REMOVE:
+            case GET_COUNT:
                 return false;
             default:
                 return true;
@@ -59,15 +60,21 @@ public enum Operation {
         switch (this) {
             case GET:
             case EXISTS:
+            case GET_COUNT:
                 return false;
             default:
                 return true;
         }
     }
 
+    public boolean isLookup() {
+        return !isMutator();
+    }
+
     public boolean returnsMatch() {
         switch (this) {
             case GET:
+            case GET_COUNT:
             case COUNTER:
                 return true;
             default:
