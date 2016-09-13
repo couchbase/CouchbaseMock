@@ -29,6 +29,8 @@ public class ClientSubdocTest extends ClientBaseTest {
     private short vbId;
     private final static String docId = "someKey";
     private final static String multiDocId = "multiKey";
+    private final static String singleValue = "{}";
+    private final static String multiValue =  "{\"key1\":\"value1\",\"key2\":\"value2\",\"key3\":\"value3\"}";
 
     @Override
     protected void setUp() throws Exception {
@@ -37,10 +39,9 @@ public class ClientSubdocTest extends ClientBaseTest {
         vbId = findValidVbucket(0);
 
         // Store the item
-        ClientResponse resp = client.sendRequest(CommandBuilder.buildStore(docId, vbId, "{}"));
+        ClientResponse resp = client.sendRequest(CommandBuilder.buildStore(docId, vbId, singleValue));
         assertTrue(resp.success());
 
-        String multiValue = "{\"key1\":\"value1\",\"key2\":\"value2\",\"key3\":\"value3\"}";
         resp = client.sendRequest(CommandBuilder.buildStore(multiDocId, vbId, multiValue));
         assertTrue(resp.success());
     }
@@ -325,5 +326,71 @@ public class ClientSubdocTest extends ClientBaseTest {
                 );
         resp = client.sendRequest(cb);
         assertEquals(ErrorCode.SUBDOC_INVALID_COMBO, resp.getStatus());
+    }
+
+    public void testMakeDocFlagSingle() throws Exception {
+        removeItem(multiDocId, vbId);
+        removeItem(docId, vbId);
+
+        // Test with a simple store operation
+        CommandBuilder cb = new CommandBuilder(CommandCode.SUBDOC_DICT_UPSERT)
+                .key(docId, vbId)
+                .subdoc("hello".getBytes(), "true".getBytes(), BinarySubdocCommand.FLAG_MKDOC);
+        ClientResponse resp = client.sendRequest(cb);
+        assertTrue(resp.getStatus().toString(), resp.success());
+
+        // Get the item
+        Item item = getItem(docId, vbId);
+        assertNotNull(item);
+        assertEquals("{\"hello\":true}", new String(item.getValue()));
+
+        // Try it again
+        cb = new CommandBuilder(CommandCode.SUBDOC_DICT_UPSERT)
+                .key(docId, vbId)
+                .subdoc("world".getBytes(), "false".getBytes(), BinarySubdocCommand.FLAG_MKDOC);
+        resp = client.sendRequest(cb);
+        assertTrue(resp.success());
+
+        cb = new CommandBuilder(CommandCode.SUBDOC_DICT_UPSERT)
+                .key(docId, vbId)
+                .subdoc("deep.path".getBytes(), "123".getBytes(), BinarySubdocCommand.FLAG_MKDOC);
+        resp = client.sendRequest(cb);
+        assertTrue(resp.success());
+
+        // Get back the old paths
+        cb = new CommandBuilder(CommandCode.SUBDOC_MULTI_LOOKUP)
+                .key(docId, vbId)
+                .subdocMultiLookup(
+                        MultiLookupSpec.get("hello"), MultiLookupSpec.get("world"), MultiLookupSpec.get("deep.path")
+                );
+        resp = client.sendRequest(cb);
+        assertTrue(resp.success());
+        List<MultiLookupResult> mRes = MultiLookupResult.parse(resp.getRawValue());
+        assertEquals("true", mRes.get(0).getValue());
+        assertEquals("false", mRes.get(1).getValue());
+        assertEquals("123", mRes.get(2).getValue());
+    }
+
+    public void testMakeDocFlagMulti() throws Exception {
+        removeItem(multiDocId, vbId);
+        CommandBuilder cb = new CommandBuilder(CommandCode.SUBDOC_MULTI_MUTATION)
+                .key(multiDocId, vbId)
+                .subdocMultiMutation(
+                        new MultiMutationSpec(CommandCode.SUBDOC_ARRAY_PUSH_FIRST, "arr", "true", BinarySubdocCommand.FLAG_MKDOC),
+                        new MultiMutationSpec(CommandCode.SUBDOC_DICT_UPSERT, "pth.nest", "false", BinarySubdocCommand.FLAG_MKDOC)
+                );
+        ClientResponse resp = client.sendRequest(cb);
+        assertTrue(resp.getStatus().toString(), resp.success());
+
+        // Get the items back!
+        cb = new CommandBuilder(CommandCode.SUBDOC_MULTI_LOOKUP)
+                .key(multiDocId, vbId)
+                .subdocMultiLookup(MultiLookupSpec.get("arr[0]"), MultiLookupSpec.get("pth.nest"));
+        resp = client.sendRequest(cb);
+        assertTrue(resp.success());
+
+        List<MultiLookupResult> mRes = MultiLookupResult.parse(resp.getRawValue());
+        assertEquals("true", mRes.get(0).getValue());
+        assertEquals("false", mRes.get(1).getValue());
     }
 }

@@ -50,24 +50,27 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
         final MemcachedConnection client;
         final Item existing;
         final VBucketStore cache;
+        boolean needCreate;
         String currentDoc;
 
         boolean isMutator() {
             return command.getComCode() == CommandCode.SUBDOC_MULTI_MUTATION;
         }
 
-        ExecutorContext(BinaryCommand cmd, MemcachedConnection client, Item existing, VBucketStore cache) {
+        ExecutorContext(
+                BinaryCommand cmd, MemcachedConnection client, Item existing, VBucketStore cache, boolean needCreate) {
             this.existing = existing;
             currentDoc = new String(existing.getValue());
             this.command = (BinarySubdocMultiCommand)cmd;
             this.client = client;
             this.specs = command.getLookupSpecs();
             this.cache = cache;
+            this.needCreate = needCreate;
             results = new ArrayList<SpecResult>();
         }
 
         private boolean handleLookupSpec(BinarySubdocMultiCommand.MultiSpec spec, int index) {
-            Operation op = BinarySubdocCommand.toSubdocOpcode(spec.getOp());
+            Operation op = spec.getOp();
             if (op == null) {
                 results.add(new SpecResult(index, ErrorCode.UNKNOWN_COMMAND));
                 return true;
@@ -111,7 +114,7 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
         }
 
         private boolean handleMutationSpec(BinarySubdocMultiCommand.MultiSpec spec, int index) {
-            Operation op = BinarySubdocCommand.toSubdocOpcode(spec.getOp());
+            Operation op = spec.getOp();
 
             if (op == null) {
                 return sendMutationError(ErrorCode.UNKNOWN_COMMAND, index);
@@ -158,7 +161,19 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
                         command.getNewExpiry(existing.getExpiryTime()),
                         currentDoc.getBytes(),
                         command.getCas());
-                MutationStatus ms = cache.replace(newItem);
+
+                MutationStatus ms;
+                if (needCreate) {
+                    needCreate = false;
+                    ms = cache.add(newItem);
+                    if (ms.getStatus() == ErrorCode.KEY_EEXISTS) {
+                        results.clear();
+                        execute();
+                        return;
+                    }
+                } else {
+                    ms = cache.replace(newItem);
+                }
 
                 ByteArrayOutputStream bao = new ByteArrayOutputStream();
                 for (SpecResult result : results) {
@@ -218,13 +233,25 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
     public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
         VBucketStore cache = server.getCache(cmd);
         Item existing = cache.get(cmd.getKeySpec());
+        ExecutorContext cx = null;
 
         if (existing == null) {
-            client.sendResponse(new BinaryResponse(cmd, ErrorCode.KEY_ENOENT));
-            return;
+            if (cmd instanceof BinarySubdocMultiMutationCommand) {
+                BinarySubdocMultiMutationCommand mcmd = (BinarySubdocMultiMutationCommand)cmd;
+                String rootString = mcmd.getRootType();
+                if (rootString != null) {
+                    Item newItem = new Item(cmd.getKeySpec(), 0, 0, rootString.getBytes(), 0);
+                    cx = new ExecutorContext(cmd, client, newItem, cache, true);
+                }
+            }
+            if (cx == null) {
+                client.sendResponse(new BinaryResponse(cmd, ErrorCode.KEY_ENOENT));
+                return;
+            }
+        } else {
+            cx = new ExecutorContext(cmd, client, existing, cache, false);
         }
 
-        ExecutorContext cx = new ExecutorContext(cmd, client, existing, cache);
         cx.execute();
     }
 

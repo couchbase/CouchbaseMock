@@ -42,7 +42,7 @@ public class SubdocCommandExecutor implements CommandExecutor {
     public static ResultInfo executeSubdocOperation(Operation op, String doc, String path, String value, byte flags) {
         ErrorCode ec = ErrorCode.SUCCESS;
         Result result = null;
-        boolean isMkdirP = (flags & BinarySubdocCommand.FLAG_MKDIR_P) != 0;
+        boolean isMkdirP = (flags & (BinarySubdocCommand.FLAG_MKDIR_P | BinarySubdocCommand.FLAG_MKDOC)) != 0;
         try {
             result = Executor.execute(doc, path, op, value, isMkdirP);
         } catch (PathNotFoundException ex2) {
@@ -84,13 +84,32 @@ public class SubdocCommandExecutor implements CommandExecutor {
         BinarySubdocCommand command = (BinarySubdocCommand)cmd;
         Operation subdocOp = command.getSubdocOp();
         VBucketStore cache = server.getCache(cmd);
-
         SubdocItem subdocInput = command.getItem();
+
+        boolean isMkdoc = (command.getSubdocFlags() & BinarySubdocCommand.FLAG_MKDOC) != 0;
+        boolean needsCreate = false;
+
+        if (isMkdoc && !subdocOp.isCreative()) {
+            client.sendResponse(new BinaryResponse(cmd, ErrorCode.EINVAL));
+            return;
+        }
+
         Item existing = cache.get(subdocInput.getKeySpec());
 
         if (existing == null) {
-            client.sendResponse(new BinaryResponse(cmd, ErrorCode.KEY_ENOENT));
-            return;
+            if (!isMkdoc) {
+                client.sendResponse(new BinaryResponse(cmd, ErrorCode.KEY_ENOENT));
+                return;
+            } else {
+                String newValue = Executor.getRootType(subdocInput.getPath(), subdocOp);
+                if (newValue == null) {
+                    client.sendResponse(new BinaryResponse(cmd, ErrorCode.KEY_ENOENT));
+                    return;
+                } else {
+                    existing = new Item(subdocInput.getKeySpec(), 0, 0, newValue.getBytes(), 0);
+                    needsCreate = true;
+                }
+            }
         }
 
         if (command.getCas() != 0) {
@@ -122,7 +141,16 @@ public class SubdocCommandExecutor implements CommandExecutor {
             Item newItm = new Item(
                     existing.getKeySpec(), existing.getFlags(), subdocInput.getExpiryTime(),
                     rci.getNewDocString().getBytes(), subdocInput.getCas());
-            ms = cache.replace(newItm);
+            if (needsCreate) {
+                ms = cache.add(newItm);
+                if (ms.getStatus() == ErrorCode.KEY_EEXISTS) {
+                    execute(cmd, server, client);
+                    return;
+                }
+            } else {
+                ms = cache.replace(newItm);
+            }
+
             if (ms.getStatus() == ErrorCode.SUCCESS) {
                 client.sendResponse(new BinaryResponse(cmd, ms, miw, newItm.getCas(), value));
             } else {

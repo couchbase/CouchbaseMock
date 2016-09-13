@@ -473,4 +473,23 @@ public class Executor {
                 throw new RuntimeException("Unknown operation!");
         }
     }
+
+    public static String getRootType(String path, Operation op) {
+        if (path.isEmpty()) {
+            switch (op) {
+                case ARRAY_APPEND:
+                case ARRAY_PREPEND:
+                case ADD_UNIQUE:
+                    return "[]";
+                default:
+                    return null;
+            }
+        }
+
+        if (path.charAt(0) == '[') {
+            return "[]";
+        } else {
+            return "{}";
+        }
+    }
 }

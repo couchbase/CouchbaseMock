@@ -16,6 +16,8 @@
 
 package org.couchbase.mock.memcached.protocol;
 
+import org.couchbase.mock.subdoc.Operation;
+
 import java.net.ProtocolException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -70,23 +72,23 @@ public abstract class BinarySubdocMultiCommand extends BinaryCommand {
     }
 
     public static class MultiSpec {
-        final private CommandCode op;
+        final private Operation op;
         final private String path;
         final private String value;
         final private byte flags;
 
-        protected MultiSpec(byte op, String path, String value, byte flags) {
-            this.op = CommandCode.valueOf(op);
+        protected MultiSpec(Operation op, String path, String value, byte flags) {
+            this.op = op;
             this.path = path;
             this.flags = flags;
             this.value = value;
         }
 
-        protected MultiSpec(byte op, String path) {
+        protected MultiSpec(Operation op, String path) {
             this(op, path, null, (byte)0);
         }
 
-        public CommandCode getOp() {
+        public Operation getOp() {
             return op;
         }
         public String getPath() {

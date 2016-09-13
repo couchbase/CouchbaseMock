@@ -34,7 +34,7 @@ public class BinarySubdocMultiLookupCommand extends BinarySubdocMultiCommand {
 
             byte[] path = new byte[pathLength];
             bodyBuffer.get(path);
-            specs.add(new MultiSpec(bOp, new String(path)));
+            specs.add(new MultiSpec(BinarySubdocCommand.toSubdocOpcode(CommandCode.valueOf(bOp)), new String(path)));
         }
     }
 
