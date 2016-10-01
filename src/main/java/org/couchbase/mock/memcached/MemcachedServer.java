@@ -153,6 +153,7 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
         executors[CommandCode.SUBDOC_ARRAY_PUSH_LAST.cc()] = new SubdocCommandExecutor();
         executors[CommandCode.SUBDOC_ARRAY_PUSH_FIRST.cc()] = new SubdocCommandExecutor();
         executors[CommandCode.SUBDOC_ARRAY_ADD_UNIQUE.cc()] = new SubdocCommandExecutor();
+        executors[CommandCode.SUBDOC_ARRAY_INSERT.cc()] = new SubdocCommandExecutor();
         executors[CommandCode.SUBDOC_COUNTER.cc()] = new SubdocCommandExecutor();
         executors[CommandCode.SUBDOC_GET_COUNT.cc()] = new SubdocCommandExecutor();
         executors[CommandCode.SUBDOC_MULTI_MUTATION.cc()] = new SubdocMultiCommandExecutor();
