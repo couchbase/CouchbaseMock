@@ -158,6 +158,7 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
         executors[CommandCode.SUBDOC_GET_COUNT.cc()] = new SubdocCommandExecutor();
         executors[CommandCode.SUBDOC_MULTI_MUTATION.cc()] = new SubdocMultiCommandExecutor();
         executors[CommandCode.SUBDOC_MULTI_LOOKUP.cc()] = new SubdocMultiCommandExecutor();
+        executors[CommandCode.GET_ERRMAP.cc()] = new GetErrmapCommandExecutor();
 
         // Couchbase buckets only
         if (bucket.getType() == BucketType.COUCHBASE) {

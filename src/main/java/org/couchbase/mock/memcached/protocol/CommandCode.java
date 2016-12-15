@@ -38,7 +38,7 @@ public enum CommandCode {
     LAST_RESERVED(0xef), SCRUB(0xf0),
     GET_REPLICA(0x83), OBSERVE(0x92), EVICT(0x93),
     GETL(0x94), UNL(0x95),
-    GET_CLUSTER_CONFIG(0xb5), HELLO(0x1f), ILLEGAL(0xff),
+    GET_CLUSTER_CONFIG(0xb5), HELLO(0x1f), GET_ERRMAP(0xfe), ILLEGAL(0xff),
     OBSERVE_SEQNO(0x91),
 
     GET_RANDOM(0xb6),
@@ -181,6 +181,8 @@ public enum CommandCode {
                 return SUBDOC_GET_COUNT;
             case (byte)0xb6:
                 return GET_RANDOM;
+            case (byte)0xfe:
+                return GET_ERRMAP;
             default:
                 return ILLEGAL;
         }
@@ -282,6 +284,8 @@ public enum CommandCode {
                 return "subdoc_get_count";
             case GET_RANDOM:
                 return "get_random";
+            case GET_ERRMAP:
+                return "get_errormap";
             default:
                 return "unknown";
 

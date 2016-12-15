@@ -90,6 +90,8 @@ public class CommandFactory {
                 return new BinarySubdocMultiLookupCommand(header);
             case SUBDOC_MULTI_MUTATION:
                 return new BinarySubdocMultiMutationCommand(header);
+            case GET_ERRMAP:
+                return new BinaryGetErrmapCommand(header);
 
             default:
                 return new BinaryCommand(header);
