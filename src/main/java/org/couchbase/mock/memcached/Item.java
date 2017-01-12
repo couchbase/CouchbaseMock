@@ -16,6 +16,7 @@
 
 package org.couchbase.mock.memcached;
 
+import com.google.gson.JsonObject;
 import org.couchbase.mock.util.Base64;
 
 import java.nio.ByteBuffer;
@@ -31,6 +32,7 @@ public class Item {
     private final KeySpec keySpec;
     private final int flags;
     private int expiryTime;
+    private byte[] xattr;
     private byte[] value;
     private String cached_UTF8 = null;
     private String cached_B64 = null;
@@ -41,10 +43,11 @@ public class Item {
     /** When the lock expires, if any */
     private int lockExpiryTime;
 
-    public Item(KeySpec ks, int flags, int expiryTime, byte[] value, long cas) {
+    public Item(KeySpec ks, int flags, int expiryTime, byte[] value, byte[] xattr, long cas) {
         this.keySpec = ks;
         this.flags = flags;
         this.value = value;
+        this.xattr = xattr;
         this.cas = cas;
         this.expiryTime = VBucketStore.convertExpiryTime(expiryTime);
     }
@@ -54,6 +57,7 @@ public class Item {
         this.flags = -1;
         this.expiryTime = -1;
         this.value = null;
+        this.xattr = null;
         this.cas = -1;
         this.modificationTime = -1;
     }
@@ -72,11 +76,7 @@ public class Item {
         this.lockExpiryTime = src.lockExpiryTime;
         this.cached_B64 = src.cached_B64;
         this.cached_UTF8 = src.cached_UTF8;
-    }
-
-    public Item(String key, byte[] value) {
-        this(new KeySpec(key, (short)-1));
-        this.value = value;
+        this.xattr = src.xattr;
     }
 
     public int getExpiryTime() {
@@ -105,6 +105,10 @@ public class Item {
 
     public byte[] getValue() {
         return value;
+    }
+
+    public byte[] getXattr() {
+        return xattr;
     }
 
     public String getUtf8() throws CharacterCodingException {

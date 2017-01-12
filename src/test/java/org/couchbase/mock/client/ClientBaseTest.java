@@ -193,4 +193,9 @@ public abstract class ClientBaseTest extends TestCase {
         MemcachedServer server = getBucket().getVBucketInfo()[vbId].getOwner();
         server.getStorage().removeCached(new KeySpec(key, vbId));
     }
+
+    protected void storeItem(String key, short vbId, String value) {
+        MemcachedServer server = getBucket().getVBucketInfo()[vbId].getOwner();
+        server.getStorage().putCached(new Item(new KeySpec(key, vbId), 0, 0, value.getBytes(), null, 0));
+    }
 }

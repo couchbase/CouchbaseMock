@@ -19,7 +19,7 @@ package org.couchbase.mock.memcached;
 public class SubdocItem extends Item {
     private final String path;
     public SubdocItem(KeySpec ks, int flags, int expiryTime, byte[] path, byte[] value, long cas) {
-        super(ks, flags, expiryTime, value, cas);
+        super(ks, flags, expiryTime, value, null, cas);
         this.path = new String(path);
     }
 

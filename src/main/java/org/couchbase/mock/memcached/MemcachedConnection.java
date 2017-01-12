@@ -193,19 +193,33 @@ public class MemcachedConnection {
         if (input.length != supportedFeatures.length) {
             throw new IllegalArgumentException("Bad features length!");
         }
-        System.arraycopy(input, 0, supportedFeatures, 0, input.length);
+
+        // Scan through all other features and disable them unless they are supported
+        for (int i = 0; i < input.length; i++) {
+            BinaryHelloCommand.Feature feature = BinaryHelloCommand.Feature.valueOf(i);
+            if (feature == null) {
+                supportedFeatures[i] = false;
+                continue;
+            }
+
+            switch (feature) {
+                case MUTATION_SEQNO:
+                case XERROR:
+                case XATTR:
+                    supportedFeatures[i] = true;
+                    break;
+
+                default:
+                    supportedFeatures[i] = false;
+                    break;
+            }
+        }
+
+        // Post-processing
         if (supportedFeatures[BinaryHelloCommand.Feature.MUTATION_SEQNO.getValue()]) {
             miw.setEnabled(true);
         } else {
             miw.setEnabled(false);
-        }
-        // Scan through all other features and disable them unless they are supported
-        for (int i = 0; i < supportedFeatures.length; i++) {
-            if (i == BinaryHelloCommand.Feature.MUTATION_SEQNO.getValue()) {
-                // nothing;
-            } else {
-                supportedFeatures[i] = false;
-            }
         }
     }
 }

@@ -393,4 +393,44 @@ public class ClientSubdocTest extends ClientBaseTest {
         assertEquals("true", mRes.get(0).getValue());
         assertEquals("false", mRes.get(1).getValue());
     }
+
+    public void testGetAttrsSingle() throws Exception {
+        storeItem(docId, vbId, "{}");
+        CommandBuilder cb = new CommandBuilder(CommandCode.SUBDOC_DICT_UPSERT)
+                .key(docId, vbId)
+                .subdoc("user.myAttr", "123", BinarySubdocCommand.FLAG_XATTR_PATH|BinarySubdocCommand.FLAG_MKDIR_P);
+        ClientResponse resp = client.sendRequest(cb);
+        assertTrue(resp.getStatus().toString(), resp.success());
+
+        Item itm = getItem(docId, vbId);
+        assertNotNull(itm.getXattr());
+        assertEquals("{\"user\":{\"myAttr\":123}}", new String(itm.getXattr()));
+        assertEquals("{}",  new String(itm.getValue()));
+
+        // Execute fullDoc operation
+        cb = new CommandBuilder(CommandCode.SUBDOC_COUNTER)
+                .key(docId, vbId)
+                .subdoc("counter", "1");
+        resp = client.sendRequest(cb);
+        assertTrue(resp.success());
+        itm = getItem(docId, vbId);
+        assertEquals("{\"user\":{\"myAttr\":123}}", new String(itm.getXattr()));
+        assertEquals("{\"counter\":1}", new String(itm.getValue()));
+    }
+
+    public void testGetAttrsMulti() throws Exception {
+        storeItem(multiDocId, vbId, "{}");
+        CommandBuilder cb = new CommandBuilder(CommandCode.SUBDOC_MULTI_MUTATION)
+                .key(multiDocId, vbId)
+                .subdocMultiMutation(
+                        new MultiMutationSpec(CommandCode.SUBDOC_DICT_UPSERT, "bodyPath", "123"),
+                        new MultiMutationSpec(CommandCode.SUBDOC_DICT_UPSERT, "attrPath", "123",
+                                BinarySubdocCommand.FLAG_MKDIR_P|BinarySubdocCommand.FLAG_XATTR_PATH));
+        ClientResponse resp = client.sendRequest(cb);
+        assertTrue(resp.success());
+
+        Item item = getItem(multiDocId, vbId);
+        assertEquals("{\"bodyPath\":123}", new String(item.getValue()));
+        assertEquals("{\"attrPath\":123}", new String(item.getXattr()));
+    }
 }

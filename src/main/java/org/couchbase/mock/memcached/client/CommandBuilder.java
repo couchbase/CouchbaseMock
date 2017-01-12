@@ -44,11 +44,11 @@ public class CommandBuilder {
         final byte flags;
         final String path;
         final String value;
-        public MultiMutationSpec(CommandCode op, String path, String value, byte flags) {
+        public MultiMutationSpec(CommandCode op, String path, String value, int flags) {
             this.op = op;
             this.path = path;
             this.value = value;
-            this.flags = flags;
+            this.flags = (byte)flags;
         }
         public MultiMutationSpec(CommandCode op, String path, String value, boolean create) {
             this(op, path, value, create ? BinarySubdocCommand.FLAG_MKDIR_P : 0x0);
@@ -141,6 +141,10 @@ public class CommandBuilder {
 
     public CommandBuilder subdoc(byte[] sdPath, byte[] sdValue, int sdFlags) {
         return subdoc(sdPath, sdValue, sdFlags, 0);
+    }
+
+    public CommandBuilder subdoc(String sdPath, String sdValue, int sdFlags) {
+        return subdoc(sdPath.getBytes(), sdValue.getBytes(), sdFlags);
     }
 
     private static byte[] subdocMultiLookupPayload(MultiLookupSpec[] specs) {

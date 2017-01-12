@@ -132,7 +132,7 @@ public class CouchbaseBucket extends Bucket {
     public ErrorCode storeItem(String key, byte[] value) {
         short vbIndex = getVbIndexForKey(key);
         KeySpec ks = new KeySpec(key, vbIndex);
-        Item item = new Item(ks, 0, 0, value, 0);
+        Item item = new Item(ks, 0, 0, value, null, 0);
         MemcachedServer server = vbInfo[vbIndex].getOwner();
         VBucketStore vbStore = server.getStorage().getCache(vbIndex);
         return vbStore.set(item).getStatus();

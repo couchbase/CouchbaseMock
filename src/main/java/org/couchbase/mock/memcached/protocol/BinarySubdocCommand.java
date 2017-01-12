@@ -29,6 +29,8 @@ public class BinarySubdocCommand extends BinaryCommand {
     private final Operation subdocOp;
     public final static byte FLAG_MKDIR_P = 0x01;
     public final static byte FLAG_MKDOC = 0x02;
+    public final static byte FLAG_XATTR_PATH = 0x04;
+    public final static byte FLAG_EXPAND_MACROS = 0x10;
 
     private final static Map<CommandCode, Operation> opMap = new HashMap<CommandCode, Operation>();
     static {

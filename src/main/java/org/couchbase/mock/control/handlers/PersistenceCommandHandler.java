@@ -96,7 +96,7 @@ public final class PersistenceCommandHandler extends KeyCommandHandler {
         if (source == null) {
             assert value != null;
             assert value.getBytes() != null;
-            source = new Item(keySpec, 0, 0, value.getBytes(), cas);
+            source = new Item(keySpec, 0, 0, value.getBytes(), null, cas);
         }
 
         if (cas < 0) {
@@ -109,6 +109,7 @@ public final class PersistenceCommandHandler extends KeyCommandHandler {
                     source.getFlags(),
                     source.getExpiryTime(),
                     value.getBytes(),
+                    source.getXattr(),
                     cas);
 
         } else {
