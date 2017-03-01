@@ -448,6 +448,8 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
             case SASL_AUTH:
             case SASL_LIST_MECHS:
             case SASL_STEP:
+            case HELLO:
+            case GET_ERRMAP:
                 return true;
 
             default:
