@@ -27,6 +27,7 @@ public class HelloCommandExecutor implements CommandExecutor {
     public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
         if (server.getBucket().getType() != Bucket.BucketType.COUCHBASE) {
             client.sendResponse(new BinaryResponse(cmd, ErrorCode.NOT_SUPPORTED));
+            return;
         }
 
         BinaryHelloCommand hcmd = (BinaryHelloCommand) cmd;
