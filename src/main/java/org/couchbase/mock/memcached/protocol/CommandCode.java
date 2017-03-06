@@ -36,7 +36,9 @@ public enum CommandCode {
     GET_VBUCKET(0x3e), DEL_VBUCKET(0x3f), TAP_CONNECT(0x40), TAP_MUTATION(0x41),
     TAP_DELETE(0x42), TAP_FLUSH(0x43), TAP_OPAQUE(0x44), TAP_VBUCKET_SET(0x45),
     LAST_RESERVED(0xef), SCRUB(0xf0),
-    GET_REPLICA(0x83), OBSERVE(0x92), EVICT(0x93),
+    GET_REPLICA(0x83),
+    SELECT_BUCKET(0x89),
+    OBSERVE(0x92), EVICT(0x93),
     GETL(0x94), UNL(0x95),
     GET_CLUSTER_CONFIG(0xb5), HELLO(0x1f), GET_ERRMAP(0xfe), ILLEGAL(0xff),
     OBSERVE_SEQNO(0x91),
@@ -183,6 +185,8 @@ public enum CommandCode {
                 return GET_RANDOM;
             case (byte)0xfe:
                 return GET_ERRMAP;
+            case (byte)0x89:
+                return SELECT_BUCKET;
             default:
                 return ILLEGAL;
         }
@@ -286,6 +290,8 @@ public enum CommandCode {
                 return "get_random";
             case GET_ERRMAP:
                 return "get_errormap";
+            case SELECT_BUCKET:
+                return "select_bucket";
             default:
                 return "unknown";
 

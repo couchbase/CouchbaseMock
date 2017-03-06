@@ -142,6 +142,7 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
         executors[CommandCode.SASL_STEP.cc()] = executors[CommandCode.SASL_LIST_MECHS.cc()];
         executors[CommandCode.EVICT.cc()] = new EvictCommandExecutor();
         executors[CommandCode.HELLO.cc()] = new HelloCommandExecutor();
+        executors[CommandCode.SELECT_BUCKET.cc()] = new SelectBucketCommandExecutor();
 
         // Sub-Document
         executors[CommandCode.SUBDOC_GET.cc()] = new SubdocCommandExecutor();

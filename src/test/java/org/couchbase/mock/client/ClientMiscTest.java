@@ -28,11 +28,11 @@ import java.nio.ByteBuffer;
 public class ClientMiscTest extends ClientBaseTest {
     public void testUnknownOpcode() throws Exception {
         ByteBuffer bb = ByteBuffer.allocate(24);
-        bb.put((byte)0x80); // Magic
-        bb.put((byte)0xff); // "Opcode"
-        bb.putShort((short)0); // keylen
+        bb.put((byte) 0x80); // Magic
+        bb.put((byte) 0xff); // "Opcode"
+        bb.putShort((short) 0); // keylen
         bb.putShort((short) 0); // extlen
-        bb.putShort((short)0); // vbucket
+        bb.putShort((short) 0); // vbucket
         bb.putInt(0); // bodylen
         bb.putInt(42); // opaque
         bb.putLong(0); // CAS..
@@ -40,7 +40,7 @@ public class ClientMiscTest extends ClientBaseTest {
         byte[] req = bb.array();
         ClientResponse resp = getBinClient().sendRequest(req);
         assertEquals(CommandCode.ILLEGAL, resp.getComCode());
-        assertEquals((byte)0xff, resp.getOpcode());
+        assertEquals((byte) 0xff, resp.getOpcode());
         assertEquals(42, resp.getOpaque());
         assertEquals(ErrorCode.UNKNOWN_COMMAND, resp.getStatus());
 
@@ -86,4 +86,14 @@ public class ClientMiscTest extends ClientBaseTest {
         }
     }
 
+    public void testSelectBucket() throws Exception {
+        CommandBuilder cb = new CommandBuilder(CommandCode.SELECT_BUCKET);
+        cb.key(bucketConfiguration.getName(), (short) 0);
+        ClientResponse resp = getBinClient().sendRequest(cb);
+        assertTrue(resp.success());
+
+        cb.key("non-exist-bucket", (short) 0);
+        resp = getBinClient().sendRequest(cb);
+        assertEquals(ErrorCode.EACCESS, resp.getStatus());
+    }
 }

@@ -92,6 +92,8 @@ public class CommandFactory {
                 return new BinarySubdocMultiMutationCommand(header);
             case GET_ERRMAP:
                 return new BinaryGetErrmapCommand(header);
+            case SELECT_BUCKET:
+                return new BinarySelectBucketCommand(header);
 
             default:
                 return new BinaryCommand(header);
