@@ -206,7 +206,7 @@ public class MemcachedConnection {
                 case MUTATION_SEQNO:
                 case XERROR:
                 case XATTR:
-                    supportedFeatures[i] = true;
+                    supportedFeatures[i] = input[i];
                     break;
 
                 default:
