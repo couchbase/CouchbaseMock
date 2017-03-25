@@ -286,6 +286,21 @@ public class CouchbaseMock {
     }
 
     /**
+     * Get the carrier port for a bucket.
+     * @param bucketName The bucket name to fetch the carrier port for.
+     * @return The carrier port.
+     */
+    public int getCarrierPort(String bucketName) {
+        Bucket bucket = buckets.get(bucketName);
+        if (null == bucket) {
+            // Buckets are created when the mock is started. Calling getCarrierPort()
+            // before the mock has been started makes no sense.
+            throw new RuntimeException("Bucket does not exist. Has the mock been started?");
+        }
+        return bucket.getCarrierPort();
+    }
+
+    /**
      * Get the name of the host to which the REST API is bound
      * @return The bound host
      */
