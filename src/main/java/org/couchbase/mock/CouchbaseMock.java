@@ -268,9 +268,9 @@ public class CouchbaseMock {
     public int getCarrierPort(String bucketName) {
         Bucket bucket = buckets.get(bucketName);
         if (null == bucket) {
-            // Buckets are created when the mock is started.  Calling getCarrierPort()
+            // Buckets are created when the mock is started. Calling getCarrierPort()
             // before the mock has been started makes no sense.
-            throw new RuntimeException("Bucket does not exist.  Has the mock been started?");
+            throw new RuntimeException("Bucket does not exist. Has the mock been started?");
         }
         return bucket.getCarrierPort();
     }
