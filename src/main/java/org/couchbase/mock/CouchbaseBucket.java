@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Arrays;
 import java.util.zip.CRC32;
 
 import org.couchbase.mock.memcached.*;
@@ -120,6 +121,8 @@ public class CouchbaseBucket extends Bucket {
         }
         vbm.put("vBucketMap", m);
         map.put("vBucketServerMap", vbm);
+        map.put("bucketCapabilitiesVer", "");
+        map.put("bucketCapabilities", Arrays.asList("cbhello", "touch", "couchapi", "cccp", "nodesExt"));
         return map;
     }
 
