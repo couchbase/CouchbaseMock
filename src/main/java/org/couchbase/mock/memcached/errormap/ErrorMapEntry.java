@@ -32,6 +32,8 @@ public class ErrorMapEntry {
 
     private Set<String> attrs;
 
+    private RetrySpec retry;
+
     public String getName() {
         return name;
     }
@@ -43,5 +45,8 @@ public class ErrorMapEntry {
     }
     public boolean hasAttr(String attr) {
         return attrs.contains(attr);
+    }
+    public RetrySpec getRetrySpec() {
+        return retry;
     }
 }

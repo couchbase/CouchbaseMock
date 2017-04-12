@@ -17,13 +17,30 @@
 package org.couchbase.mock.memcached.errormap;
 
 import com.google.gson.Gson;
+import org.couchbase.mock.util.ReaderUtils;
 
+import java.io.IOException;
 import java.util.Map;
 
 /**
  * Created by mnunberg on 4/12/17.
  */
 public class ErrorMap {
+    // Opcodes in the existing error map
+    public final static int OPCODE_RETRY_CONSTANT = 0xfff0;
+    public final static int OPCODE_RETRY_LINEAR = 0xfff1;
+    public final static int OPCODE_RETRY_EXPONENTIAL = 0xfff2;
+    public final static ErrorMap DEFAULT_ERRMAP;
+    static {
+        try {
+            String tmp = ReaderUtils.fromResource("errmap/errmap_v1.json");
+            DEFAULT_ERRMAP = ErrorMap.parse(tmp);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
+
+    }
+
     private int version;
     private int revision;
     private Map<String, ErrorMapEntry> errors;
@@ -41,6 +58,6 @@ public class ErrorMap {
     }
 
     public ErrorMapEntry getErrorEntry(int code) {
-        return errors.get(code + "");
+        return errors.get(Integer.toHexString(code));
     }
 }

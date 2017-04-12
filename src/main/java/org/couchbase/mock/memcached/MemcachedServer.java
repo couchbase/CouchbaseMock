@@ -73,6 +73,10 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
             this.opcode = opcode;
             this.timestamp = System.currentTimeMillis();
         }
+        public CommandLogEntry(int opcode, long timestamp) {
+            this.opcode = opcode;
+            this.timestamp = timestamp;
+        }
         public long getMsTimestamp() {
             return timestamp;
         }
