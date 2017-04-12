@@ -14,35 +14,28 @@
  *    limitations under the License.
  */
 package org.couchbase.mock.clientv2;
-import java.net.URI;
-import java.util.ArrayList;
-
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.CouchbaseCluster;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import junit.framework.TestCase;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.couchbase.mock.BucketConfiguration;
 import org.couchbase.mock.CouchbaseMock;
 import org.couchbase.mock.JsonUtils;
 import org.couchbase.mock.client.MockClient;
-import org.apache.http.client.methods.HttpGet;
-import org.couchbase.mock.httpio.HandlerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
+
+import java.util.ArrayList;
 
 public class ClientTest extends TestCase {
     protected final BucketConfiguration bucketConfiguration = new BucketConfiguration();
