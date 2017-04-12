@@ -20,12 +20,30 @@ This is a maven project and most of us use NetBeans with it.
 
 Typically the mock is spawned by passing a `--port` argument as the REST port to
 listen on, and a list of _bucket specifications_ separated by commas. Passing
-`--help` to the CouchbaseMock should show example usage.
+`--help` to the CouchbaseMock should show example usage. If no port is passed,
+it will listen on the REST port of 8091 (and will fail if you already have a
+Couchbase Server running).
 
 By default, the mock will be up and running with the `default` bucket.
 
 Once the mock has been started, it may be used like a normal Couchbase server,
 with clients bootstrapping over HTTP using the port specified as `--port`.
+
+```sh
+java -jar CouchbaseMock-1.4.7.jar --port 9000
+```
+
+and then in another console:
+
+```sh
+cbc cat foo -U http://localhost:9000
+```
+
+If you are using CouchbaseMock in automated testing, the test application
+should open up a control port, pass that port to the mock using the
+`--harakiri-monitor` argument and set `--port` to 0. The randomly assigned
+HTTP port will be received on the control port once. See the
+_Out of Band Commands_ section below.
 
 ## Supported Couchbase Operations
 
