@@ -65,6 +65,9 @@ public class MockCommandDispatcher {
         registerClass(MockCommand.Command.GET_MCPORTS, GetMCPortsHandler.class);
         registerClass(MockCommand.Command.REGEN_VBCOORDS, RegenCoordsHandler.class);
         registerClass(MockCommand.Command.RESET_QUERYSTATE, ResetQueryStateHandler.class);
+        registerClass(MockCommand.Command.START_CMDLOG, StartCmdLogCommandHandler.class);
+        registerClass(MockCommand.Command.STOP_CMDLOG, StopCmdLogCommandHandler.class);
+        registerClass(MockCommand.Command.GET_CMDLOG, GetCmdLogCommandHandler.class);
     }
 
 

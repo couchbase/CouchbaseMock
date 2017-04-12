@@ -37,10 +37,7 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.security.AccessControlException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -65,7 +62,24 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
     private int hiccupOffset = 0;
     private int truncateLimit = 0;
     private boolean cccpEnabled = false;
+    private final List<CommandLogEntry> commandLog = new ArrayList<CommandLogEntry>();
+    private boolean shouldLogCommands = false;
 
+
+    public static class CommandLogEntry {
+        private final int opcode;
+        private final long timestamp;
+        CommandLogEntry(int opcode) {
+            this.opcode = opcode;
+            this.timestamp = System.currentTimeMillis();
+        }
+        public long getMsTimestamp() {
+            return timestamp;
+        }
+        public int getOpcode() {
+            return opcode;
+        }
+    }
 
     public class FailMaker {
         private ErrorCode code = ErrorCode.SUCCESS;
@@ -470,6 +484,10 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
             throws IOException {
         try {
 
+            if (shouldLogCommands) {
+                commandLog.add(new CommandLogEntry(cmd.getOpcode()));
+            }
+
             ErrorCode failcode = failmaker.getFailCode();
             if (failcode != ErrorCode.SUCCESS) {
                 client.sendResponse(new BinaryResponse(cmd, failcode));
@@ -587,5 +605,18 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
             }
         }
         return null;
+    }
+
+    public void startLog() {
+        shouldLogCommands = true;
+    }
+
+    public void stopLog() {
+        shouldLogCommands = false;
+        commandLog.clear();
+    }
+
+    public List<CommandLogEntry> getLogs() {
+        return commandLog;
     }
 }

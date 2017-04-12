@@ -20,6 +20,7 @@ import com.google.gson.JsonObject;
 import org.couchbase.mock.Bucket;
 import org.couchbase.mock.CouchbaseMock;
 import org.couchbase.mock.control.CommandStatus;
+import org.couchbase.mock.control.MissingRequiredFieldException;
 import org.couchbase.mock.control.MockCommand;
 import org.jetbrains.annotations.NotNull;
 
@@ -34,7 +35,15 @@ abstract public class BucketCommandHandler extends MockCommand {
     int idx;
 
     public @NotNull CommandStatus execute(@NotNull CouchbaseMock mock, @NotNull Command command, @NotNull JsonObject payload) {
+        if (payload == null) {
+            throw new MissingRequiredFieldException("payload");
+        }
+        if (!payload.has("idx")) {
+            throw new MissingRequiredFieldException("idx");
+        }
+
         idx = payload.get("idx").getAsInt();
+
         String bucketStr = "default";
         if (payload.has("bucket")) {
             bucketStr = payload.get("bucket").getAsString();

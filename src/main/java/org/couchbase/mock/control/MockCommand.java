@@ -66,7 +66,10 @@ public abstract class MockCommand {
         SET_CCCP,
         GET_MCPORTS,
         REGEN_VBCOORDS,
-        RESET_QUERYSTATE
+        RESET_QUERYSTATE,
+        START_CMDLOG,
+        STOP_CMDLOG,
+        GET_CMDLOG
     }
 
     /**
