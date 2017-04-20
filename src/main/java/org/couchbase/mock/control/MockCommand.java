@@ -69,7 +69,9 @@ public abstract class MockCommand {
         RESET_QUERYSTATE,
         START_CMDLOG,
         STOP_CMDLOG,
-        GET_CMDLOG
+        GET_CMDLOG,
+        START_RETRY_VERIFY,
+        CHECK_RETRY_VERIFY
     }
 
     /**

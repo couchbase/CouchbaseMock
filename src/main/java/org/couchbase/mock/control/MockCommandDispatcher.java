@@ -68,6 +68,8 @@ public class MockCommandDispatcher {
         registerClass(MockCommand.Command.START_CMDLOG, StartCmdLogCommandHandler.class);
         registerClass(MockCommand.Command.STOP_CMDLOG, StopCmdLogCommandHandler.class);
         registerClass(MockCommand.Command.GET_CMDLOG, GetCmdLogCommandHandler.class);
+        registerClass(MockCommand.Command.START_RETRY_VERIFY, StartRetryVerifyComandHandler.class);
+        registerClass(MockCommand.Command.CHECK_RETRY_VERIFY, CheckRetryVerifyCommandHandler.class);
     }
 
 
