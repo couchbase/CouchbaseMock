@@ -26,8 +26,6 @@ import java.nio.ByteBuffer;
  * Created by mnunberg on 10/9/15.
  */
 public class BinarySubdocMultiMutationCommand extends BinarySubdocMultiCommand {
-    private boolean hasMkdoc = false;
-
     public BinarySubdocMultiMutationCommand(ByteBuffer header) throws ProtocolException {
         super(header);
     }
@@ -45,20 +43,10 @@ public class BinarySubdocMultiMutationCommand extends BinarySubdocMultiCommand {
             bodyBuffer.get(value);
             Operation subdocOp = BinarySubdocCommand.toSubdocOpcode(CommandCode.valueOf(bOp));
             specs.add(new MultiSpec(subdocOp, new String(path), new String(value), flags));
-            if ((flags & BinarySubdocCommand.FLAG_MKDOC) != 0) {
-                hasMkdoc = true;
-            }
         }
-    }
-
-    public final boolean hasMkdocFlag() {
-        return hasMkdoc;
     }
 
     public final String getRootType() {
-        if (!hasMkdocFlag()) {
-            return null;
-        }
         for (MultiSpec spec : specs) {
             String rootString = Executor.getRootType(spec.getPath(), spec.getOp());
             if (rootString != null) {

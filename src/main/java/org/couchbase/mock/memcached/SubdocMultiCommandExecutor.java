@@ -17,7 +17,6 @@
 package org.couchbase.mock.memcached;
 
 import org.couchbase.mock.memcached.SubdocCommandExecutor.ResultInfo;
-import org.couchbase.mock.memcached.client.CommandBuilder;
 import org.couchbase.mock.memcached.protocol.*;
 import org.couchbase.mock.subdoc.Operation;
 
@@ -131,9 +130,12 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
         private ResultInfo handleMutationSpecInner(Operation op, String input,
                                                    BinarySubdocMultiMutationCommand.MultiSpec spec)
                 throws MutationError {
-
+            byte specFlags = spec.getFlags();
+            if ((command.getSubdocDocFlags() & BinarySubdocCommand.DOCFLAG_CREATEMASK) != 0) {
+                specFlags |= BinarySubdocCommand.PATHFLAG_MKDIR_P;
+            }
             ResultInfo rsi = SubdocCommandExecutor.executeSubdocOperation(op, input, spec.getPath(),
-                    spec.getValue(), spec.getFlags());
+                    spec.getValue(), specFlags);
             if (rsi.getStatus() != ErrorCode.SUCCESS) {
                 throw new MutationError(rsi.getStatus());
             }
@@ -151,7 +153,7 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
                 return sendMutationError(ErrorCode.SUBDOC_INVALID_COMBO, index);
             }
 
-            boolean isXattr = (spec.getFlags() & BinarySubdocCommand.FLAG_XATTR_PATH) != 0;
+            boolean isXattr = (spec.getFlags() & BinarySubdocCommand.PATHFLAG_XATTR) != 0;
             ResultInfo rsi;
             try {
                 if (isXattr) {
@@ -287,7 +289,7 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
             }
 
             BinarySubdocMultiMutationCommand mcmd = (BinarySubdocMultiMutationCommand)cmd;
-            if (!mcmd.hasMkdocFlag()) {
+            if ((mcmd.getSubdocDocFlags() & (BinarySubdocCommand.DOCFLAG_CREATEMASK)) == 0) {
                 client.sendResponse(new BinaryResponse(cmd, ErrorCode.KEY_ENOENT));
                 return;
             }
@@ -302,6 +304,12 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
             cx = new ExecutorContext(cmd, client, newItem, cache, true);
 
         } else {
+            if (cmd instanceof BinarySubdocMultiMutationCommand) {
+                if ((((BinarySubdocMultiMutationCommand) cmd).getSubdocDocFlags() & BinarySubdocCommand.DOCFLAG_ADD) != 0) {
+                    client.sendResponse(new BinaryResponse(cmd, ErrorCode.KEY_EEXISTS));
+                    return;
+                }
+            }
             cx = new ExecutorContext(cmd, client, existing, cache, false);
         }
 

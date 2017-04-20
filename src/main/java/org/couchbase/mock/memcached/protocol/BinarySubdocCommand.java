@@ -27,10 +27,14 @@ import java.util.Map;
 public class BinarySubdocCommand extends BinaryCommand {
 
     private final Operation subdocOp;
-    public final static byte FLAG_MKDIR_P = 0x01;
-    public final static byte FLAG_MKDOC = 0x02;
-    public final static byte FLAG_XATTR_PATH = 0x04;
-    public final static byte FLAG_EXPAND_MACROS = 0x10;
+    public final static byte PATHFLAG_MKDIR_P = 0x01;
+    public final static byte PATHFLAG_XATTR = 0x04;
+    public final static byte PATHFLAG_EXPAND_MACROS = 0x10;
+
+    public final static byte DOCFLAG_MKDOC = 0x01;
+    public final static byte DOCFLAG_ADD = 0x02;
+    public final static byte DOCFLAG_CREATEMASK = DOCFLAG_MKDOC | DOCFLAG_ADD;
+    public final static byte DOCFLAG_ACCESS_DELETED = 0x04;
 
     private final static Map<CommandCode, Operation> opMap = new HashMap<CommandCode, Operation>();
     static {
@@ -50,8 +54,14 @@ public class BinarySubdocCommand extends BinaryCommand {
 
     BinarySubdocCommand(ByteBuffer header) throws ProtocolException {
         super(header);
-        if (extraLength != 3 && extraLength != 7) {
-            throw new ProtocolException("Extras must be 3 or 7");
+        switch (extraLength) {
+            case 3: // standard header(3) [path + pathflags]
+            case 4: // standard header(3) + docflags(1)
+            case 7: // standard header(3) + expiry(4)
+            case 8: // standard header(3) + expiry(4) + docflags(1)
+                break;
+            default:
+            throw new ProtocolException("Extras must be 3, 4, 7, or 8");
         }
 
         subdocOp = toSubdocOpcode(getComCode());
@@ -64,8 +74,23 @@ public class BinarySubdocCommand extends BinaryCommand {
         return opMap.get(op);
     }
 
-    public byte getSubdocFlags() {
+    public byte getSubdocPathFlags() {
         return bodyBuffer.get(2);
+    }
+
+    public byte getSubdocDocFlags() {
+        switch (extraLength) {
+            case 3:
+                return 0;
+            case 4:
+                return bodyBuffer.get(3);
+            case 7:
+                return 8;
+            case 8:
+                return bodyBuffer.get(7);
+            default:
+                return 0;
+        }
     }
 
     public Operation getSubdocOp() {

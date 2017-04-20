@@ -3,7 +3,6 @@ package org.couchbase.mock.memcached.client;
 import org.couchbase.mock.memcached.protocol.BinaryHelloCommand;
 import org.couchbase.mock.memcached.protocol.BinarySubdocCommand;
 import org.couchbase.mock.memcached.protocol.CommandCode;
-import org.couchbase.mock.memcached.protocol.ErrorCode;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -51,7 +50,7 @@ public class CommandBuilder {
             this.flags = (byte)flags;
         }
         public MultiMutationSpec(CommandCode op, String path, String value, boolean create) {
-            this(op, path, value, create ? BinarySubdocCommand.FLAG_MKDIR_P : 0x0);
+            this(op, path, value, create ? BinarySubdocCommand.PATHFLAG_MKDIR_P : 0x0);
         }
         public MultiMutationSpec(CommandCode op, String path, String value) {
             this(op, path, value, false);
@@ -105,14 +104,26 @@ public class CommandBuilder {
         return this;
     }
 
-    public CommandBuilder subdoc(byte[] sdPath, byte[] sdValue, int sdFlags, int expiry) {
-        int numExtras = expiry == 0 ? 3 : 7;
+    public CommandBuilder subdoc(byte[] sdPath, byte[] sdValue, int sdFlags, int docflags, int expiry) {
+        int numExtras = 3;
+        if (expiry != 0) {
+            numExtras += 4;
+        }
+
+        if (docflags != 0) {
+            numExtras ++;
+        }
+
         ByteBuffer extrasBuf = ByteBuffer.allocate(numExtras);
         extrasBuf.putShort((short)sdPath.length);
         extrasBuf.put((byte)sdFlags);
 
         if (expiry != 0) {
             extrasBuf.putInt(expiry);
+        }
+
+        if (docflags != 0) {
+            extrasBuf.put((byte)docflags);
         }
 
         if (sdValue == null) {
@@ -129,18 +140,18 @@ public class CommandBuilder {
     }
 
     public CommandBuilder subdoc(byte[] sdPath) {
-        return subdoc(sdPath, null, 0, 0);
+        return subdoc(sdPath, null, 0, 0, 0);
     }
 
     public CommandBuilder subdoc(byte[] sdPath, byte[] sdValue) {
-        return subdoc(sdPath, sdValue, 0, 0);
+        return subdoc(sdPath, sdValue, 0, 0, 0);
     }
     public CommandBuilder subdoc(String sdPath, String sdValue) {
         return subdoc(sdPath.getBytes(), sdValue.getBytes());
     }
 
     public CommandBuilder subdoc(byte[] sdPath, byte[] sdValue, int sdFlags) {
-        return subdoc(sdPath, sdValue, sdFlags, 0);
+        return subdoc(sdPath, sdValue, sdFlags, 0,0);
     }
 
     public CommandBuilder subdoc(String sdPath, String sdValue, int sdFlags) {
@@ -204,10 +215,22 @@ public class CommandBuilder {
         return bao.toByteArray();
     }
 
-    public CommandBuilder subdocMultiMutation(int expiry, MultiMutationSpec... specs) {
+    public CommandBuilder subdocMultiMutation(int expiry, int docflags, MultiMutationSpec... specs) {
+        int allocLen = 0;
         if (expiry != -1) {
-            ByteBuffer bb = ByteBuffer.allocate(4);
-            bb.putInt(expiry);
+            allocLen = 4;
+        }
+        if (docflags != 0) {
+            allocLen++;
+        }
+        if (allocLen > 0) {
+            ByteBuffer bb = ByteBuffer.allocate(allocLen);
+            if (expiry != -1) {
+                bb.putInt(expiry);
+            }
+            if (docflags != 0) {
+                bb.put((byte)docflags);
+            }
             extras(bb.array());
         }
         value(subdocMultiMutationPayload(specs));
@@ -215,7 +238,7 @@ public class CommandBuilder {
     }
 
     public CommandBuilder subdocMultiMutation(MultiMutationSpec... specs) {
-        return subdocMultiMutation(-1, specs);
+        return subdocMultiMutation(-1, 0, specs);
     }
 
     public static byte[] buildHello(String name, BinaryHelloCommand.Feature... features) {

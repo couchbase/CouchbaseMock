@@ -26,6 +26,7 @@ import java.util.List;
 public abstract class BinarySubdocMultiCommand extends BinaryCommand {
     private int expiryTime;
     private boolean hasExpiry;
+    private byte docFlags;
     protected final List<MultiSpec> specs = new ArrayList<MultiSpec>();
 
     public BinarySubdocMultiCommand(ByteBuffer header) throws ProtocolException {
@@ -35,14 +36,34 @@ public abstract class BinarySubdocMultiCommand extends BinaryCommand {
     @Override
     public void process() throws ProtocolException {
         bodyBuffer.rewind();
-        if (extraLength == 0) {
-            expiryTime = 0;
-            hasExpiry = false;
-        } else if (extraLength == 4) {
-            expiryTime = bodyBuffer.getInt(0);
-            hasExpiry = true;
-        } else {
-            throw new ProtocolException("Extras must be 0 or 4!");
+        switch (extraLength) {
+            case 0:
+                expiryTime = 0;
+                docFlags = 0;
+                hasExpiry = false;
+                break;
+
+            case 1:
+                expiryTime = 0;
+                hasExpiry = false;
+                docFlags = bodyBuffer.get(0);
+                break;
+
+            case 4:
+                expiryTime = bodyBuffer.getInt(0);
+                hasExpiry = true;
+                docFlags = 0;
+                break;
+
+            case 5:
+                expiryTime = bodyBuffer.getInt(0);
+                hasExpiry = true;
+                docFlags = bodyBuffer.get(4);
+                break;
+
+            default:
+                throw new ProtocolException("Extras must be 0, 1, 4, or 5!");
+
         }
 
         try {
@@ -69,6 +90,10 @@ public abstract class BinarySubdocMultiCommand extends BinaryCommand {
         } else {
             return oldExpiry;
         }
+    }
+
+    public byte getSubdocDocFlags() {
+        return docFlags;
     }
 
     public static class MultiSpec {

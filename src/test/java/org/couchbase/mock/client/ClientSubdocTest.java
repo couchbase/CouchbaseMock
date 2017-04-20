@@ -112,7 +112,7 @@ public class ClientSubdocTest extends ClientBaseTest {
 
         CommandBuilder cb = new CommandBuilder(CommandCode.SUBDOC_DICT_UPSERT)
                 .key(docId, vbId)
-                .subdoc("foo".getBytes(), "123".getBytes(), 0, 30);
+                .subdoc("foo".getBytes(), "123".getBytes(), 0, 0, 30);
         ClientResponse resp = client.sendRequest(cb);
         assertTrue(resp.success());
 
@@ -335,7 +335,7 @@ public class ClientSubdocTest extends ClientBaseTest {
         // Test with a simple store operation
         CommandBuilder cb = new CommandBuilder(CommandCode.SUBDOC_DICT_UPSERT)
                 .key(docId, vbId)
-                .subdoc("hello".getBytes(), "true".getBytes(), BinarySubdocCommand.FLAG_MKDOC);
+                .subdoc("hello".getBytes(), "true".getBytes(), 0, BinarySubdocCommand.DOCFLAG_MKDOC, 0);
         ClientResponse resp = client.sendRequest(cb);
         assertTrue(resp.getStatus().toString(), resp.success());
 
@@ -347,13 +347,13 @@ public class ClientSubdocTest extends ClientBaseTest {
         // Try it again
         cb = new CommandBuilder(CommandCode.SUBDOC_DICT_UPSERT)
                 .key(docId, vbId)
-                .subdoc("world".getBytes(), "false".getBytes(), BinarySubdocCommand.FLAG_MKDOC);
+                .subdoc("world".getBytes(), "false".getBytes(), BinarySubdocCommand.DOCFLAG_MKDOC);
         resp = client.sendRequest(cb);
         assertTrue(resp.success());
 
         cb = new CommandBuilder(CommandCode.SUBDOC_DICT_UPSERT)
                 .key(docId, vbId)
-                .subdoc("deep.path".getBytes(), "123".getBytes(), BinarySubdocCommand.FLAG_MKDOC);
+                .subdoc("deep.path".getBytes(), "123".getBytes(), BinarySubdocCommand.DOCFLAG_MKDOC);
         resp = client.sendRequest(cb);
         assertTrue(resp.success());
 
@@ -375,9 +375,9 @@ public class ClientSubdocTest extends ClientBaseTest {
         removeItem(multiDocId, vbId);
         CommandBuilder cb = new CommandBuilder(CommandCode.SUBDOC_MULTI_MUTATION)
                 .key(multiDocId, vbId)
-                .subdocMultiMutation(
-                        new MultiMutationSpec(CommandCode.SUBDOC_ARRAY_PUSH_FIRST, "arr", "true", BinarySubdocCommand.FLAG_MKDOC),
-                        new MultiMutationSpec(CommandCode.SUBDOC_DICT_UPSERT, "pth.nest", "false", BinarySubdocCommand.FLAG_MKDOC)
+                .subdocMultiMutation(-1, BinarySubdocCommand.DOCFLAG_MKDOC,
+                        new MultiMutationSpec(CommandCode.SUBDOC_ARRAY_PUSH_FIRST, "arr", "true"),
+                        new MultiMutationSpec(CommandCode.SUBDOC_DICT_UPSERT, "pth.nest", "false")
                 );
         ClientResponse resp = client.sendRequest(cb);
         assertTrue(resp.getStatus().toString(), resp.success());
@@ -398,7 +398,7 @@ public class ClientSubdocTest extends ClientBaseTest {
         storeItem(docId, vbId, "{}");
         CommandBuilder cb = new CommandBuilder(CommandCode.SUBDOC_DICT_UPSERT)
                 .key(docId, vbId)
-                .subdoc("user.myAttr", "123", BinarySubdocCommand.FLAG_XATTR_PATH|BinarySubdocCommand.FLAG_MKDIR_P);
+                .subdoc("user.myAttr", "123", BinarySubdocCommand.PATHFLAG_XATTR |BinarySubdocCommand.PATHFLAG_MKDIR_P);
         ClientResponse resp = client.sendRequest(cb);
         assertTrue(resp.getStatus().toString(), resp.success());
 
@@ -425,7 +425,7 @@ public class ClientSubdocTest extends ClientBaseTest {
                 .subdocMultiMutation(
                         new MultiMutationSpec(CommandCode.SUBDOC_DICT_UPSERT, "bodyPath", "123"),
                         new MultiMutationSpec(CommandCode.SUBDOC_DICT_UPSERT, "attrPath", "123",
-                                BinarySubdocCommand.FLAG_MKDIR_P|BinarySubdocCommand.FLAG_XATTR_PATH));
+                                BinarySubdocCommand.PATHFLAG_MKDIR_P |BinarySubdocCommand.PATHFLAG_XATTR));
         ClientResponse resp = client.sendRequest(cb);
         assertTrue(resp.success());
 

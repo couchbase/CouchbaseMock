@@ -42,7 +42,7 @@ public class SubdocCommandExecutor implements CommandExecutor {
     static ResultInfo executeSubdocOperation(Operation op, String doc, String path, String value, byte flags) {
         ErrorCode ec = ErrorCode.SUCCESS;
         Result result = null;
-        boolean isMkdirP = (flags & (BinarySubdocCommand.FLAG_MKDIR_P | BinarySubdocCommand.FLAG_MKDOC)) != 0;
+        boolean isMkdirP = (flags & (BinarySubdocCommand.PATHFLAG_MKDIR_P | BinarySubdocCommand.DOCFLAG_MKDOC)) != 0;
         try {
             result = Executor.execute(doc, path, op, value, isMkdirP);
         } catch (PathNotFoundException ex2) {
@@ -86,8 +86,8 @@ public class SubdocCommandExecutor implements CommandExecutor {
         VBucketStore cache = server.getCache(cmd);
         SubdocItem subdocInput = command.getItem();
 
-        boolean isMkdoc = (command.getSubdocFlags() & BinarySubdocCommand.FLAG_MKDOC) != 0;
-        boolean isXattr = (command.getSubdocFlags() & BinarySubdocCommand.FLAG_XATTR_PATH) != 0;
+        boolean isMkdoc = (command.getSubdocDocFlags() & BinarySubdocCommand.DOCFLAG_CREATEMASK) != 0;
+        boolean isXattr = (command.getSubdocPathFlags() & BinarySubdocCommand.PATHFLAG_XATTR) != 0;
         boolean needsCreate = false;
 
         if (isMkdoc && !subdocOp.isCreative()) {
@@ -119,6 +119,11 @@ public class SubdocCommandExecutor implements CommandExecutor {
             existing = new Item(subdocInput.getKeySpec(), 0, 0, newBody, newAttr, 0);
             needsCreate = true;
 
+        } else {
+            if ((command.getSubdocDocFlags() & BinarySubdocCommand.DOCFLAG_ADD) != 0) {
+                client.sendResponse(new BinaryResponse(command, ErrorCode.KEY_EEXISTS));
+                return;
+            }
         }
 
         if (command.getCas() != 0) {
@@ -144,7 +149,7 @@ public class SubdocCommandExecutor implements CommandExecutor {
                 new String(curValue),
                 subdocInput.getPath(),
                 new String(subdocInput.getValue()),
-                command.getSubdocFlags());
+                command.getSubdocPathFlags());
 
         if (rci.getStatus() != ErrorCode.SUCCESS) {
             client.sendResponse(new BinaryResponse(cmd, rci.getStatus()));
