@@ -51,6 +51,8 @@ import java.util.logging.Logger;
  * @author Trond Norbye
  */
 public class MemcachedServer extends Thread implements BinaryProtocolHandler {
+    private static final Logger logger = Logger.getLogger(MemcachedServer.class.getName());
+
     private final Storage storage;
     private final long bootTime;
     private final String hostname;
@@ -66,14 +68,20 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
     private int truncateLimit = 0;
     private boolean cccpEnabled = false;
 
-
     public class FailMaker {
         private ErrorCode code = ErrorCode.SUCCESS;
         private int remaining = 0;
+        private Map<CommandCode, ErrorCode> errorPerCmdType = new HashMap<CommandCode, ErrorCode>();
+        private Map<CommandCode, Integer> countPerCmdType = new HashMap<CommandCode, Integer>();
 
         public void update(ErrorCode code, int count) {
             this.code = code;
             this.remaining = count;
+        }
+
+        public void update(CommandCode cmdCode, ErrorCode code, int count) {
+            errorPerCmdType.put(cmdCode, code);
+            countPerCmdType.put(cmdCode, count);
         }
 
         public ErrorCode getFailCode() {
@@ -83,7 +91,22 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
             if (this.remaining > 0) {
                 this.remaining--;
             }
+            logger.finer("For all cmds " + code + " count:" + remaining);
             return code;
+        }
+
+        public ErrorCode getFailCode(CommandCode cmdCode) {
+            Integer cmdRemaining = countPerCmdType.get(cmdCode);
+            ErrorCode cmdErrCode = errorPerCmdType.get(cmdCode);
+
+            if (cmdRemaining == null || cmdErrCode == null || cmdRemaining == 0) {
+                return getFailCode();
+            }
+            if (cmdRemaining > 0) {
+                countPerCmdType.put(cmdCode, cmdRemaining - 1);
+            }
+            logger.finer("For " + cmdCode + " error:" + cmdErrCode + " count:" + cmdRemaining);
+            return cmdErrCode;
         }
     }
 
@@ -202,8 +225,10 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
         return storage;
     }
 
-    public void updateFailMakerContext(ErrorCode code, int count) {
-        failmaker.update(code, count);
+    public void updateFailMakerContext(CommandCode cmdName, ErrorCode code, int count) {
+        logger.fine("Adding fail handler cmdName:" + cmdName + " count:" + count + " code:" + count);
+        if (cmdName == null) failmaker.update(code, count);
+        else failmaker.update(cmdName, code, count);
     }
 
     @SuppressWarnings("SpellCheckingInspection")
@@ -332,7 +357,7 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
                     }
                 } catch (IOException e) {
 
-                    Logger.getLogger(MemcachedServer.class.getName()).log(Level.SEVERE, null, e);
+                    logger.log(Level.SEVERE, null, e);
                 }
             }
         } finally {
@@ -340,7 +365,7 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
                 server.close();
                 selector.close();
             } catch (IOException e) {
-                Logger.getLogger(MemcachedServer.class.getName()).log(Level.SEVERE, null, e);
+                logger.log(Level.SEVERE, null, e);
             }
         }
     }
@@ -470,7 +495,7 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
             throws IOException {
         try {
 
-            ErrorCode failcode = failmaker.getFailCode();
+            ErrorCode failcode = failmaker.getFailCode(cmd.getComCode());
             if (failcode != ErrorCode.SUCCESS) {
                 client.sendResponse(new BinaryResponse(cmd, failcode));
             } else if (authOk(cmd, client)) {
@@ -549,7 +574,7 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
             }
             server.run();
         } catch (IOException e) {
-            Logger.getLogger(MemcachedServer.class.getName()).log(Level.SEVERE, "Fatal error! failed to create socket: ", e);
+            logger.log(Level.SEVERE, "Fatal error! failed to create socket: ", e);
         }
     }
 

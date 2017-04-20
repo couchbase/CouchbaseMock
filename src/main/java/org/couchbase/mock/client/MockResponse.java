@@ -18,11 +18,14 @@ package org.couchbase.mock.client;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author mnunberg
  */
 public class MockResponse {
+    private static final Logger logger = Logger.getLogger(MockResponse.class.getName());
     private final JsonObject response;
 
     public MockResponse(String jsonString) {
@@ -30,7 +33,12 @@ public class MockResponse {
     }
 
     public boolean isOk() {
-        return response.get("status").getAsString().toLowerCase().equals("ok");
+        boolean result = response.get("status").getAsString().toLowerCase().equals("ok");
+        if (!result) {
+          logger.fine("Response : " + response.get("status").getAsString());
+          logger.fine("Error : " + getErrorMessage());
+        }
+        return result;
     }
 
     public String getErrorMessage() {
