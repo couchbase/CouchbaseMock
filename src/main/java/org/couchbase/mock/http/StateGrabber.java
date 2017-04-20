@@ -58,6 +58,9 @@ class StateGrabber {
 
         poolInfo.put("buckets", buckets);
         buckets.put("uri", "/pools/" + mock.getPoolName() + "/buckets");
+        buckets.put("streamingUri", "/pools/" + mock.getPoolName() + "/bucketsStreaming/");
+        buckets.put("terseBucketsBase", "/pools/" + mock.getPoolName() + "/buckets/");
+        buckets.put("terseStreamingBucketsBase", "/pools/" + mock.getPoolName() + "/bucketsStreaming/");
         return JsonUtils.encode(poolInfo);
     }
 
