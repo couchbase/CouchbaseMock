@@ -2,6 +2,7 @@ package org.couchbase.mock.memcached.errormap;
 
 import junit.framework.TestCase;
 import org.couchbase.mock.memcached.MemcachedServer.CommandLogEntry;
+import org.couchbase.mock.memcached.protocol.ErrorCode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +14,7 @@ public class VerifierTest extends TestCase {
   public void testConstant() throws Exception {
     // Get the spec
     ErrorMap mm = ErrorMap.DEFAULT_ERRMAP;
-    int opcode = ErrorMap.OPCODE_RETRY_CONSTANT;
+    int opcode = ErrorCode.DUMMY_RETRY_CONSTANT.value();
 
     // Fill the log
     List<CommandLogEntry> entries = new ArrayList<CommandLogEntry>();
@@ -42,12 +43,12 @@ public class VerifierTest extends TestCase {
       curTime += spec.getInterval();
     }
 
-    Verifier.verifyPriv(entries, spec, opcode);
+    Verifier.verifyThrow(entries, spec, opcode);
   }
 
   public void testLinear() throws Exception {
     ErrorMap mm = ErrorMap.DEFAULT_ERRMAP;
-    int opcode = ErrorMap.OPCODE_RETRY_LINEAR;
+    int opcode = ErrorCode.DUMMY_RETRY_LINEAR.value();
     ErrorMapEntry mmEntry = mm.getErrorEntry(opcode);
     assertNotNull(mmEntry);
     RetrySpec spec = mmEntry.getRetrySpec();
@@ -79,12 +80,12 @@ public class VerifierTest extends TestCase {
 //      System.err.printf("Waiting %d\n", incrBy);
       curTime += incrBy;
     }
-    Verifier.verifyPriv(entries, spec, opcode);
+    Verifier.verifyThrow(entries, spec, opcode);
   }
 
   public void testExponential() throws Exception {
     ErrorMap mm = ErrorMap.DEFAULT_ERRMAP;
-    int opcode = ErrorMap.OPCODE_RETRY_EXPONENTIAL;
+    int opcode = ErrorCode.DUMMY_RETRY_EXPONENTIAL.value();
     ErrorMapEntry mmEntry = mm.getErrorEntry(opcode);
     assertNotNull(mmEntry);
     RetrySpec spec = mmEntry.getRetrySpec();
@@ -118,6 +119,6 @@ public class VerifierTest extends TestCase {
       curTime += incrBy;
     }
 
-    Verifier.verifyPriv(entries, spec, opcode);
+    Verifier.verifyThrow(entries, spec, opcode);
   }
 }

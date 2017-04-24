@@ -21,10 +21,12 @@ import org.couchbase.mock.CouchbaseMock;
 import org.couchbase.mock.control.CommandStatus;
 import org.couchbase.mock.memcached.MemcachedServer.CommandLogEntry;
 import org.couchbase.mock.memcached.errormap.ErrorMap;
+import org.couchbase.mock.memcached.errormap.ErrorMapEntry;
 import org.couchbase.mock.memcached.errormap.RetrySpec;
 import org.couchbase.mock.memcached.errormap.Verifier;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -36,16 +38,20 @@ public class CheckRetryVerifyCommandHandler extends  BucketCommandHandler {
     public CommandStatus execute(@NotNull CouchbaseMock mock, @NotNull Command command, @NotNull JsonObject payload) {
         super.execute(mock, command, payload);
         int opcode = payload.get("opcode").getAsInt();
+        int errcode = payload.get("errcode").getAsInt();
+
         // Get the logs from the server
-        List<CommandLogEntry> entries = bucket.getServers()[idx].getLogs();
+        List<CommandLogEntry> entries = new ArrayList<CommandLogEntry>(bucket.getServers()[idx].getLogs());
         bucket.getServers()[idx].stopLog();
 
         // Get the spec for the error code
-        RetrySpec spec = ErrorMap.DEFAULT_ERRMAP.getErrorEntry(opcode).getRetrySpec();
-        if (!Verifier.verify(entries, spec, opcode)) {
-            return new CommandStatus().fail();
-        } else {
+        RetrySpec spec = ErrorMap.DEFAULT_ERRMAP.getErrorEntry(errcode).getRetrySpec();
+
+        try {
+            Verifier.verifyThrow(entries, spec, opcode);
             return new CommandStatus();
+        } catch (Verifier.VerificationException ex) {
+            return new CommandStatus().fail(ex);
         }
     }
 }

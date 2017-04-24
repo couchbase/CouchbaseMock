@@ -53,4 +53,14 @@ public class RetrySpec {
     public int getCeil() {
         return ceil;
     }
+
+    public boolean isConstant() {
+        return getStrategy().equals(CONSTANT);
+    }
+    public boolean isLinear() {
+        return getStrategy().equals(LINEAR);
+    }
+    public boolean isExponential() {
+        return getStrategy().equals(EXPONENTIAL);
+    }
 }

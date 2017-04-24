@@ -13,9 +13,12 @@ public abstract class Verifier {
   public static final String STRATEGY_LINEAR = "linear";
   public static final String STRATEGY_CONSTANT = "constant";
 
+  // How much "fuzz" to allow in testing, when considering any slowness in the mock.
+  public static final long FUZZ_MS = 10;
+
   protected CommandLogEntry firstEntry = null;
 
-  static class VerificationException extends Exception {
+  public static class VerificationException extends Exception {
     public VerificationException(String message) {
       super(message);
     }
@@ -28,14 +31,14 @@ public abstract class Verifier {
   }
 
   static class DurationExceededException extends VerificationException {
-    public DurationExceededException() {
-      super("Retries lasted for too long (`max-duration`)");
+    public DurationExceededException(long expected, long actual) {
+      super("Retries lasted for too long (`max-duration`). Expected: " + expected + ". Actual: " + actual);
     }
   }
 
   protected void verify(List<CommandLogEntry> entries, RetrySpec spec) throws VerificationException {
     if (entries.size() < 2) {
-      throw new VerificationException("No commands executed");
+      throw new VerificationException("No commands executed: Log has " + entries.size());
     }
 
     firstEntry = entries.get(0);
@@ -45,9 +48,8 @@ public abstract class Verifier {
     long endTime = entries.get(entries.size()-1).getMsTimestamp();
     long duration = endTime - beginTime;
 
-    if (duration + 2 >  spec.getMaxDuration()) {
-//      System.err.printf("Max duration is %d. Duration is %d\n", spec.getMaxDuration(), duration);
-      throw new DurationExceededException();
+    if (duration > spec.getMaxDuration() + FUZZ_MS) {
+      throw new DurationExceededException(spec.getMaxDuration(), duration);
     }
 
     if (entries.get(0).getMsTimestamp() - firstEntry.getMsTimestamp() < spec.getAfter() - 1) {
@@ -60,7 +62,7 @@ public abstract class Verifier {
 
   public static class ConstantVerifier extends Verifier {
     @Override
-     protected void verifyImpl(List<CommandLogEntry> entries, RetrySpec spec) throws VerificationException{
+     protected void verifyImpl(List<CommandLogEntry> entries, RetrySpec spec) throws VerificationException {
       CommandLogEntry last = null;
       // Iterate through each log entry. There should be _interval_ between retries.
       for (CommandLogEntry ent : entries) {
@@ -69,19 +71,25 @@ public abstract class Verifier {
           continue;
         }
         long duration = ent.getMsTimestamp() - last.getMsTimestamp();
-        if (Math.abs(duration - spec.getInterval()) > 2) {
-          throw new VerificationException("Too much spacing between intervals: " + duration);
+        if (Math.abs(duration - spec.getInterval()) > FUZZ_MS) {
+          throw new VerificationException("Too much spacing between intervals: " + duration + ". Expected: " + spec.getInterval());
         }
         last = ent;
       }
 
       // Determine when our *last* retry attempt is supposed to be. This is to ensure
       // that we're not skimping on retries.
-      long lastRetryExpected = firstEntry.getMsTimestamp() + spec.getMaxDuration();
+      long lastRetryExpected = entries.get(0).getMsTimestamp() + spec.getMaxDuration();
       lastRetryExpected -= spec.getInterval();
-      // Now get the actual last retry timestamp
-      if (Math.abs(last.getMsTimestamp() - lastRetryExpected) > 50) {
-        throw new VerificationException("Not enough/too many retries");
+
+      // We should tolerate the client skipping the last beat
+      long lastIntervalMaxDiff = FUZZ_MS;
+      assert last != null;
+      if (Math.abs(last.getMsTimestamp() - lastRetryExpected) > lastIntervalMaxDiff) {
+        throw new VerificationException(
+                String.format("Not enough/too many retries. Last TS=%d. Last expected=%d. Diff=%d. MaxDiff=%d",
+                        last.getMsTimestamp(), lastRetryExpected, Math.abs(lastRetryExpected - last.getMsTimestamp()),
+                        lastIntervalMaxDiff));
       }
     }
   }
@@ -94,7 +102,7 @@ public abstract class Verifier {
         long duration = entries.get(i).getMsTimestamp() - entries.get(i-1).getMsTimestamp();
         long expectedDuration = spec.getInterval() * i;
         expectedDuration = Math.min(spec.getCeil(), expectedDuration);
-        if (Math.abs(duration - expectedDuration) > 2) {
+        if (Math.abs(duration - expectedDuration) > FUZZ_MS) {
           throw new VerificationException("Linear backoff failed!. " + " duration: " + duration + ", expected: " + expectedDuration);
         }
       }
@@ -111,15 +119,14 @@ public abstract class Verifier {
         if (spec.getCeil() > 0) {
           expectedDuration = Math.min(spec.getCeil(), expectedDuration);
         }
-        if (Math.abs(duration - expectedDuration) > 2) {
+        if (Math.abs(duration - expectedDuration) > FUZZ_MS) {
           throw new VerificationException("Exponential backoff failed. Duration: " + duration + ", expected: " + expectedDuration);
         }
       }
     }
   }
 
-
-  static void verifyPriv(List<CommandLogEntry> allEntries, RetrySpec spec, int opcode) throws VerificationException {
+  public static void verifyThrow(List<CommandLogEntry> allEntries, RetrySpec spec, int opcode) throws VerificationException {
     List<CommandLogEntry> entries = new ArrayList<CommandLogEntry>();
     for (CommandLogEntry entry : allEntries) {
       if (entry.getOpcode() == opcode) {
@@ -143,7 +150,7 @@ public abstract class Verifier {
   }
   public static boolean verify(List<CommandLogEntry> entries, RetrySpec spec, int opcode) {
     try {
-      verifyPriv(entries, spec, opcode);
+      verifyThrow(entries, spec, opcode);
       return true;
     } catch (VerificationException ex) {
       return false;

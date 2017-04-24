@@ -15,7 +15,10 @@
  */
 package org.couchbase.mock.client;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import com.sun.corba.se.spi.orb.OperationFactory;
 import org.couchbase.mock.memcached.protocol.ErrorCode;
 
 public class OpfailRequest extends MockRequest {
@@ -24,13 +27,22 @@ public class OpfailRequest extends MockRequest {
         setName("opfail");
         payload.put("code", code.value());
         payload.put("count", count);
-        payload.put("servers", servers);
+        if (servers != null) {
+            payload.put("servers", servers);
+        }
     }
 
     public OpfailRequest(ErrorCode code, int count) {
-        super();
-        setName("opfail");
-        payload.put("code", code.value());
-        payload.put("count", count);
+        this(code, count, null);
+    }
+
+    private static List<Integer> singleServerList(int index) {
+        List<Integer> ret = new ArrayList<Integer>();
+        ret.add(index);
+        return ret;
+    }
+
+    public OpfailRequest(ErrorCode code, int count, int server) {
+        this(code, count, singleServerList(server));
     }
 }

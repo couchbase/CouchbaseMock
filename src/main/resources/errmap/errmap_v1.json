@@ -279,9 +279,9 @@
     ],
     "retry": {
      "strategy": "constant",
-     "interval": 25,
-     "after": 10,
-     "max-duration": 1500
+     "interval": 10,
+     "after": 50,
+     "max-duration": 500
     }
    },
    "fff1": {
@@ -292,9 +292,9 @@
     ],
     "retry": {
      "strategy": "linear",
-     "interval": 10,
-     "after": 10,
-     "max-duration": 1500,
+     "interval": 2,
+     "after": 50,
+     "max-duration": 500,
      "ceil": 50
     }
    },
@@ -307,9 +307,9 @@
     "retry": {
      "strategy": "exponential",
      "interval": 2,
-     "after": 10,
-     "max-duration": 1500,
-     "ceil": 500
+     "after": 50,
+     "max-duration": 500,
+     "ceil": 200
     }
    }
   }
