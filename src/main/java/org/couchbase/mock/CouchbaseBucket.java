@@ -69,10 +69,10 @@ public class CouchbaseBucket extends Bucket {
 
             if (cluster != null) {
                 // Add 'couchApiBase'
-                String capiBase = String.format("http://%s:%d/%s", cluster.getHttpHost(), cluster.getHttpPort(), name);
+                String capiBase = String.format("http://%s:%d/%s", server.getHostname(), cluster.getHttpPort(), name);
                 nodeInfo.put("couchApiBase", capiBase);
 
-                svcsTopLevel.put("hostname", cluster.getHttpHost());
+                svcsTopLevel.put("hostname", server.getHostname());
                 svcsInfo.put("mgmt", cluster.getHttpPort());
                 svcsInfo.put("n1ql", cluster.getHttpPort());
                 svcsInfo.put("capi", cluster.getHttpPort());
