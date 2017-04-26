@@ -34,6 +34,13 @@ public class Retryer {
         this.cmd = cmd;
     }
 
+    private static void accuSleep(long sleepTime) throws InterruptedException {
+        long timeAfterSleep = System.currentTimeMillis() + sleepTime;
+        while (System.currentTimeMillis() < timeAfterSleep) {
+            Thread.sleep(0, 500000);
+        }
+    }
+
     /**
      * Runs until the retry duration is reached
      */
@@ -72,10 +79,7 @@ public class Retryer {
             if (now + sleepTime > endTime) {
                 break;
             } else {
-                long timeAfterSleep = now + sleepTime;
-                while (System.currentTimeMillis() < timeAfterSleep) {
-                    Thread.sleep(1);
-                }
+                accuSleep(sleepTime);
                 now = System.currentTimeMillis();
             }
         }
