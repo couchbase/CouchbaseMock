@@ -572,3 +572,99 @@ This is equivalent to calling `persist` and `cache` on the same item
 For each affected node, remove the item from both its _Disk_ and _Cache_
 stores. This is equivalent to calling `uncache` and `unpersist` on the same
 item
+
+## Retry Verification Commands
+
+The mock can verify whether a client library is properly retrying commands.
+To use this feature, your client must have the `XERROR` feature enabled and
+implemented.
+
+The usage overview is this:
+
+1. Setup retry verification recording before running your test
+2. Instruct the mock to inject failures (using the `OPFAIL` command), which
+   will trigger the retry. Note that you can inject failures using other means
+   as well (e.g. internally at the client level)
+3. Execute your operations with failure injection enabled (per step 2)
+4. Once the operations are done, request the mock to verify behavior. This will
+   also implicitly undo whatever setup was done in step 1.
+
+You can set up retry verification using the `START_RETRY_VERIFY` command. This command requires the server index and the bucket name to use for verification.
+
+Because the precise server index must be known, you will need to determine the vBucket
+for the key that will be used in the commands.
+
+```python
+# Pseudo code
+test_key = "HelloWorld"
+vbucket = vbucket_map(test_key)
+server = server_map(vbucket)
+```
+
+In order to trigger the correct error retry behavior, you will need to use special error return codes which are further defined in the Mock itself. If the client is
+properly implemented and functioning correctly, it should not have explicit
+knowledge of these error codes - but should be handled dynamically by using the
+corresponding entry in the error map.
+
+The error codes are:
+
+* `0xfff0` - defines a *constant* retry strategy
+* `0xfff1` - defines a *linear* retry strategy
+* `0xfff2` - defines an *exponential* retry strategy.
+
+You should test with all three error codes to verify that the client can correctly
+handle all three strategies.
+
+Then set up the `OPFAIL` command to be directed towards the correct server:
+
+```python
+cmd = {
+    'command': 'OPFAIL',
+    'payload': {
+        'servers': [server],
+        'bucket': 'default',
+        'count': 100,
+        'code': 0xfff1
+    }
+}
+```
+
+And then set up the `START_RETRY_VERIFY` command.
+
+```python
+cmd = {
+    'command': 'START_RETRY_VERIFY',
+    'payload': {
+        'idx': server,  # Numeric index of server
+        'bucket': 'default'
+    }
+}
+```
+
+Note that `START_RETRY_VERIFY` only tells the server to start recording command logs.
+
+Once the `OPFAIL` is sent, any command directed to the specified servers will cause
+the server to return the error code specified. For the purposes of testing, a simple
+`GET` (`0x00`) command should suffice to trigger the error behavior.
+
+The command should eventually fail on the client side - after multiple internal retries by the client.
+
+Once the client has failed the command, you should query the mock to determine if
+the client had behaved as expected. This is done using the `CHECK_RETRY_VERIFY` command.
+
+The `CHECK_RETRY_VERIFY` command requires the server index (from above), the error, and the opcode of the test operation. If verification succeeded, the command will
+return success, and if it failed, it will return an error with some additional
+information.
+
+The format of `CHECK_RETRY_VERIFY` is:
+
+```python
+'command': {
+    'payload': {
+        'idx': server,
+        'bucket': 'default',
+        'errcode': 0xfff1,
+        'opcode': 0x00
+    }
+}
+```
