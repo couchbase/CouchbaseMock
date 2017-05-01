@@ -81,12 +81,16 @@ public class BinarySubdocCommand extends BinaryCommand {
     public byte getSubdocDocFlags() {
         switch (extraLength) {
             case 3:
+                // Path,PathFlags
                 return 0;
             case 4:
+                // Path, PathFlags, DocFlags
                 return bodyBuffer.get(3);
             case 7:
-                return 8;
+                // Path, PathFlags, Expiry
+                return 0;
             case 8:
+                // Path, PathFlags, Expiry, DocFlags
                 return bodyBuffer.get(7);
             default:
                 return 0;
