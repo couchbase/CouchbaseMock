@@ -318,14 +318,10 @@ public class VBucketStore {
      * @return The converted value
      */
     public static int convertExpiryTime(int original) {
-        if (original == 0) {
+        if (original == 0 || original > THIRTY_DAYS) {
             return original;
-        } else if (original > THIRTY_DAYS) {
-            return original + (int)Info.getClockOffset();
         }
 
         return (int)((new Date().getTime() / 1000) + original + Info.getClockOffset());
     }
-
-
 }
