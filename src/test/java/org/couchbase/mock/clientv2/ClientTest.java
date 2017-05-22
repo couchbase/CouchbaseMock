@@ -48,20 +48,7 @@ public class ClientTest extends TestCase {
 
     protected void getPortInfo(String bucket) throws Exception {
         httpPort = couchbaseMock.getHttpPort();
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("http").setHost("localhost").setPort(httpPort).setPath("mock/get_mcports")
-                .setParameter("bucket", bucket);
-        HttpGet request = new HttpGet(builder.build());
-        HttpClient client = HttpClientBuilder.create().build();
-        HttpResponse response = client.execute(request);
-        int status = response.getStatusLine().getStatusCode();
-        if (status < 200 || status > 300) {
-            throw new ClientProtocolException("Unexpected response status: " + status);
-        }
-        String rawBody = EntityUtils.toString(response.getEntity());
-        JsonObject respObject = JsonUtils.GSON.fromJson(rawBody, JsonObject.class);
-        JsonArray portsArray = respObject.getAsJsonArray("payload");
-        carrierPort = portsArray.get(0).getAsInt();
+        carrierPort = couchbaseMock.getCarrierPort(bucket);
     }
 
     protected void createMock(@NotNull String name, @NotNull String password) throws Exception {
