@@ -1,10 +1,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.couchbase.mock</groupId>
+  <groupId>com.couchbase.mock</groupId>
   <artifactId>CouchbaseMock</artifactId>
   <packaging>jar</packaging>
-  <!-- Please update src/main/java/org/couchbase/mock/Info.java when you change the version number -->
+  <!-- Please update src/main/java/com.couchbase.mock/Info.java when you change the version number -->
   <version>1.5.0</version>
   <name>CouchbaseMock</name>
   <url>http://maven.apache.org</url>
@@ -63,8 +63,8 @@
           <configuration>
         <archive>
           <manifest>
-            <mainClass>org.couchbase.mock.CouchbaseMock</mainClass>
-            <packageName>org.couchbase.mock</packageName>
+            <mainClass>com.couchbase.mock.CouchbaseMock</mainClass>
+            <packageName>com.couchbase.mock</packageName>
           </manifest>
           <manifestEntries>
             <mode>development</mode>
