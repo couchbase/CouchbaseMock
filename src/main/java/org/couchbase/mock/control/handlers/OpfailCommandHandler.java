@@ -49,7 +49,7 @@ public class OpfailCommandHandler extends MockCommand {
         }
 
         int count = payload.get("count").getAsInt();
-        int iCode = payload.get("code").getAsInt();
+        short iCode = payload.get("code").getAsShort();
 
         for (ErrorCode rc : ErrorCode.values()) {
             if (iCode == rc.value()) {
