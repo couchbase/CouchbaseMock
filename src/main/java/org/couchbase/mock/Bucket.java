@@ -425,4 +425,14 @@ public abstract class Bucket {
     public CouchbaseMock getCluster() {
         return cluster;
     }
+
+    public int getCarrierPort() {
+        List<MemcachedServer> aServers =  activeServers();
+        if (aServers.isEmpty()) {
+            throw new RuntimeException("No servers exist for bucket");
+        }
+        MemcachedServer aServer = aServers.get(0);
+        return aServer.getPort();
+    }
+
 }
