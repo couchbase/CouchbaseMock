@@ -30,9 +30,11 @@ public abstract class Verifier {
   public static final String STRATEGY_CONSTANT = "constant";
 
   // How much "fuzz" to allow in testing, when considering any slowness in the mock.
-  public static final long FUZZ_MS = 10;
+  public static final long DEFAULT_FUZZ_MS = 10;
 
   protected MemcachedServer.CommandLogEntry firstEntry = null;
+
+  protected long fuzzMillis = DEFAULT_FUZZ_MS;
 
   public static class VerificationException extends Exception {
     public VerificationException(String message) {
@@ -64,7 +66,7 @@ public abstract class Verifier {
     long endTime = entries.get(entries.size()-1).getMsTimestamp();
     long duration = endTime - beginTime;
 
-    if (duration > spec.getMaxDuration() + FUZZ_MS) {
+    if (duration > spec.getMaxDuration() + fuzzMillis) {
       throw new DurationExceededException(spec.getMaxDuration(), duration);
     }
 
@@ -87,7 +89,7 @@ public abstract class Verifier {
           continue;
         }
         long duration = ent.getMsTimestamp() - last.getMsTimestamp();
-        if (Math.abs(duration - spec.getInterval()) > FUZZ_MS) {
+        if (Math.abs(duration - spec.getInterval()) > fuzzMillis) {
           throw new VerificationException("Too much spacing between intervals: " + duration + ". Expected: " + spec.getInterval());
         }
         last = ent;
@@ -97,8 +99,9 @@ public abstract class Verifier {
       // that we're not skimping on retries.
       long lastRetryExpected = entries.get(0).getMsTimestamp() + ((entries.size() -1) * spec.getInterval()) + spec.getAfter();
 
-      // We should tolerate some fuzz for each retry
-      long lastIntervalMaxDiff = FUZZ_MS * (entries.size());
+      // We should tolerate the client skipping the last beat
+      long lastIntervalMaxDiff = fuzzMillis;
+
       assert last != null;
       if (Math.abs(last.getMsTimestamp() - lastRetryExpected) > lastIntervalMaxDiff) {
         throw new VerificationException(
@@ -117,7 +120,7 @@ public abstract class Verifier {
         long duration = entries.get(i).getMsTimestamp() - entries.get(i-1).getMsTimestamp();
         long expectedDuration = spec.getInterval() * i;
         expectedDuration = Math.min(spec.getCeil(), expectedDuration);
-        if (Math.abs(duration - expectedDuration) > FUZZ_MS) {
+        if (Math.abs(duration - expectedDuration) > fuzzMillis) {
           throw new VerificationException("Linear backoff failed!. " + " duration: " + duration + ", expected: " + expectedDuration);
         }
       }
@@ -134,7 +137,7 @@ public abstract class Verifier {
         if (spec.getCeil() > 0) {
           expectedDuration = Math.min(spec.getCeil(), expectedDuration);
         }
-        if (Math.abs(duration - expectedDuration) > FUZZ_MS) {
+        if (Math.abs(duration - expectedDuration) > fuzzMillis) {
           throw new VerificationException("Exponential backoff failed. Duration: " + duration + ", expected: " + expectedDuration);
         }
       }
@@ -142,6 +145,10 @@ public abstract class Verifier {
   }
 
   public static void verifyThrow(List<MemcachedServer.CommandLogEntry> allEntries, RetrySpec spec, int opcode) throws VerificationException {
+    verifyThrow(allEntries, spec, opcode, 0);
+  }
+
+  public static void verifyThrow(List<MemcachedServer.CommandLogEntry> allEntries, RetrySpec spec, int opcode, long fuzzMillis) throws VerificationException {
     List<MemcachedServer.CommandLogEntry> entries = new ArrayList<MemcachedServer.CommandLogEntry>();
     for (MemcachedServer.CommandLogEntry entry : allEntries) {
       if (entry.getOpcode() == opcode) {
@@ -160,9 +167,14 @@ public abstract class Verifier {
       throw new RuntimeException("No such verifier strategy!");
     }
 
+    if (fuzzMillis > 0) {
+      verifier.fuzzMillis = fuzzMillis;
+    }
+
     verifier.verify(entries, spec);
 
   }
+
   public static boolean verify(List<MemcachedServer.CommandLogEntry> entries, RetrySpec spec, int opcode) {
     try {
       verifyThrow(entries, spec, opcode);

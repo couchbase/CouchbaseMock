@@ -38,6 +38,10 @@ public class CheckRetryVerifyCommandHandler extends  BucketCommandHandler {
         super.execute(mock, command, payload);
         int opcode = payload.get("opcode").getAsInt();
         int errcode = payload.get("errcode").getAsInt();
+        long fuzzms = 0;
+        if (payload.has("fuzz_ms")) {
+            fuzzms = payload.get("fuzz_ms").getAsLong();
+        }
 
         // Get the logs from the server
         List<MemcachedServer.CommandLogEntry> entries = new ArrayList<MemcachedServer.CommandLogEntry>(bucket.getServers()[idx].getLogs());
@@ -47,7 +51,7 @@ public class CheckRetryVerifyCommandHandler extends  BucketCommandHandler {
         RetrySpec spec = ErrorMap.DEFAULT_ERRMAP.getErrorEntry(errcode).getRetrySpec();
 
         try {
-            Verifier.verifyThrow(entries, spec, opcode);
+            Verifier.verifyThrow(entries, spec, opcode, fuzzms);
             return new CommandStatus();
         } catch (Verifier.VerificationException ex) {
             return new CommandStatus().fail(ex);
