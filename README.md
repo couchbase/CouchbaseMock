@@ -608,9 +608,9 @@ corresponding entry in the error map.
 
 The error codes are:
 
-* `0xfff0` - defines a *constant* retry strategy
-* `0xfff1` - defines a *linear* retry strategy
-* `0xfff2` - defines an *exponential* retry strategy.
+* `0x7ff0` - defines a *constant* retry strategy
+* `0x7ff1` - defines a *linear* retry strategy
+* `0x7ff2` - defines an *exponential* retry strategy.
 
 You should test with all three error codes to verify that the client can correctly
 handle all three strategies.
@@ -624,7 +624,7 @@ cmd = {
         'servers': [server],
         'bucket': 'default',
         'count': 100,
-        'code': 0xfff1
+        'code': 0x7ff1
     }
 }
 ```
@@ -663,7 +663,7 @@ The format of `CHECK_RETRY_VERIFY` is:
     'payload': {
         'idx': server,
         'bucket': 'default',
-        'errcode': 0xfff1,
+        'errcode': 0x7ff1,
         'opcode': 0x00
     }
 }
