@@ -95,11 +95,10 @@ public abstract class Verifier {
 
       // Determine when our *last* retry attempt is supposed to be. This is to ensure
       // that we're not skimping on retries.
-      long lastRetryExpected = entries.get(0).getMsTimestamp() + spec.getMaxDuration();
-      lastRetryExpected -= spec.getInterval();
+      long lastRetryExpected = entries.get(0).getMsTimestamp() + ((entries.size() -1) * spec.getInterval()) + spec.getAfter();
 
-      // We should tolerate the client skipping the last beat
-      long lastIntervalMaxDiff = FUZZ_MS;
+      // We should tolerate some fuzz for each retry
+      long lastIntervalMaxDiff = FUZZ_MS * (entries.size());
       assert last != null;
       if (Math.abs(last.getMsTimestamp() - lastRetryExpected) > lastIntervalMaxDiff) {
         throw new VerificationException(
