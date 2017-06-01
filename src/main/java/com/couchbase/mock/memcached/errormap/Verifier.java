@@ -62,9 +62,8 @@ public abstract class Verifier {
     firstEntry = entries.get(0);
     entries.remove(0);
 
-    long beginTime = entries.get(0).getMsTimestamp();
     long endTime = entries.get(entries.size()-1).getMsTimestamp();
-    long duration = endTime - beginTime;
+    long duration = endTime - firstEntry.getMsTimestamp();
 
     if (duration > spec.getMaxDuration() + fuzzMillis) {
       throw new DurationExceededException(spec.getMaxDuration(), duration);
@@ -90,7 +89,8 @@ public abstract class Verifier {
 
       // Determine when our *last* retry attempt is supposed to be. This is to ensure
       // that we're not skimping on retries.
-      long lastRetryExpected = entries.get(0).getMsTimestamp() + spec.getMaxDuration();
+      // Note that max-duration is inclusive of any 'after' interval
+      long lastRetryExpected = entries.get(0).getMsTimestamp() + (spec.getMaxDuration() - (spec.getInterval() + spec.getAfter()));
 
       // We should tolerate the client skipping the last beat
       long lastIntervalMaxDiff = fuzzMillis;

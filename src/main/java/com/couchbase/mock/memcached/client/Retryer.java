@@ -48,7 +48,7 @@ public class Retryer {
         // Send the initial command:
         client.sendRequest(cmd);
 
-        long endTime = System.currentTimeMillis() + spec.getMaxDuration() + spec.getAfter();
+        long endTime = System.currentTimeMillis() + spec.getMaxDuration();
 
         // Wait until the 'after' time
         Thread.sleep(spec.getAfter());

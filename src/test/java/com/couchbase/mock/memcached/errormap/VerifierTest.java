@@ -54,7 +54,7 @@ public class VerifierTest extends TestCase {
     entries.add(new MemcachedServer.CommandLogEntry(opcode, 0));
 
     int curTime = spec.getAfter();
-    while (curTime < spec.getMaxDuration() + spec.getAfter()) {
+    while (curTime < spec.getMaxDuration()) {
       entries.add(new MemcachedServer.CommandLogEntry(opcode, curTime));
       curTime += spec.getInterval();
     }
@@ -85,7 +85,7 @@ public class VerifierTest extends TestCase {
 
     int curTime = spec.getAfter();
     int numAttempts = 0;
-    while (curTime < spec.getMaxDuration() + spec.getAfter()) {
+    while (curTime < spec.getMaxDuration()) {
 //      System.err.printf("Adding spec at %d\n", curTime);
       entries.add(new MemcachedServer.CommandLogEntry(opcode, curTime));
       numAttempts ++;
@@ -125,7 +125,7 @@ public class VerifierTest extends TestCase {
     entries.add(new MemcachedServer.CommandLogEntry(opcode, 0));
     int curTime = spec.getAfter();
 
-    while (curTime < spec.getAfter() + spec.getMaxDuration()) {
+    while (curTime < spec.getMaxDuration()) {
       entries.add(new MemcachedServer.CommandLogEntry(opcode, curTime));
       numAttempts++;
       int incrBy = (int)Math.pow(spec.getInterval(), numAttempts);
