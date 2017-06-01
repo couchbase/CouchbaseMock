@@ -668,3 +668,68 @@ The format of `CHECK_RETRY_VERIFY` is:
     }
 }
 ```
+
+The mock uses three basic tests to determine if the retries were done according
+to spec.
+
+1. The first retry should be within `after` (+/- fuzz) ms of the first
+   error response.
+2. The spacing between each interval should be as prescribed (strategy dependent)
+3. The *last* retry should not exceed past (+/- fuzz) ms of the
+   `max-duration` interval from the receipt of the first error.
+
+The "fuzz" is defined as 10ms. Fuzz is required because not all operating
+environments (virtual machines, interpreters, clocks, etc.) can guarantee
+accuracy/resolution within 1 ms.
+
+
+In the following example, conformance to the `constant` strategy is
+verified. We will assume that the clock begins at 0 ms
+
+
+Here is the spec:
+
+```
+{
+    "strategy": "constant",
+    "max-duration": 500,
+    "interval": 10,
+    "after": 50
+}
+```
+
+* 0ms: Client receives error response
+* 53ms: After waiting ~50ms, the client sends the first retry. This should
+  be within fuzz+`after` of first error response.
+* 60ms: After waiting ~10ms, the client sends the next retry.
+  This should be within fuzz+`interval` of the previous retry attempt.
+* 69ms: Retry
+* 75ms: Retry
+....
+* 484ms: Client sends retry...
+* 497ms: Client sends last retry. Should be within interval+fuzz of
+  +500ms (Time since first error response)
+
+
+Verifying this with linear or exponential retries is similar. Here's an example
+for linear retry:
+
+```
+{
+    "strategy": "linear",
+    "max-duration": 500,
+    "interval": 10,
+    "after": 50,
+    "ceil": 200
+}
+```
+
+* 0ms: Client receives error response
+* 55ms: Client sends first retry
+* 62ms: Client sends next retry (interval is 10ms)
+* 87ms: Client sends next retry (interval is now 20ms)
+* 109ms: Client sends next retry (interval is now 30ms)
+* 142ms: Client sends next retry (interval is now 40ms)
+* 195ms: Client sends next retry (interval is now 50ms)
+* 256ms: Client sends next retry (interval is now 60ms)
+...
