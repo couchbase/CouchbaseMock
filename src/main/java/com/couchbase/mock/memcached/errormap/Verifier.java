@@ -81,32 +81,26 @@ public abstract class Verifier {
   public static class ConstantVerifier extends Verifier {
     @Override
      protected void verifyImpl(List<MemcachedServer.CommandLogEntry> entries, RetrySpec spec) throws VerificationException {
-      MemcachedServer.CommandLogEntry last = null;
-      // Iterate through each log entry. There should be _interval_ between retries.
-      for (MemcachedServer.CommandLogEntry ent : entries) {
-        if (last == null) {
-          last = ent;
-          continue;
-        }
-        long duration = ent.getMsTimestamp() - last.getMsTimestamp();
+      for (int i = 1; i < entries.size(); i++) {
+        long duration = entries.get(i).getMsTimestamp() - entries.get(i-1).getMsTimestamp();
         if (Math.abs(duration - spec.getInterval()) > fuzzMillis) {
           throw new VerificationException("Too much spacing between intervals: " + duration + ". Expected: " + spec.getInterval());
         }
-        last = ent;
       }
 
       // Determine when our *last* retry attempt is supposed to be. This is to ensure
       // that we're not skimping on retries.
-      long lastRetryExpected = entries.get(0).getMsTimestamp() + ((entries.size() -1) * spec.getInterval()) + spec.getAfter();
+      long lastRetryExpected = entries.get(0).getMsTimestamp() + spec.getMaxDuration();
 
       // We should tolerate the client skipping the last beat
       long lastIntervalMaxDiff = fuzzMillis;
 
-      assert last != null;
-      if (Math.abs(last.getMsTimestamp() - lastRetryExpected) > lastIntervalMaxDiff) {
+      long lastTimestamp = entries.get(entries.size() - 1).getMsTimestamp();
+
+      if (Math.abs(lastTimestamp - lastRetryExpected) > lastIntervalMaxDiff) {
         throw new VerificationException(
                 String.format("Not enough/too many retries. Last TS=%d. Last expected=%d. Diff=%d. MaxDiff=%d",
-                        last.getMsTimestamp(), lastRetryExpected, Math.abs(lastRetryExpected - last.getMsTimestamp()),
+                        lastTimestamp, lastRetryExpected, Math.abs(lastRetryExpected - lastTimestamp),
                         lastIntervalMaxDiff));
       }
     }
