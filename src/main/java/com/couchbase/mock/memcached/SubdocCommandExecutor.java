@@ -148,11 +148,16 @@ public class SubdocCommandExecutor implements CommandExecutor {
             }
         }
 
+        byte pathflags = command.getSubdocPathFlags();
+        if (isMkdoc) {
+            pathflags |= BinarySubdocCommand.PATHFLAG_MKDIR_P;
+        }
+
         ResultInfo rci = executeSubdocOperation(subdocOp,
                 new String(curValue),
                 subdocInput.getPath(),
                 new String(subdocInput.getValue()),
-                command.getSubdocPathFlags());
+                pathflags);
 
         if (rci.getStatus() != ErrorCode.SUCCESS) {
             client.sendResponse(new BinaryResponse(cmd, rci.getStatus()));
