@@ -433,6 +433,9 @@ public class Executor {
                     }
                 }
 
+            case GET_FULLDOC:
+                return new Result(match.getRoot(), null);
+
             case REPLACE:
                 replace(value);
                 return new Result(null, match.getRoot());
@@ -469,6 +472,9 @@ public class Executor {
             case COUNTER:
                 return new Result(counter(), match.getRoot());
 
+            case WRITE_FULLDOC:
+                return new Result(null, value);
+
             default:
                 throw new RuntimeException("Unknown operation!");
         }
@@ -483,6 +489,8 @@ public class Executor {
                     return "[]";
                 default:
                     return null;
+                case WRITE_FULLDOC:
+                    return "{}";
             }
         }
 

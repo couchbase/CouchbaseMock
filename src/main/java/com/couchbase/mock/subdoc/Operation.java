@@ -22,7 +22,7 @@ package com.couchbase.mock.subdoc;
 public enum Operation {
     GET(0xC5), EXISTS(0xC6), GET_COUNT(0xD2), DICT_ADD(0xC7), DICT_UPSERT(0xC8), REMOVE(0xC9), REPLACE(0xCA),
     ARRAY_PREPEND(0xCB), ARRAY_APPEND(0xCC), ARRAY_INSERT(0xCD), ADD_UNIQUE(0xCE), COUNTER(0xCD),
-    INVALID(0xFF);
+    INVALID(0xFF), WRITE_FULLDOC(0xE1), GET_FULLDOC(0xE2);
 
     private final int value;
 
@@ -40,6 +40,7 @@ public enum Operation {
             case EXISTS:
             case REMOVE:
             case GET_COUNT:
+            case GET_FULLDOC:
                 return false;
             default:
                 return true;
@@ -62,6 +63,7 @@ public enum Operation {
             case GET:
             case EXISTS:
             case GET_COUNT:
+            case GET_FULLDOC:
                 return false;
             default:
                 return true;
@@ -77,6 +79,7 @@ public enum Operation {
             case GET:
             case GET_COUNT:
             case COUNTER:
+            case GET_FULLDOC:
                 return true;
             default:
                 return false;
