@@ -28,7 +28,7 @@ import com.couchbase.mock.memcached.ObsKeyState;
  * The status for this command is always successful.
  *
  * See the BinaryObserveCommand for more information.
- * @author Mark Nunberg <mnunberg@haskalah.org>
+ * @author Mark Nunberg
  */
 public class BinaryObserveResponse extends BinaryResponse {
 

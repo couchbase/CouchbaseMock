@@ -21,7 +21,7 @@ import java.util.List;
 /**
  * Small class to ease command line parsing.
  *
- * @author Trond Norbye <trond.norbye@gmail.com>
+ * @author Trond Norbye
  * @version 1.0
  */
 public class Getopt {

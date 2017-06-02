@@ -84,10 +84,11 @@ public class CouchbaseMock {
 
     /**
      * Start the monitor
+     * see {@link #startHarakiriMonitor(java.net.InetSocketAddress, boolean)}
+     *
      * @param host A string in the form of {@code host:port}
      * @param terminate Whether the application should terminate on disconnect
-     * @throws IOException
-     * @see {@link #startHarakiriMonitor(java.net.InetSocketAddress, boolean)}
+     * @throws IOException If an I/O error occurs
      */
     public void startHarakiriMonitor(String host, boolean terminate) throws IOException {
         int idx = host.indexOf(':');
@@ -104,6 +105,8 @@ public class CouchbaseMock {
      * Return the list of active buckets for inspection. The returned value should not be modified.
      * Use {@link #createBucket(BucketConfiguration)} or {@link #removeBucket(String)} to add or
      * remove buckets
+     *
+     * @return active buckets
      */
     public Map<String, Bucket> getBuckets() {
         return Collections.unmodifiableMap(buckets);
@@ -223,7 +226,7 @@ public class CouchbaseMock {
      *             port will be selected
      * @param configs A list of bucket configurations which the mock should start when the
      *                {@link #start()} method is called.
-     * @throws IOException
+     * @throws IOException if an I/O error occurs
      */
     public CouchbaseMock(int port, List<BucketConfiguration> configs) throws IOException {
         this.port = port;
@@ -246,7 +249,7 @@ public class CouchbaseMock {
 
     /**
      * Wait until all initial buckets have been created
-     * @throws InterruptedException
+     * @throws InterruptedException if interrupted
      */
     public void waitForStartup() throws InterruptedException {
         startupLatch.await();
@@ -278,9 +281,10 @@ public class CouchbaseMock {
 
     /**
      * Create a new bucket, and start it.
+     *
      * @param config The bucket configuration to use
      * @throws BucketAlreadyExistsException If the bucket already exists
-     * @throws IOException
+     * @throws IOException If an I/O error occurs
      */
     public void createBucket(BucketConfiguration config) throws BucketAlreadyExistsException, IOException {
         if (!config.validate()) {
@@ -341,7 +345,7 @@ public class CouchbaseMock {
      * @param docsFile Document file to load
      * @param monitorAddress Monitor address
      * @param useBeerSample Whether to load the beer-sample bucket
-     * @throws IOException
+     * @throws IOException if an I/O error occurs
      */
     private void start(String docsFile, String monitorAddress, boolean useBeerSample) throws IOException {
         try {
@@ -387,6 +391,7 @@ public class CouchbaseMock {
      * which are configured in the initial configuration list.
      *
      * To stop the cluster, invoke {@link #stop()}
+     * @throws IOException If an I/O error occurs
      */
     public void start() throws IOException {
         start(null, null, false);

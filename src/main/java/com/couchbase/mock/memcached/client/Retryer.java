@@ -21,7 +21,7 @@ import com.couchbase.mock.memcached.errormap.RetrySpec;
 import java.io.IOException;
 
 /**
- * Created by mnunberg on 4/20/17.
+ * @author Mark Nunberg
  */
 public class Retryer {
     final MemcachedClient client;
@@ -43,6 +43,8 @@ public class Retryer {
 
     /**
      * Runs until the retry duration is reached
+     *
+     * @throws Exception if an error occurs
      */
     public void run() throws Exception {
         // Send the initial command:

@@ -29,7 +29,7 @@ import org.jetbrains.annotations.NotNull;
  * This returns information about the current mock's supported
  * command set.
  *
- * @author Mark Nunberg <mnunberg@haskalah.org>
+ * @author Mark Nunberg
  */
 public final class MockInfoCommandHandler extends MockCommand {
     @NotNull

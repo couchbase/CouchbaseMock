@@ -22,7 +22,7 @@ import junit.framework.TestCase;
 /**
  * Tests for bucket spec parser
  *
- * @author Sergey Avseyev <sergey.avseyev@gmail.com>
+ * @author Sergey Avseyev
  */
 public class BucketSpecTest extends TestCase {
     private int numNodes = 100;

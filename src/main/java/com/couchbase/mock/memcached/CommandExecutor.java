@@ -18,7 +18,7 @@ package com.couchbase.mock.memcached;
 import com.couchbase.mock.memcached.protocol.BinaryCommand;
 
 /**
- * @author Trond Norbye <trond.norbye@gmail.com>
+ * @author Trond Norbye
  */
 interface CommandExecutor {
     /**

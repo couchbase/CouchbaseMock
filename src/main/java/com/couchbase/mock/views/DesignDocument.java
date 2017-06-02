@@ -47,7 +47,7 @@ public class DesignDocument {
      *             {@code body} contains a {@code _id} property, then that property will override
      *             {@code name}
      * @return A new design document
-     * @throws DesignParseException
+     * @throws DesignParseException if a design parse error occurs
      */
     public static DesignDocument create(String body, String name) throws DesignParseException {
         DesignDocument doc = new DesignDocument(body);

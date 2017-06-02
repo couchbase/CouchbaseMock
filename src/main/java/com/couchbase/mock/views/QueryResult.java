@@ -65,7 +65,10 @@ public class QueryResult {
         return rowAt(ix).get("key");
     }
 
-    /** Like {@link #keyAt(int)} but casts the key as an integer */
+    /** Like {@link #keyAt(int)} but casts the key as an integer
+     * @param ix index of the row
+     * @return key as int
+     **/
     public int numKeyAt(int ix) {
         return ((Number)keyAt(ix)).intValue();
     }

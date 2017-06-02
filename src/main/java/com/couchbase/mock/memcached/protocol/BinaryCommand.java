@@ -104,7 +104,7 @@ public class BinaryCommand {
     /**
      * Any postprocessing on the body should be done here.
      * Used mainly for observe
-     * @throws ProtocolException
+     * @throws ProtocolException if a protocol error occurs
      */
     public void process() throws ProtocolException {
     }

@@ -32,8 +32,8 @@ import java.util.logging.Logger;
 
 /**
  * Abstract class for all bucket types in Couchbase.
- * @see {@link CouchbaseBucket}
- * @see {@link MemcachedBucket}
+ * see {@link CouchbaseBucket}
+ * see {@link MemcachedBucket}
  *
  * A bucket is instantiated via {@link CouchbaseMock#createBucket(BucketConfiguration)}. The number
  * of servers a bucket has is limited to the amount provided in the {@link BucketConfiguration#numNodes}
@@ -181,10 +181,11 @@ public abstract class Bucket {
 
     /**
      * Create a bucket.
+     *
      * @param mock The cluster this bucket is a member of
      * @param config The configuration for the bucket
      * @return The newly instantiated subclass
-     * @throws IOException
+     * @throws IOException if an I/O error occurs
      */
     public static Bucket create(CouchbaseMock mock, BucketConfiguration config) throws IOException {
           switch (config.type) {
@@ -259,9 +260,9 @@ public abstract class Bucket {
     }
 
     /**
-     * Convenience method to get the JSON-encoded version of the configuration map.
+     * Convenience method to get the JSON-encoded version of the configuration map {@link #getConfigMap()}
      * @return An encoded JSON String
-     * @see {@link #getConfigMap()}
+     *
      */
     public final String getJSON() {
         return JsonUtils.encode(getConfigMap());
@@ -414,17 +415,23 @@ public abstract class Bucket {
         return password;
     }
 
-    /** Get the name of the bucket */
+    /** Get the name of the bucket
+     * @return name
+     * */
     public String getName() {
         return name;
     }
 
-    /** Gets the UUID for the bucket. This is only used to generate the stats response */
+    /** Gets the UUID for the bucket. This is only used to generate the stats response
+     * @return bucket uuid
+     * */
     public String getUUID() {
         return uuid.toString();
     }
 
-    /** Gets the parent {@link CouchbaseMock} object */
+    /** Gets the parent {@link CouchbaseMock} object
+     * @return parent
+     * */
     public CouchbaseMock getCluster() {
         return cluster;
     }

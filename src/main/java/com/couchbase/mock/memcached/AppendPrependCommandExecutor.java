@@ -24,7 +24,7 @@ import com.couchbase.mock.memcached.protocol.ErrorCode;
 /**
  * Implementation of the APPEND[Q] and PREPEND[Q] commands
  *
- * @author Trond Norbye <trond.norbye@gmail.com>
+ * @author Trond Norbye
  */
 class AppendPrependCommandExecutor implements CommandExecutor {
 

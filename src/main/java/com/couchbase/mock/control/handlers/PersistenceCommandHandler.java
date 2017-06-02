@@ -32,7 +32,7 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * Handler for various out-of-band key manipulations
- * @author Mark Nunberg <mnunberg@haskalah.org>
+ * @author Mark Nunberg
  */
 public final class PersistenceCommandHandler extends KeyCommandHandler {
 

@@ -29,7 +29,7 @@ public abstract class AbstractMockClient {
     /**
      * Negotiates the connection between the client and the Mock server.
      *
-     * @throws IOException
+     * @throws IOException if an I/O error occurs
      */
     public void negotiate() throws IOException {
     }
@@ -39,6 +39,7 @@ public abstract class AbstractMockClient {
      *
      * @param req The command to send
      * @return The response received
+     * @throws IOException if an I/O error occurs
      */
     public abstract @NotNull MockResponse request(@NotNull MockRequest req) throws IOException;
 

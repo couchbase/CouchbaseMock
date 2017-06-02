@@ -29,6 +29,24 @@
     </repository>
   </repositories>
 
+  <developers>
+    <developer>
+      <id>mnunberg</id>
+      <name>Mark Nunberg</name>
+      <email>mnunberg@haskalah.org</email>
+    </developer>
+    <developer>
+      <id>trond.norbye</id>
+      <name>Trond Norbye</name>
+      <email>trond.norbye@gmail.com</email>
+    </developer>
+    <developer>
+      <id>avsej</id>
+      <name>Sergey Avseyev</name>
+      <email>sergey@couchbase.com</email>
+    </developer>
+  </developers>
+
   <distributionManagement>
     <repository>
       <id>ssh-repository</id>
@@ -94,6 +112,32 @@
               </artifactSet>
               <finalName>${project.artifactId}-${project.version}</finalName>
             </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>3.0.1</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.10.4</version>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>

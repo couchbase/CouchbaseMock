@@ -45,7 +45,7 @@ import java.util.logging.Logger;
 /**
  * Base test case which uses a client.
  *
- * @author Mark Nunberg <mnunberg@haskalah.org>
+ * @author Mark Nunberg
  */
 public abstract class ClientBaseTest extends TestCase {
     protected final BucketConfiguration bucketConfiguration = new BucketConfiguration();

@@ -75,8 +75,9 @@ public class DocumentLoader {
 
     /**
      * Load documents into the bucket
+     *
      * @param docsFile The path to the ZIP file which contains the documents
-     * @throws IOException
+     * @throws IOException if an I/O error occurs
      */
     public void loadDocuments(String docsFile) throws IOException {
         ZipFile zipFile = new ZipFile(docsFile);
@@ -134,10 +135,12 @@ public class DocumentLoader {
 
     /**
      * Loads the {@code beer-sample} documents from the built-in serialized compressed resource.
+     *
      * @param is The input stream
      * @param bucketName The target bucket into which the docs should be loaded
      * @param mock The cluster
-     * @throws IOException
+     * @throws IOException if an I/O error occurs
+     *
      */
     public static void loadFromSerializedXZ(InputStream is, String bucketName, CouchbaseMock mock) throws IOException {
         XZInputStream xzi = new XZInputStream(is);
@@ -162,7 +165,7 @@ public class DocumentLoader {
     /**
      * Load the {@code `beer-sample`} bucket
      * @param mock The cluster
-     * @throws IOException
+     * @throws IOException if an I/O error occurs
      */
     public static void loadBeerSample(CouchbaseMock mock) throws IOException {
         InputStream iss = CouchbaseMock.class.getClassLoader().getResourceAsStream("views/beer-sample.serialized.xz");
@@ -172,7 +175,7 @@ public class DocumentLoader {
     /**
      * Converts a zip file into a serialized compress resource.
      * @param args The ZIP file
-     * @throws Exception
+     * @throws Exception if an error occurs
      */
     public static void main(String[] args) throws Exception {
         String input = args[0];

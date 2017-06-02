@@ -21,7 +21,7 @@ import com.couchbase.mock.memcached.protocol.CommandCode;
 import com.couchbase.mock.Bucket;
 
 /**
- * @author Sergey Avseyev <sergey.avseyev@gmail.com>
+ * @author Sergey Avseyev
  */
 public class SaslCommandExecutor implements CommandExecutor {
     // http://www.ietf.org/rfc/rfc4616.txt

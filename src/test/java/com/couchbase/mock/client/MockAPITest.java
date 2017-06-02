@@ -35,7 +35,7 @@ import java.util.ArrayList;
 /**
  * Tests for the "extended" Mock API.
  *
- * @author Mark Nunberg <mnunberg@haskalah.org>
+ * @author Mark Nunberg
  */
 public class MockAPITest extends ClientBaseTest {
     MockHttpClient mockHttpClient;

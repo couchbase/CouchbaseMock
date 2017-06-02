@@ -18,7 +18,7 @@ package com.couchbase.mock.memcached.protocol;
 import java.nio.ByteBuffer;
 
 /**
- * @author Trond Norbye <trond.norbye@gmail.com>
+ * @author Trond Norbye
  */
 public class BinaryVersionResponse extends BinaryResponse {
 

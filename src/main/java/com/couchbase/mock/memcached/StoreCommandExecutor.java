@@ -23,7 +23,7 @@ import com.couchbase.mock.memcached.protocol.BinaryStoreResponse;
 import com.couchbase.mock.memcached.protocol.CommandCode;
 
 /**
- * @author Trond Norbye <trond.norbye@gmail.com>
+ * @author Trond Norbye
  */
 public class StoreCommandExecutor implements CommandExecutor {
 

@@ -69,7 +69,9 @@ public class BucketConfiguration {
         hostname = other.hostname;
     }
 
-    /** Gets the {@link #name } */
+    /** Gets the {@link #name }
+     * @return bucket name
+     * */
     public String getName() {
         return name;
     }

@@ -94,12 +94,13 @@ public class View {
     }
 
     /**
-     * Executes the view query with the given parameters
+     * Executes the view query with the given parameters see {@link #executeRaw(Iterable, Configuration)}
+     *
      * @param items The items in the bucket which should be processed via the view
      * @param config The configuration for the view, acting as a filter on the items processed
      * @return A results object which may be inspected
      * @throws QueryExecutionException If there was an error while processing the options
-     * @see {@link #executeRaw(Iterable, Configuration)}
+     *
      */
     public QueryResult execute(Iterable<Item> items, Configuration config) throws QueryExecutionException {
         return new QueryResult(JsonUtils.decodeAsMap(executeRaw(items, config)));
@@ -110,7 +111,7 @@ public class View {
      * @param items The items to be indexed
      * @param config The configuration to use for filters
      * @return A string suitable for returning to a Couchbase client
-     * @throws QueryExecutionException
+     * @throws QueryExecutionException If a query execution error occurs
      */
     public String executeRaw(Iterable<Item> items, Configuration config) throws QueryExecutionException {
         if (config == null) {

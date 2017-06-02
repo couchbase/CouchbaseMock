@@ -21,7 +21,7 @@ import junit.framework.TestCase;
 /**
  * Test the command line parser
  *
- * @author Trond Norbye <trond.norbye@gmail.com>
+ * @author Trond Norbye
  * @version 1.0
  */
 public class GetoptTest extends TestCase {

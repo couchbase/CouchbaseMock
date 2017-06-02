@@ -19,7 +19,7 @@ import java.net.ProtocolException;
 import java.nio.ByteBuffer;
 
 /**
- * @author Trond Norbye <trond.norbye@gmail.com>
+ * @author Trond Norbye
  */
 public class BinaryArithmeticCommand extends BinaryCommand {
 

@@ -17,7 +17,7 @@ package com.couchbase.mock.control;
 
 /**
  *
- * @author Mark Nunberg <mnunberg@haskalah.org>
+ * @author Mark Nunberg
  */
 public class CommandNotFoundException extends RuntimeException {
     public CommandNotFoundException(String msg, Throwable e) {

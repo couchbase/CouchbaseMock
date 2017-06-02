@@ -33,7 +33,7 @@ import com.couchbase.mock.httpio.HandlerUtil;
 
 /**
  *
- * @author Mark Nunberg <mnunberg@haskalah.org>
+ * @author Mark Nunberg
  */
 public class ControlHandler implements HttpRequestHandler {
     private final MockCommandDispatcher dispatcher;

@@ -23,7 +23,7 @@ import com.couchbase.mock.memcached.protocol.BinaryCommand;
 /**
  * Implementation of the callback function for a flush command.
  *
- * @author Trond Norbye <trond.norbye@gmail.com>
+ * @author Trond Norbye
  */
 public class FlushCommandExecutor implements CommandExecutor {
 

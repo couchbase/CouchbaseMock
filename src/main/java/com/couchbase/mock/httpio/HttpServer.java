@@ -106,10 +106,10 @@ public class HttpServer extends Thread {
     }
 
     /**
-     * Set the server's listening address
+     * Set the server's listening address. See {@link #bind(java.nio.channels.ServerSocketChannel)}
+     *
      * @param address The address the server should listen on
      * @throws IOException if a new socket could not be created
-     * @see {@link #bind(java.nio.channels.ServerSocketChannel)}
      */
     public void bind(InetSocketAddress address) throws IOException {
         if (listener != null) {
@@ -121,19 +121,19 @@ public class HttpServer extends Thread {
     }
 
     /**
-     * Set the server's listening socket.
+     * Set the server's listening socket. See {@link #bind(java.net.InetSocketAddress)}.
+     *
      * @param newSock An existing listening socket.
-     * @see {@link #bind(java.net.InetSocketAddress)}
      */
     public void bind(ServerSocketChannel newSock) {
         listener = newSock;
     }
 
     /**
-     * Register a path with a handler
+     * Register a path with a handler. See {@link org.apache.http.protocol.UriHttpRequestHandlerMapper}
+     *
      * @param pattern The path to register
      * @param handler The handler to handle the path
-     * @see {@link org.apache.http.protocol.UriHttpRequestHandlerMapper}
      */
     public void register(String pattern, HttpRequestHandler handler) {
         registry.register(pattern, handler);

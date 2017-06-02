@@ -23,7 +23,7 @@ import com.couchbase.mock.memcached.protocol.ErrorCode;
 /**
  * Implementation of the quit command
  *
- * @author Trond Norbye <trond.norbye@gmail.com>
+ * @author Trond Norbye
  */
 class QuitCommandExecutor implements CommandExecutor {
 

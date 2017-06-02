@@ -17,7 +17,7 @@ package com.couchbase.mock.memcached;
 
 /**
  * This class is used as a key for our Items.
- * @author Mark Nunberg <mnunberg@haskalah.org>
+ * @author Mark Nunberg
  */
 public class KeySpec {
     public final short vbId;

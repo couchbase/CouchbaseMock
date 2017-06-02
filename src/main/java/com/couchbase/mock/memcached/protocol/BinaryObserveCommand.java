@@ -34,7 +34,7 @@ import com.couchbase.mock.memcached.KeySpec;
  *  https://github.com/membase/ep-engine/blob/2.0.0/src/ep_engine.cc#L3431
  *  http://www.couchbase.com/wiki/display/couchbase/Observe
  *
- * @author Mark Nunberg <mnunberg@haskalah.org>
+ * @author Mark Nunberg
  */
 public class BinaryObserveCommand extends BinaryCommand {
     private final List<KeySpec> keySpecs = new ArrayList<KeySpec>();

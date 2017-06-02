@@ -58,7 +58,7 @@ public class HandlerUtil {
     /**
      * @param request The request
      * @return a URL object for the request
-     * @throws MalformedURLException
+     * @throws MalformedURLException if an error occurs
      */
     public static URL getUrl(HttpRequest request) throws MalformedURLException{
         String uriStr = request.getRequestLine().getUri();
@@ -174,8 +174,8 @@ public class HandlerUtil {
      * Send and flush the response object over the current connection and close the connection
      * @param cx The context
      * @param response The response object
-     * @throws IOException
-     * @throws HttpException
+     * @throws IOException if an I/O error occurs
+     * @throws HttpException if a http error occurs
      */
     public static void bailResponse(HttpContext cx, HttpResponse response) throws IOException, HttpException {
         HttpServerConnection conn = getConnection(cx);
@@ -190,7 +190,7 @@ public class HandlerUtil {
      * @param cx The HTTP Context (from httpcomonents)
      * @param req The request
      * @return The authentication info
-     * @throws IOException
+     * @throws IOException if an I/O error occurs
      */
     public static AuthContext getAuth(HttpContext cx, HttpRequest req) throws IOException {
         AuthContext auth = (AuthContext) cx.getAttribute(HttpServer.CX_AUTH);

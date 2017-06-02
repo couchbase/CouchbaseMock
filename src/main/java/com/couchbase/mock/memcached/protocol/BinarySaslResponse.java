@@ -18,7 +18,7 @@ package com.couchbase.mock.memcached.protocol;
 import java.nio.ByteBuffer;
 
 /**
- * @author Sergey Avseyev <sergey.avseyev@gmail.com>
+ * @author Sergey Avseyev
  */
 public class BinarySaslResponse extends BinaryResponse {
 

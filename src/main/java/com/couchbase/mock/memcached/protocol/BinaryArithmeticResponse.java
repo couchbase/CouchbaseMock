@@ -19,7 +19,7 @@ import com.couchbase.mock.memcached.MutationInfoWriter;
 import com.couchbase.mock.memcached.MutationStatus;
 
 /**
- * @author Trond Norbye <trond.norbye@gmail.com>
+ * @author Trond Norbye
  */
 public class BinaryArithmeticResponse extends BinaryResponse {
 

@@ -19,7 +19,7 @@ import java.net.ProtocolException;
 import java.nio.ByteBuffer;
 
 /**
- * @author Sergey Avseyev <sergey.avseyev@gmail.com>
+ * @author Sergey Avseyev
  */
 public class BinaryGetCommand extends BinaryCommand {
 

@@ -85,6 +85,7 @@ public class Indexer {
     /**
      * Create a new indexer object
      * @param mapTxt The text of the map function
+     * @return indexer
      */
     public static Indexer create(String mapTxt) {
         Context cx = Context.enter();

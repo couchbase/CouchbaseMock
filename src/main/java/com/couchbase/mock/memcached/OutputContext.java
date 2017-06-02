@@ -44,6 +44,8 @@ public class OutputContext {
 
     /**
      * Check if there are unsent chunks
+     *
+     * @return true if not empty
      */
     public boolean hasRemaining() {
         return !buffers.isEmpty();

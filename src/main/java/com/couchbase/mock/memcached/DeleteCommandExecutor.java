@@ -21,7 +21,7 @@ import com.couchbase.mock.memcached.protocol.ErrorCode;
 import com.couchbase.mock.memcached.protocol.BinaryCommand;
 
 /**
- * @author Trond Norbye <trond.norbye@gmail.com>
+ * @author Trond Norbye
  */
 public class DeleteCommandExecutor implements CommandExecutor {
 

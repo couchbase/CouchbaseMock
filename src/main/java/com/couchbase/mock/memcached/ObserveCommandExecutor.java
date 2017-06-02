@@ -25,7 +25,7 @@ import com.couchbase.mock.memcached.protocol.ObserveCode;
 
 /**
  *
- * @author Mark Nunberg <mnunberg@haskalah.org>
+ * @author Mark Nunberg
  */
 public class ObserveCommandExecutor implements CommandExecutor {
 

@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 /**
- * @author Trond Norbye <trond.norbye@gmail.com>
+ * @author Trond Norbye
  */
 public class StatCommandExecutor implements CommandExecutor {
 

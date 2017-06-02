@@ -20,7 +20,7 @@ import java.security.AccessControlException;
 import com.couchbase.mock.memcached.protocol.*;
 
 /**
- * @author Trond Norbye <trond.norbye@gmail.com>
+ * @author Trond Norbye
  */
 public class GetCommandExecutor implements CommandExecutor {
 

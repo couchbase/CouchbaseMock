@@ -114,6 +114,7 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
      * @param hostname  The hostname to connect to (null == any)
      * @param port      The port this server should listen to (0 to choose an
      *                  ephemeral port)
+     * @param vbi       Vbucket Info
      * @throws IOException If we fail to create the server socket
      */
     public MemcachedServer(Bucket bucket, String hostname, int port, VBucketInfo[] vbi) throws IOException {

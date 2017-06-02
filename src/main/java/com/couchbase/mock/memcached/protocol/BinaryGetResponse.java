@@ -20,7 +20,7 @@ import java.nio.ByteBuffer;
 import com.couchbase.mock.memcached.Item;
 
 /**
- * @author Trond Norbye <trond.norbye@gmail.com>
+ * @author Trond Norbye
  */
 public class BinaryGetResponse extends BinaryResponse {
     public BinaryGetResponse(BinaryCommand command, ErrorCode error) {

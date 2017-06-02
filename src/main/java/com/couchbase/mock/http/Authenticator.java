@@ -67,11 +67,17 @@ public class Authenticator {
                 ctx.getPassword() != null && ctx.getPassword().equals(adminPass);
     }
 
-    /** Get the administrative username */
+    /** Get the administrative username
+     * @return admin name
+     * */
     public String getAdminName() {
         return adminName;
     }
-    /** Get the administrative password */
+
+
+    /** Get the administrative password
+     * @return admin password
+     * */
     public String getAdminPass() {
         return adminPass;
     }

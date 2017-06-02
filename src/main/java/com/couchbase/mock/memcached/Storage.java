@@ -34,7 +34,7 @@ import com.couchbase.mock.Bucket;
  * is probably not the most efficient way to go about things, it is crucial in
  * order to be able to test these types of semantics.
  *
- * @author Mark Nunberg <mnunberg@haskalah.org>
+ * @author Mark Nunberg
  */
 public class Storage {
     public enum StorageType { CACHE, DISK }

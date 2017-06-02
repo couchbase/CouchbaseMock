@@ -22,7 +22,7 @@ import com.couchbase.mock.memcached.protocol.BinaryCommand;
 /**
  * Implementation of the noop command
  *
- * @author Trond Norbye <trond.norbye@gmail.com>
+ * @author Trond Norbye
  */
 public class NoopCommandExecutor implements CommandExecutor {
 

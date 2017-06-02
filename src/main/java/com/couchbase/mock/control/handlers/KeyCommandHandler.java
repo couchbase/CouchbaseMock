@@ -28,7 +28,7 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  *
- * @author Mark Nunberg <mnunberg@haskalah.org>
+ * @author Mark Nunberg
  */
 public abstract class KeyCommandHandler extends MockCommand {
     KeySpec keySpec;

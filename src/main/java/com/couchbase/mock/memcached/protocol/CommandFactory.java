@@ -21,7 +21,7 @@ import java.nio.ByteBuffer;
 /**
  * Helper class to create the correct sort of object
  *
- * @author Trond Norbye <trond.norbye@gmail.com>
+ * @author Trond Norbye
  */
 public class CommandFactory {
     public static BinaryCommand create(ByteBuffer header) throws ProtocolException {

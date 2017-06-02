@@ -31,7 +31,7 @@ import java.util.Set;
 
 /**
  *
- * @author Mark Nunberg <mnunberg@haskalah.org>
+ * @author Mark Nunberg
  */
 public class ClientTest extends ClientBaseTest {
 

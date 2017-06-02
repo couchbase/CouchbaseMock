@@ -32,7 +32,7 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  *
- * @author Mark Nunberg <mnunberg@haskalah.org>
+ * @author Mark Nunberg
  */
 public final class KeyInfoCommandHandler extends KeyCommandHandler {
     private String result;

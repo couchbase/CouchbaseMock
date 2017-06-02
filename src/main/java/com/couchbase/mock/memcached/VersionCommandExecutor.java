@@ -22,7 +22,7 @@ import com.couchbase.mock.memcached.protocol.BinaryVersionResponse;
 /**
  * Implementation of version command
  *
- * @author Trond Norbye <trond.norbye@gmail.com>
+ * @author Trond Norbye
  */
 class VersionCommandExecutor implements CommandExecutor {
     @Override
