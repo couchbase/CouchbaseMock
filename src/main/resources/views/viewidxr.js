@@ -84,7 +84,7 @@ var OPTION_SPECS = {
   startkey_docid:     { type: 'raw' },
   endkey_docid:       { type: 'raw' },
   inclusive_start:    { type: 'boolean', default: true },
-  inclusive_end:      { type: 'boolean', default: false },
+  inclusive_end:      { type: 'boolean', default: true },
   descending:         { type: 'boolean', default: false },
   key:                { type: 'json' },
   keys:               { type: 'object' },
