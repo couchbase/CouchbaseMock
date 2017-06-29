@@ -382,6 +382,38 @@ Parameters:
     </tr>
  </table>
 
+### SET_ENHANCED_ERRORS
+
+This command enables or disables *Enhanced Error Messages* semantics for a group of
+servers. See [SDK-RFC-28](https://github.com/couchbaselabs/sdk-rfcs) for details.
+
+Parameters:
+
+<table>
+    <tr>
+       <th>Name</th>
+       <th>Meaning</th>
+       <th>Type</th>
+    </tr>
+    <tr>
+        <td><b>enabled</b></td>
+        <td>Whether to enable or disabled Enhanced Errors on the selection criteria</td>
+        <td>JSON Boolean</td>
+    </tr>
+    <tr>
+        <td>bucket</td>
+        <td>Bucket for which Enhanced Errors should be enabled/disabled.
+        If this is empty, then this command affects all buckets</td>
+        <td>String</td>
+    </tr>
+    <tr>
+        <td>servers</td>
+        <td>An array of server indices for which the enable/disable setting should
+        apply to. If this is not set, then all servers are modified</td>
+        <td>Array of numbers</td>
+    </tr>
+</table>
+
 ### GET_MCPORTS
 
 This is a more convenient way to get the memcached ports without parsing the

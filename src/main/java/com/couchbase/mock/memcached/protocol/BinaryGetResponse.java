@@ -27,6 +27,10 @@ public class BinaryGetResponse extends BinaryResponse {
         super(command, error);
     }
 
+    public BinaryGetResponse(BinaryCommand command, ErrorCode error, String errorContext) {
+        super(command, error, errorContext);
+    }
+
     public BinaryGetResponse(BinaryCommand command, Item item) {
         super(create(command, item));
     }

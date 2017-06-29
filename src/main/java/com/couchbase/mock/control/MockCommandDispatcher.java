@@ -70,6 +70,7 @@ public class MockCommandDispatcher {
         registerClass(MockCommand.Command.GET_CMDLOG, GetCmdLogCommandHandler.class);
         registerClass(MockCommand.Command.START_RETRY_VERIFY, StartRetryVerifyComandHandler.class);
         registerClass(MockCommand.Command.CHECK_RETRY_VERIFY, CheckRetryVerifyCommandHandler.class);
+        registerClass(MockCommand.Command.SET_ENHANCED_ERRORS, EnhancedErrorsCommandHandler.class);
     }
 
 

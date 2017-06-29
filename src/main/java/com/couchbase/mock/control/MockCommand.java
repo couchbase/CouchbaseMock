@@ -67,7 +67,8 @@ public abstract class MockCommand {
         STOP_CMDLOG,
         GET_CMDLOG,
         START_RETRY_VERIFY,
-        CHECK_RETRY_VERIFY
+        CHECK_RETRY_VERIFY,
+        SET_ENHANCED_ERRORS
     }
 
     /**

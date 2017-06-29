@@ -64,7 +64,15 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
     private boolean cccpEnabled = false;
     private final List<CommandLogEntry> commandLog = new ArrayList<CommandLogEntry>();
     private boolean shouldLogCommands = false;
+    private boolean enhancedErrorsEnabled = false;
 
+    public void setEnhancedErrorsEnabled(boolean enhancedErrorsEnabled) {
+        this.enhancedErrorsEnabled = enhancedErrorsEnabled;
+    }
+
+    public boolean isEnhancedErrorsEnabled() {
+        return enhancedErrorsEnabled;
+    }
 
     public static class CommandLogEntry {
         private final int opcode;
@@ -488,6 +496,9 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
     public void execute(BinaryCommand cmd, MemcachedConnection client)
             throws IOException {
         try {
+            if (enhancedErrorsEnabled) {
+                cmd.generateEventId();
+            }
 
             if (shouldLogCommands) {
                 commandLog.add(new CommandLogEntry(cmd.getOpcode()));

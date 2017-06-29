@@ -43,7 +43,8 @@ public class GetCommandExecutor implements CommandExecutor {
 
         if (item == null) {
             if (cc != CommandCode.GETKQ && cc != CommandCode.GETQ && cc != CommandCode.GATQ) {
-                client.sendResponse(new BinaryGetResponse(cmd, ErrorCode.KEY_ENOENT));
+                client.sendResponse(new BinaryGetResponse(cmd, ErrorCode.KEY_ENOENT,
+                        server.isEnhancedErrorsEnabled() ? "Failed to lookup item" : null));
             }
             return;
         }
@@ -51,7 +52,8 @@ public class GetCommandExecutor implements CommandExecutor {
         if (cc == CommandCode.GETL) {
             ErrorCode ec = cache.lock(item, cmd.getExpiration());
             if (ec != ErrorCode.SUCCESS) {
-                client.sendResponse(new BinaryResponse(cmd, ec));
+                client.sendResponse(new BinaryResponse(cmd, ec,
+                        server.isEnhancedErrorsEnabled() ? "Failed to lock item" : null));
                 return;
             }
         } else if (cc == CommandCode.TOUCH || cc == CommandCode.GAT || cc == CommandCode.GATQ) {

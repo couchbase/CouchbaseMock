@@ -17,6 +17,8 @@ package com.couchbase.mock.memcached.protocol;
 
 import com.couchbase.mock.memcached.MutationInfoWriter;
 import com.couchbase.mock.memcached.MutationStatus;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 import java.nio.ByteBuffer;
 
@@ -26,6 +28,7 @@ import java.nio.ByteBuffer;
 public class BinaryResponse {
     private static final byte MAGIC = (byte) 0x81;
     private static final byte DATA_TYPE = 0;
+    private static final byte DATA_TYPE_JSON = 1;
     final ByteBuffer buffer;
 
     BinaryResponse(final ByteBuffer buffer) {
@@ -36,8 +39,31 @@ public class BinaryResponse {
         buffer = createAndRewind(command, errorCode, extraLength, keyLength, dataLength, cas);
     }
 
+    public BinaryResponse(BinaryCommand command, ErrorCode errorCode, String errorContext) {
+        if (command.getEventId() != null || errorContext != null) {
+            JsonObject error = new JsonObject();
+            if (command.getEventId() != null) {
+                error.addProperty("ref", command.getEventId());
+            }
+            if (errorContext != null) {
+                error.addProperty("context", errorContext);
+            }
+            JsonObject body = new JsonObject();
+            body.add("error", error);
+            byte[] value = new Gson().toJson(body).getBytes();
+            buffer = create(command, errorCode, 0, 0, value.length, 0);
+            buffer.position(5);
+            buffer.put(DATA_TYPE_JSON);
+            buffer.position(24);
+            buffer.put(value);
+            buffer.rewind();
+        } else {
+            buffer = createAndRewind(command, errorCode, 0, 0, 0, 0);
+        }
+    }
+
     public BinaryResponse(BinaryCommand command, ErrorCode errorCode) {
-        buffer = createAndRewind(command, errorCode, 0, 0, 0, 0);
+        this(command, errorCode, null);
     }
 
     public BinaryResponse(BinaryCommand command, MutationStatus ms, MutationInfoWriter miw, long cas) {

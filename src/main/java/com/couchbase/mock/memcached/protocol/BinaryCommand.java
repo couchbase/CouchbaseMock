@@ -17,6 +17,7 @@ package com.couchbase.mock.memcached.protocol;
 
 import java.net.ProtocolException;
 import java.nio.ByteBuffer;
+import java.util.UUID;
 
 import com.couchbase.mock.memcached.KeySpec;
 
@@ -34,6 +35,7 @@ public class BinaryCommand {
     private final int opaque;
     final long cas;
     final ByteBuffer bodyBuffer;
+    private String eventId;
 
     BinaryCommand(ByteBuffer header) throws ProtocolException {
         header.rewind();
@@ -96,6 +98,10 @@ public class BinaryCommand {
         return ret;
     }
 
+    public String getEventId() {
+        return eventId;
+    }
+
     public boolean complete() {
         return bodyLength == 0 || !bodyBuffer.hasRemaining();
     }
@@ -107,5 +113,9 @@ public class BinaryCommand {
      * @throws ProtocolException if a protocol error occurs
      */
     public void process() throws ProtocolException {
+    }
+
+    public void generateEventId() {
+        this.eventId = UUID.randomUUID().toString();
     }
 }

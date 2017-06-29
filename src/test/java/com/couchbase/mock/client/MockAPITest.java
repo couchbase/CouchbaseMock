@@ -270,6 +270,30 @@ public class MockAPITest extends ClientBaseTest {
         }
     }
 
+    private void checkEnhancedErrorsEnabled(int index, boolean enabledExpected) throws IOException {
+        MemcachedClient mcClient = getBinClient(index);
+
+        try {
+            CommandBuilder cBuilder;
+            ClientResponse resp;
+            cBuilder = new CommandBuilder(CommandCode.GETL);
+            cBuilder.key("foo", findValidVbucket(index));
+            resp = mcClient.sendRequest(cBuilder.build());
+            assertEquals(ErrorCode.KEY_ENOENT, resp.getStatus());
+            if (enabledExpected) {
+                assertTrue(resp.getValue().length() > 0);
+                JsonObject res = new Gson().fromJson(resp.getValue(), JsonObject.class);
+                assertTrue(res.has("error"));
+                assertEquals("Failed to lookup item", res.getAsJsonObject("error").get("context").getAsString());
+                assertTrue(res.getAsJsonObject("error").get("ref").getAsJsonPrimitive().isString());
+            } else {
+                assertEquals(0, resp.getValue().length());
+            }
+        } finally {
+            mcClient.close();
+        }
+    }
+
     public void testBasicCCCP() throws Exception {
         // Open a connection to a mock server
         // CCCP is disabled by default
@@ -318,5 +342,14 @@ public class MockAPITest extends ClientBaseTest {
             socket.connect(new InetSocketAddress("localhost", port));
             socket.close();
         }
+    }
+
+    public void testBasicEnhancedErrors() throws Exception {
+        checkEnhancedErrorsEnabled(0, false);
+
+        SetEnhancedErrorsRequest req = new SetEnhancedErrorsRequest(true);
+        MockResponse res = mockClient.request(req);
+        assertTrue(res.isOk());
+        checkEnhancedErrorsEnabled(0, true);
     }
 }
