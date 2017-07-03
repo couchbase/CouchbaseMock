@@ -59,9 +59,8 @@ public final class EnhancedErrorsCommandHandler extends MockCommand {
             MemcachedServer[] servers = bucket.getServers();
             for (int ii = 0; ii < servers.length; ii++) {
                 if (enabledServers.contains(ii)) {
-                    continue;
+                    servers[ii].setEnhancedErrorsEnabled(enabled);
                 }
-                servers[ii].setEnhancedErrorsEnabled(enabled);
             }
         }
 
