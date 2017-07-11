@@ -56,7 +56,10 @@ public class CouchbaseMock {
     private final CountDownLatch startupLatch = new CountDownLatch(1);
     private final MockCommandDispatcher controlDispatcher;
     private final PoolsHandler poolsHandler;
+    private final UserManagementHandler userManagementHandler;
     private BucketConfiguration defaultConfig = new BucketConfiguration();
+    private final Map<String, User> users = new HashMap<String, User>();
+
 
     private int port = 8091;
     private HarakiriMonitor harakiriMonitor;
@@ -243,6 +246,8 @@ public class CouchbaseMock {
 
         poolsHandler = new PoolsHandler(this);
         poolsHandler.register(httpServer);
+        userManagementHandler = new UserManagementHandler(this);
+        userManagementHandler.register(httpServer);
         httpServer.register("/mock/*", new ControlHandler(controlDispatcher));
         httpServer.register("/query/*", new QueryServer());
     }
@@ -506,5 +511,9 @@ public class CouchbaseMock {
             Logger.getLogger(CouchbaseMock.class.getName()).log(Level.SEVERE, "Could not create cluster: ", e);
             System.exit(1);
         }
+    }
+
+    public Map<String, User> getUsers() {
+        return users;
     }
 }
