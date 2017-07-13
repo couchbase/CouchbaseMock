@@ -109,8 +109,8 @@ public abstract class BinarySubdocMultiCommand extends BinaryCommand {
             this.value = value;
         }
 
-        protected MultiSpec(Operation op, String path) {
-            this(op, path, null, (byte)0);
+        protected MultiSpec(Operation op, String path, byte flags) {
+            this(op, path, null, flags);
         }
 
         public Operation getOp() {

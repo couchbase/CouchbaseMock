@@ -17,7 +17,11 @@
 package com.couchbase.mock.client;
 
 import com.couchbase.mock.memcached.Item;
-import com.couchbase.mock.memcached.client.*;
+import com.couchbase.mock.memcached.client.ClientResponse;
+import com.couchbase.mock.memcached.client.CommandBuilder;
+import com.couchbase.mock.memcached.client.MemcachedClient;
+import com.couchbase.mock.memcached.client.MultiLookupResult;
+import com.couchbase.mock.memcached.client.MultiMutationResult;
 import com.couchbase.mock.memcached.protocol.BinarySubdocCommand;
 import com.couchbase.mock.memcached.protocol.CommandCode;
 import com.couchbase.mock.memcached.protocol.ErrorCode;
@@ -432,5 +436,37 @@ public class ClientSubdocTest extends ClientBaseTest {
         Item item = getItem(multiDocId, vbId);
         assertEquals("{\"bodyPath\":123}", new String(item.getValue()));
         assertEquals("{\"attrPath\":123}", new String(item.getXattr()));
+    }
+
+    public void testGetAttrsMixed() throws Exception {
+        storeItem(multiDocId, vbId, "{\"x\":\"x value 1\"}");
+        Item item = getItem(multiDocId, vbId);
+        assertEquals("{\"x\":\"x value 1\"}", new String(item.getValue()));
+        assertNull(item.getXattr());
+
+        CommandBuilder cb = new CommandBuilder(CommandCode.SUBDOC_MULTI_MUTATION)
+                .key(multiDocId, vbId)
+                .subdocMultiMutation(
+                        new CommandBuilder.MultiMutationSpec(CommandCode.SUBDOC_DICT_UPSERT, "xatest.test", "\"test value\"",
+                                BinarySubdocCommand.PATHFLAG_MKDIR_P | BinarySubdocCommand.PATHFLAG_XATTR),
+                        new CommandBuilder.MultiMutationSpec(CommandCode.SUBDOC_DICT_UPSERT, "x", "\"x value 2\"")
+                );
+        ClientResponse resp = client.sendRequest(cb);
+        assertTrue(resp.getStatus().toString(), resp.success());
+
+        cb = new CommandBuilder(CommandCode.SUBDOC_MULTI_LOOKUP)
+                .key(multiDocId, vbId)
+                .subdocMultiLookup(
+                        new CommandBuilder.MultiLookupSpec(CommandCode.SUBDOC_GET, "xatest", BinarySubdocCommand.PATHFLAG_XATTR),
+                        new CommandBuilder.MultiLookupSpec(CommandCode.SUBDOC_GET, "x")
+                );
+
+        resp = client.sendRequest(cb);
+        assertTrue(resp.getStatus().toString(), resp.success());
+        List<MultiLookupResult> results = MultiLookupResult.parse(resp.getRawValue());
+        assertTrue(results.get(0).getStatus().toString(), results.get(0).success());
+        assertEquals("{\"test\":\"test value\"}", results.get(0).getValue());
+        assertTrue(results.get(1).getStatus().toString(), results.get(1).success());
+        assertEquals("\"x value 2\"", results.get(1).getValue());
     }
 }

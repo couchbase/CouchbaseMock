@@ -39,10 +39,16 @@ public class CommandBuilder {
 
     public static class MultiLookupSpec {
         final String path;
+        final byte flags;
         final CommandCode op;
         public MultiLookupSpec(CommandCode op, String path) {
+            this(op, path, 0);
+        }
+
+        public MultiLookupSpec(CommandCode op, String path, int flags) {
             this.path = path;
             this.op = op;
+            this.flags = (byte) flags;
         }
 
         public static MultiLookupSpec exists(String path) {
@@ -179,7 +185,7 @@ public class CommandBuilder {
         for (MultiLookupSpec spec : specs) {
             ByteBuffer bb = ByteBuffer.allocate(1 + 1 + 2 + spec.path.length());
             bb.put((byte)spec.op.cc());
-            bb.put((byte)0x00);
+            bb.put(spec.flags);
             bb.putShort((short)spec.path.getBytes().length);
             bb.put(spec.path.getBytes());
             try {

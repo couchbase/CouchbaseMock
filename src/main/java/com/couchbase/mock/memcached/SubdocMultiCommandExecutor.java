@@ -66,7 +66,7 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
 				BinaryCommand cmd, MemcachedConnection client, Item existing, VBucketStore cache, boolean needCreate) {
             this.existing = existing;
             currentDoc = new String(existing.getValue());
-            currentAttrs = new String(existing.getValue() == null ? "{}".getBytes() : existing.getValue());
+            currentAttrs = new String(existing.getXattr() == null ? "{}".getBytes() : existing.getXattr());
             this.command = (BinarySubdocMultiCommand)cmd;
             this.client = client;
             this.specs = command.getLookupSpecs();
@@ -86,7 +86,8 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
                 client.sendResponse(new BinaryResponse(command, ErrorCode.SUBDOC_INVALID_COMBO));
                 return false;
             }
-            ResultInfo rsi = SubdocCommandExecutor.executeSubdocLookup(op, currentDoc, spec.getPath());
+            boolean isXattr = (spec.getFlags() & BinarySubdocCommand.PATHFLAG_XATTR) != 0;
+            ResultInfo rsi = SubdocCommandExecutor.executeSubdocLookup(op, isXattr ? currentAttrs : currentDoc, spec.getPath());
             switch (rsi.getStatus()) {
                 case SUCCESS:
                     if (op.returnsMatch()) {
