@@ -31,6 +31,10 @@ import com.google.gson.JsonObject;
 
 import java.util.Map;
 
+import static com.couchbase.mock.http.HttpAssert.assertResponseNotFound;
+import static com.couchbase.mock.http.HttpAssert.assertResponseOK;
+import static com.couchbase.mock.http.HttpAssert.assertResponseUnauthorized;
+
 
 /**
  * Basic testing of JMembase
@@ -96,57 +100,22 @@ public class JMembaseTest extends TestCase {
 
     public void testHandleHttpRequest() throws IOException {
         URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/protected");
-        HttpURLConnection conn;
-
-        try {
-            conn = (HttpURLConnection) url.openConnection();
-            assertNotNull(conn);
-            conn.addRequestProperty("Authorization", "Basic " + Base64.encode("protected:secret"));
-            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
-        } catch (Exception ex) {
-            fail(ex.getMessage());
-        }
+        assertResponseOK(url, "protected", "secret");
     }
 
     public void testHandleHttpRequestWithTrailingSlash() throws IOException {
         URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/protected/");
-        HttpURLConnection conn;
-
-        try {
-            conn = (HttpURLConnection) url.openConnection();
-            assertNotNull(conn);
-            conn.addRequestProperty("Authorization", "Basic " + Base64.encode("protected:secret"));
-            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
-        } catch (Exception ex) {
-            fail(ex.getMessage());
-        }
+        assertResponseOK(url, "protected", "secret");
     }
 
     public void testAdministratorCouldAccessProtectedBuckets() throws IOException {
         URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/protected");
-        HttpURLConnection conn;
-
-        try {
-            conn = (HttpURLConnection) url.openConnection();
-            assertNotNull(conn);
-            conn.addRequestProperty("Authorization", "Basic " + Base64.encode("Administrator:password"));
-            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
-        } catch (Exception ex) {
-            fail(ex.getMessage());
-        }
+        assertResponseOK(url, "Administrator", "password");
     }
 
     public void testDefaultBucketShouldBeAccessibleForEveryone() throws IOException {
         URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/default");
-        HttpURLConnection conn;
-
-        try {
-            conn = (HttpURLConnection) url.openConnection();
-            assertNotNull(conn);
-            assertEquals(HttpURLConnection.HTTP_OK, conn.getResponseCode());
-        } catch (Exception ex) {
-            fail(ex.getMessage());
-        }
+        assertResponseOK(url);
     }
 
     public void testProtectedBucketsShouldBeFilteredOutFromList() throws IOException {
@@ -202,61 +171,24 @@ public class JMembaseTest extends TestCase {
 
     public void testHandleHttpRequestMissingAuth() throws IOException {
         URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/protected");
-        HttpURLConnection conn;
-
-        try {
-            conn = (HttpURLConnection) url.openConnection();
-            assertNotNull(conn);
-            assertEquals(HttpURLConnection.HTTP_UNAUTHORIZED, conn.getResponseCode());
-        } catch (Exception ex) {
-            fail(ex.getMessage());
-        }
+        assertResponseUnauthorized(url);
     }
 
     @SuppressWarnings("SpellCheckingInspection")
     public void testHandleHttpRequestIncorrectCred() throws IOException {
         URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/protected");
-        HttpURLConnection conn;
-
-        try {
-            conn = (HttpURLConnection) url.openConnection();
-            assertNotNull(conn);
-            conn.addRequestProperty("Authorization", "Basic " + Base64.encode("Bubba:TheHut"));
-            assertEquals(HttpURLConnection.HTTP_UNAUTHORIZED, conn.getResponseCode());
-        } catch (Exception ex) {
-            fail(ex.getMessage());
-        }
-
+        assertResponseUnauthorized(url, "Bubba", "TheHut");
     }
 
     @SuppressWarnings("SpellCheckingInspection")
     public void testHandleHttpRequestIllegalCred() throws IOException {
         URL url = new URL("http://localhost:" + instance.getHttpPort() + "/pools/default/buckets/default");
-        HttpURLConnection conn;
-
-        try {
-            conn = (HttpURLConnection) url.openConnection();
-            assertNotNull(conn);
-            conn.addRequestProperty("Authorization", "Basic " + Base64.encode(":TheHut"));
-            assertEquals(HttpURLConnection.HTTP_UNAUTHORIZED, conn.getResponseCode());
-        } catch (Exception ex) {
-            fail(ex.getMessage());
-        }
-
+        assertResponseUnauthorized(url, "", "TheHut");
     }
 
     public void testHandleHttpRequestUnkownFile() throws IOException {
         URL url = new URL("http://localhost:" + instance.getHttpPort() + "/");
-        HttpURLConnection conn;
-
-        try {
-            conn = (HttpURLConnection) url.openConnection();
-            assertNotNull(conn);
-            conn.addRequestProperty("Authorization", "Basic " + Base64.encode("Administrator:password"));
-            assertEquals(HttpURLConnection.HTTP_NOT_FOUND, conn.getResponseCode());
-        } catch (Exception ex) {
-            fail(ex.getMessage());
-        }
+        assertResponseNotFound(url, "Administrator", "password");
     }
 
 //    @SuppressWarnings("UnusedAssignment")
