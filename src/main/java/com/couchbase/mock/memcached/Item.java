@@ -16,6 +16,7 @@
 
 package com.couchbase.mock.memcached;
 
+import com.couchbase.mock.Info;
 import com.couchbase.mock.util.Base64;
 
 import java.nio.ByteBuffer;
@@ -130,6 +131,13 @@ public class Item {
     }
 
     public long getCas() {
+        if (isLocked()) {
+            return -1L;
+        }
+        return cas;
+    }
+
+    public long getCasReal() {
         return cas;
     }
 
@@ -151,7 +159,7 @@ public class Item {
             return false;
         }
 
-        long now = new Date().getTime() / 1000;
+        long now = new Date().getTime() / 1000 + Info.getClockOffset();
         return now <= lockExpiryTime;
     }
 

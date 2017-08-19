@@ -35,7 +35,15 @@ public class BinaryGetResponse extends BinaryResponse {
         super(create(command, item));
     }
 
+    public BinaryGetResponse(BinaryGetCommand cmd, Item item, long casOverride) {
+        super(create(cmd, item, casOverride));
+    }
+
     private static ByteBuffer create(BinaryCommand command, Item item) {
+        return create(command, item, null);
+    }
+
+    private static ByteBuffer create(BinaryCommand command, Item item, Long casOverride) {
         int keySize;
         byte[] keyBytes;
         switch (command.getComCode()) {
@@ -56,7 +64,7 @@ public class BinaryGetResponse extends BinaryResponse {
         final ByteBuffer message = create(command, ErrorCode.SUCCESS,
                 4 /* flags */,
                 keySize,
-                item.getValue().length, item.getCas());
+                item.getValue().length, casOverride == null ? item.getCas() : casOverride);
         message.putInt(item.getFlags());
         if (keySize > 0) {
             message.put(keyBytes);

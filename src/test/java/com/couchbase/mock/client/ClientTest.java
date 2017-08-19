@@ -15,6 +15,7 @@
  */
 package com.couchbase.mock.client;
 
+import net.spy.memcached.CASResponse;
 import net.spy.memcached.CASValue;
 import net.spy.memcached.MemcachedNode;
 import net.spy.memcached.ObserveResponse;
@@ -169,5 +170,74 @@ public class ClientTest extends ClientBaseTest {
 
     public void testBasicStats() throws Exception {
         assertFalse(client.getStats().isEmpty());
+    }
+
+    public void testSimpleGetLocked() throws Exception {
+        String key = "key";
+        String value = "data";
+        OperationFuture<Boolean> f = client.set(key, value);
+        assertTrue(f.get());
+        Long initialCas = f.getCas();
+        assertTrue(initialCas > 0);
+
+        // get with lock should change CAS
+        CASValue<Object> ret = client.getAndLock(key, 1);
+        long lockedCas = ret.getCas();
+        assertTrue(lockedCas != initialCas);
+
+        // CAS should be masked now
+        ret = client.gets(key);
+        assertEquals(-1L, ret.getCas());
+
+        // when unlocked by timeout, CAS should stay as GETL returned
+        assertTrue(mockClient.request(new TimeTravelRequest(2)).isOk());
+        ret = client.gets(key);
+        assertEquals(lockedCas, ret.getCas());
+    }
+
+    public void testSimpleGetLockedUnlock() throws Exception {
+        String key = "key";
+        String value = "data";
+        OperationFuture<Boolean> f = client.set(key, value);
+        assertTrue(f.get());
+        Long initialCas = f.getCas();
+        assertTrue(initialCas > 0);
+
+        // get with lock should change CAS
+        CASValue<Object> ret = client.getAndLock(key, 10);
+        long lockedCas = ret.getCas();
+        assertTrue(lockedCas != initialCas);
+
+        // should not be possible to unlock with initial CAS
+        assertFalse(client.unlock(key, initialCas));
+
+        // but okay to use CAS from GETL
+        assertTrue(client.unlock(key, lockedCas));
+    }
+
+    public void testSimpleGetLockedUnlockByMutation() throws Exception {
+        String key = "key";
+        String value = "data";
+        OperationFuture<Boolean> f = client.set(key, value);
+        assertTrue(f.get());
+        Long initialCas = f.getCas();
+        assertTrue(initialCas > 0);
+
+        // get with lock should change CAS
+        CASValue<Object> ret = client.getAndLock(key, 10);
+        long lockedCas = ret.getCas();
+        assertTrue(lockedCas != initialCas);
+
+        // should not be possible to unlock without CAS
+        f = client.set(key, "new data");
+        assertFalse(f.get());
+
+        // should not be possible to unlock with initial CAS
+        CASResponse resp = client.cas(key, initialCas, "new data");
+        assertEquals(CASResponse.EXISTS, resp);
+
+        // should be possible to unlock with CAS from GETL
+        resp = client.cas(key, lockedCas, "new data");
+        assertEquals(CASResponse.OK, resp);
     }
 }

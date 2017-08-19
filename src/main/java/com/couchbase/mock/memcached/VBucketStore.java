@@ -123,6 +123,7 @@ public class VBucketStore {
             }
             MutationStatus ms = incrCoords(item.getKeySpec());
             item.setLockExpiryTime(expiry);
+            item.setCas(++casCounter);
             onItemMutated.onAction(this, item, ms.getCoords());
             return ErrorCode.SUCCESS;
         }
@@ -156,14 +157,14 @@ public class VBucketStore {
             return new MutationStatus(ErrorCode.KEY_ENOENT);
         }
 
+        if (!old.ensureUnlocked(item.getCas())) {
+            return new MutationStatus(ErrorCode.KEY_EEXISTS);
+        }
+
         if (item.getCas() != old.getCas()) {
             if (item.getCas() != 0) {
                 return new MutationStatus(ErrorCode.KEY_EEXISTS);
             }
-        }
-
-        if (!old.ensureUnlocked(item.getCas())) {
-            return new MutationStatus(ErrorCode.KEY_EEXISTS);
         }
 
         MutationStatus ms = incrCoords(item.getKeySpec());
