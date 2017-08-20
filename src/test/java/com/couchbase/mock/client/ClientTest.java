@@ -189,6 +189,14 @@ public class ClientTest extends ClientBaseTest {
         ret = client.gets(key);
         assertEquals(-1L, ret.getCas());
 
+        // touch should fail
+        f = client.touch(key, 1);
+        assertFalse(f.get());
+
+        // get with touch should fail
+        ret = client.getAndTouch(key, 1);
+        assertNull(ret);
+
         // when unlocked by timeout, CAS should stay as GETL returned
         assertTrue(mockClient.request(new TimeTravelRequest(2)).isOk());
         ret = client.gets(key);

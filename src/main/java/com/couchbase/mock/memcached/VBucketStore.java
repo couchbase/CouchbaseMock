@@ -135,6 +135,9 @@ public class VBucketStore {
     }
 
     public ErrorCode touch(Item item, int expiry) {
+        if (item.isLocked()) {
+            return ErrorCode.KEY_EEXISTS;
+        }
         item.setExpiryTime(expiry);
         MutationStatus ms = incrCoords(item.getKeySpec());
         onItemMutated.onAction(this, item, ms.getCoords());
