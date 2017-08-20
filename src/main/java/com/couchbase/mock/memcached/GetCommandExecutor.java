@@ -15,9 +15,14 @@
  */
 package com.couchbase.mock.memcached;
 
-import java.security.AccessControlException;
+import com.couchbase.mock.memcached.protocol.BinaryCommand;
+import com.couchbase.mock.memcached.protocol.BinaryGetCommand;
+import com.couchbase.mock.memcached.protocol.BinaryGetResponse;
+import com.couchbase.mock.memcached.protocol.BinaryResponse;
+import com.couchbase.mock.memcached.protocol.CommandCode;
+import com.couchbase.mock.memcached.protocol.ErrorCode;
 
-import com.couchbase.mock.memcached.protocol.*;
+import java.security.AccessControlException;
 
 /**
  * @author Trond Norbye

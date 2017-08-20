@@ -19,9 +19,9 @@ package com.couchbase.mock.client;
 import com.couchbase.mock.memcached.client.ClientResponse;
 import com.couchbase.mock.memcached.client.CommandBuilder;
 import com.couchbase.mock.memcached.client.MemcachedClient;
+import com.couchbase.mock.memcached.protocol.BinaryHelloCommand;
 import com.couchbase.mock.memcached.protocol.CommandCode;
 import com.couchbase.mock.memcached.protocol.ErrorCode;
-import com.couchbase.mock.memcached.protocol.BinaryHelloCommand;
 
 import java.nio.ByteBuffer;
 

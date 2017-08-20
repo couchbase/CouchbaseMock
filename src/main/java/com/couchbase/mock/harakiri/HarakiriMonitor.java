@@ -15,6 +15,9 @@
  */
 package com.couchbase.mock.harakiri;
 
+import com.couchbase.mock.CouchbaseMock;
+import com.couchbase.mock.control.MockCommandDispatcher;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -22,9 +25,6 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Observable;
 import java.util.concurrent.Callable;
-
-import com.couchbase.mock.CouchbaseMock;
-import com.couchbase.mock.control.MockCommandDispatcher;
 
 /**
  * The HarakiriMonitor started off as a class that was designed to

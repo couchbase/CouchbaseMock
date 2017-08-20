@@ -15,13 +15,29 @@
  */
 
 package com.couchbase.mock.client;
+
 import com.couchbase.client.CouchbaseClient;
 import com.couchbase.client.CouchbaseConnectionFactory;
 import com.couchbase.client.CouchbaseConnectionFactoryBuilder;
 import com.couchbase.client.internal.HttpCompletionListener;
 import com.couchbase.client.internal.HttpFuture;
-import com.couchbase.client.protocol.views.*;
+import com.couchbase.client.protocol.views.ComplexKey;
+import com.couchbase.client.protocol.views.DesignDocument;
+import com.couchbase.client.protocol.views.DocsOperationImpl;
+import com.couchbase.client.protocol.views.HttpOperation;
+import com.couchbase.client.protocol.views.InvalidViewException;
+import com.couchbase.client.protocol.views.NoDocsOperationImpl;
+import com.couchbase.client.protocol.views.OnError;
+import com.couchbase.client.protocol.views.Query;
+import com.couchbase.client.protocol.views.ReducedOperationImpl;
+import com.couchbase.client.protocol.views.RowError;
+import com.couchbase.client.protocol.views.SpatialViewDesign;
+import com.couchbase.client.protocol.views.Stale;
+import com.couchbase.client.protocol.views.View;
+import com.couchbase.client.protocol.views.ViewDesign;
 import com.couchbase.client.protocol.views.ViewOperation.ViewCallback;
+import com.couchbase.client.protocol.views.ViewResponse;
+import com.couchbase.client.protocol.views.ViewRow;
 import com.couchbase.mock.Bucket;
 import com.couchbase.mock.BucketConfiguration;
 import com.couchbase.mock.CouchbaseMock;
@@ -33,11 +49,21 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpVersion;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicHttpResponse;
-import org.junit.*;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -46,7 +72,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Verifies the correct functionality of views.

@@ -16,8 +16,14 @@
 
 package com.couchbase.mock.memcached;
 
-import com.couchbase.mock.memcached.protocol.*;
 import com.couchbase.mock.memcached.SubdocCommandExecutor.ResultInfo;
+import com.couchbase.mock.memcached.protocol.BinaryCommand;
+import com.couchbase.mock.memcached.protocol.BinaryResponse;
+import com.couchbase.mock.memcached.protocol.BinarySubdocCommand;
+import com.couchbase.mock.memcached.protocol.BinarySubdocMultiCommand;
+import com.couchbase.mock.memcached.protocol.BinarySubdocMultiMutationCommand;
+import com.couchbase.mock.memcached.protocol.CommandCode;
+import com.couchbase.mock.memcached.protocol.ErrorCode;
 import com.couchbase.mock.subdoc.Operation;
 
 import java.io.ByteArrayOutputStream;

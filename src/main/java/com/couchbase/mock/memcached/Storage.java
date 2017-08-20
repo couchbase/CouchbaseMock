@@ -15,10 +15,14 @@
  */
 package com.couchbase.mock.memcached;
 
-import java.security.AccessControlException;
-import java.util.*;
-
 import com.couchbase.mock.Bucket;
+
+import java.security.AccessControlException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Class representing a node's storage.

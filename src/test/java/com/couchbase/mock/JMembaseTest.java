@@ -15,21 +15,37 @@
  */
 package com.couchbase.mock;
 
-import java.io.*;
-import java.net.*;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import com.couchbase.mock.client.*;
+import com.couchbase.mock.client.FailoverRequest;
+import com.couchbase.mock.client.HiccupRequest;
+import com.couchbase.mock.client.MockClient;
+import com.couchbase.mock.client.MockRequest;
+import com.couchbase.mock.client.MockResponse;
+import com.couchbase.mock.client.RespawnRequest;
 import com.couchbase.mock.harakiri.HarakiriMonitor;
 import com.couchbase.mock.util.Base64;
 import com.couchbase.mock.util.ReaderUtils;
-import junit.framework.TestCase;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import junit.framework.TestCase;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.URL;
+import java.net.UnknownHostException;
+import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static com.couchbase.mock.http.HttpAssert.assertResponseNotFound;
 import static com.couchbase.mock.http.HttpAssert.assertResponseOK;

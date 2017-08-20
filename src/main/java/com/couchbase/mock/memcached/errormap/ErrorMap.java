@@ -16,9 +16,9 @@
 
 package com.couchbase.mock.memcached.errormap;
 
-import com.google.gson.Gson;
 import com.couchbase.mock.memcached.protocol.ErrorCode;
 import com.couchbase.mock.util.ReaderUtils;
+import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.util.Map;

@@ -15,14 +15,14 @@
  */
 package com.couchbase.mock.http;
 
+import com.couchbase.mock.Bucket;
+import com.couchbase.mock.CouchbaseMock;
+import com.couchbase.mock.JsonUtils;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.couchbase.mock.CouchbaseMock;
-import com.couchbase.mock.JsonUtils;
-import com.couchbase.mock.Bucket;
 
 /**
  * Utility class to extract a consistent state for various configuration

@@ -16,7 +16,26 @@
 package com.couchbase.mock.control;
 
 import com.couchbase.mock.CouchbaseMock;
-import com.couchbase.mock.control.handlers.*;
+import com.couchbase.mock.control.handlers.CCCPCommandHandler;
+import com.couchbase.mock.control.handlers.CheckRetryVerifyCommandHandler;
+import com.couchbase.mock.control.handlers.EnhancedErrorsCommandHandler;
+import com.couchbase.mock.control.handlers.FailoverCommandHandler;
+import com.couchbase.mock.control.handlers.GetCmdLogCommandHandler;
+import com.couchbase.mock.control.handlers.GetMCPortsHandler;
+import com.couchbase.mock.control.handlers.HiccupCommandHandler;
+import com.couchbase.mock.control.handlers.KeyInfoCommandHandler;
+import com.couchbase.mock.control.handlers.MockHelpCommandHandler;
+import com.couchbase.mock.control.handlers.MockInfoCommandHandler;
+import com.couchbase.mock.control.handlers.OpfailCommandHandler;
+import com.couchbase.mock.control.handlers.PersistenceCommandHandler;
+import com.couchbase.mock.control.handlers.RegenCoordsHandler;
+import com.couchbase.mock.control.handlers.ResetQueryStateHandler;
+import com.couchbase.mock.control.handlers.RespawnCommandHandler;
+import com.couchbase.mock.control.handlers.StartCmdLogCommandHandler;
+import com.couchbase.mock.control.handlers.StartRetryVerifyComandHandler;
+import com.couchbase.mock.control.handlers.StopCmdLogCommandHandler;
+import com.couchbase.mock.control.handlers.TimeTravelCommandHandler;
+import com.couchbase.mock.control.handlers.TruncateCommandHandler;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;

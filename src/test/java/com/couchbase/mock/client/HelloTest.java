@@ -16,10 +16,10 @@
 
 package com.couchbase.mock.client;
 
+import com.couchbase.mock.memcached.MemcachedConnection;
 import com.couchbase.mock.memcached.client.ClientResponse;
 import com.couchbase.mock.memcached.client.CommandBuilder;
 import com.couchbase.mock.memcached.client.MemcachedClient;
-import com.couchbase.mock.memcached.MemcachedConnection;
 import com.couchbase.mock.memcached.protocol.BinaryHelloCommand;
 
 /** Tests that the basic HELLO functionality works. */

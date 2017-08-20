@@ -16,14 +16,14 @@
 
 package com.couchbase.mock.control.handlers;
 
+import com.couchbase.mock.Bucket;
 import com.couchbase.mock.CouchbaseMock;
 import com.couchbase.mock.control.CommandStatus;
+import com.couchbase.mock.control.MockCommand;
 import com.couchbase.mock.memcached.MemcachedServer;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.couchbase.mock.Bucket;
-import com.couchbase.mock.control.MockCommand;
 import org.jetbrains.annotations.NotNull;
 
 /**

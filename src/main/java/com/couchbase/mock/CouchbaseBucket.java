@@ -15,19 +15,19 @@
  */
 package com.couchbase.mock;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Arrays;
-import java.util.zip.CRC32;
-
 import com.couchbase.mock.memcached.Item;
 import com.couchbase.mock.memcached.KeySpec;
 import com.couchbase.mock.memcached.MemcachedServer;
 import com.couchbase.mock.memcached.VBucketStore;
 import com.couchbase.mock.memcached.protocol.ErrorCode;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.zip.CRC32;
 
 /**
  * Representation of a membase bucket

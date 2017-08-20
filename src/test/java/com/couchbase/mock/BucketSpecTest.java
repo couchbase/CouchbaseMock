@@ -16,8 +16,9 @@
 
 package com.couchbase.mock;
 
-import java.util.Map;
 import junit.framework.TestCase;
+
+import java.util.Map;
 
 /**
  * Tests for bucket spec parser

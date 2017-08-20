@@ -16,10 +16,10 @@
 
 package com.couchbase.mock.memcached;
 
+import com.couchbase.mock.memcached.protocol.BinaryCommand;
 import com.couchbase.mock.memcached.protocol.BinaryGetResponse;
 import com.couchbase.mock.memcached.protocol.BinaryResponse;
 import com.couchbase.mock.memcached.protocol.ErrorCode;
-import com.couchbase.mock.memcached.protocol.BinaryCommand;
 
 public class GetRandomCommandExecutor implements CommandExecutor {
     @Override

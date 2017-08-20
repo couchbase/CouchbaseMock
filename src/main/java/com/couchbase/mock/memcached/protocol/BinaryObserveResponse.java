@@ -15,10 +15,10 @@
  */
 package com.couchbase.mock.memcached.protocol;
 
+import com.couchbase.mock.memcached.ObsKeyState;
+
 import java.nio.ByteBuffer;
 import java.util.List;
-
-import com.couchbase.mock.memcached.ObsKeyState;
 
 /**
  * This contains the response for the OBSERVE command.

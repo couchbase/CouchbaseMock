@@ -16,8 +16,8 @@
 
 package com.couchbase.mock.memcached.client;
 
-import com.couchbase.mock.memcached.MemcachedServer;
 import com.couchbase.mock.memcached.MemcachedConnection;
+import com.couchbase.mock.memcached.MemcachedServer;
 
 import java.io.IOException;
 import java.io.InputStream;

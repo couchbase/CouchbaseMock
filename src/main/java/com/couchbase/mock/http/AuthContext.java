@@ -14,9 +14,10 @@
  *    limitations under the License.
  */
 package com.couchbase.mock.http;
-import java.io.IOException;
 
 import com.couchbase.mock.util.Base64;
+
+import java.io.IOException;
 
 /**
  *

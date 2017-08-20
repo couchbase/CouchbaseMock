@@ -15,13 +15,13 @@
  */
 package com.couchbase.mock.memcached.protocol;
 
+import com.couchbase.mock.memcached.KeySpec;
+
 import java.net.ProtocolException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.couchbase.mock.memcached.KeySpec;
 
 /**
  * This implements the OBSERVE request.

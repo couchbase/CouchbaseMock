@@ -16,8 +16,6 @@
 
 package com.couchbase.mock.subdoc;
 
-import javax.print.DocFlavor;
-
 /**
  * Path component
  */

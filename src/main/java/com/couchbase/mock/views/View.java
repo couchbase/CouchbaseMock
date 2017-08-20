@@ -19,7 +19,13 @@ import com.couchbase.mock.JsonUtils;
 import com.couchbase.mock.memcached.Item;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.mozilla.javascript.*;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.EcmaError;
+import org.mozilla.javascript.JavaScriptException;
+import org.mozilla.javascript.NativeArray;
+import org.mozilla.javascript.NativeJSON;
+import org.mozilla.javascript.NativeObject;
+import org.mozilla.javascript.Scriptable;
 
 import javax.script.ScriptException;
 

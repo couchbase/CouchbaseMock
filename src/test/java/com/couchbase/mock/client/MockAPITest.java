@@ -15,17 +15,17 @@
  */
 package com.couchbase.mock.client;
 
+import com.couchbase.mock.Bucket;
 import com.couchbase.mock.memcached.MemcachedServer;
+import com.couchbase.mock.memcached.client.ClientResponse;
 import com.couchbase.mock.memcached.client.CommandBuilder;
 import com.couchbase.mock.memcached.client.MemcachedClient;
 import com.couchbase.mock.memcached.protocol.CommandCode;
+import com.couchbase.mock.memcached.protocol.ErrorCode;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.spy.memcached.internal.OperationFuture;
-import com.couchbase.mock.Bucket;
-import com.couchbase.mock.memcached.client.ClientResponse;
-import com.couchbase.mock.memcached.protocol.ErrorCode;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

@@ -15,7 +15,11 @@
  */
 package com.couchbase.mock.http;
 
-import java.io.*;
+import com.couchbase.mock.Bucket;
+import com.couchbase.mock.harakiri.HarakiriMonitor;
+
+import java.io.IOException;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
@@ -26,9 +30,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
-import com.couchbase.mock.Bucket;
-import com.couchbase.mock.harakiri.HarakiriMonitor;
 
 /**
  * @author M. Nunberg

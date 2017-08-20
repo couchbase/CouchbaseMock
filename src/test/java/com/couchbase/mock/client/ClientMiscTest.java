@@ -16,12 +16,12 @@
 
 package com.couchbase.mock.client;
 
-import com.couchbase.mock.memcached.client.CommandBuilder;
-import com.couchbase.mock.memcached.protocol.CommandCode;
-import net.spy.memcached.internal.OperationFuture;
 import com.couchbase.mock.memcached.client.ClientResponse;
+import com.couchbase.mock.memcached.client.CommandBuilder;
 import com.couchbase.mock.memcached.client.MemcachedClient;
+import com.couchbase.mock.memcached.protocol.CommandCode;
 import com.couchbase.mock.memcached.protocol.ErrorCode;
+import net.spy.memcached.internal.OperationFuture;
 
 import java.nio.ByteBuffer;
 

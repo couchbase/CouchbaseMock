@@ -15,11 +15,17 @@
  */
 package com.couchbase.mock;
 
-import com.couchbase.mock.http.*;
 import com.couchbase.mock.Bucket.BucketType;
 import com.couchbase.mock.client.RestAPIUtil;
 import com.couchbase.mock.control.MockCommandDispatcher;
 import com.couchbase.mock.harakiri.HarakiriMonitor;
+import com.couchbase.mock.http.Authenticator;
+import com.couchbase.mock.http.BucketAdminServer;
+import com.couchbase.mock.http.ControlHandler;
+import com.couchbase.mock.http.HttpAuthVerifier;
+import com.couchbase.mock.http.PoolsHandler;
+import com.couchbase.mock.http.User;
+import com.couchbase.mock.http.UserManagementHandler;
 import com.couchbase.mock.http.capi.CAPIServer;
 import com.couchbase.mock.http.query.QueryServer;
 import com.couchbase.mock.httpio.HttpServer;
@@ -32,7 +38,11 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.InetSocketAddress;
 import java.nio.channels.ServerSocketChannel;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;

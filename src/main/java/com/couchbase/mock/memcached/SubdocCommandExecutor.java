@@ -20,7 +20,22 @@ import com.couchbase.mock.memcached.protocol.BinaryCommand;
 import com.couchbase.mock.memcached.protocol.BinaryResponse;
 import com.couchbase.mock.memcached.protocol.BinarySubdocCommand;
 import com.couchbase.mock.memcached.protocol.ErrorCode;
-import com.couchbase.mock.subdoc.*;
+import com.couchbase.mock.subdoc.BadNumberException;
+import com.couchbase.mock.subdoc.CannotInsertException;
+import com.couchbase.mock.subdoc.DeltaTooBigException;
+import com.couchbase.mock.subdoc.DocNotJsonException;
+import com.couchbase.mock.subdoc.EmptyValueException;
+import com.couchbase.mock.subdoc.Executor;
+import com.couchbase.mock.subdoc.InvalidPathException;
+import com.couchbase.mock.subdoc.NumberTooBigException;
+import com.couchbase.mock.subdoc.Operation;
+import com.couchbase.mock.subdoc.PathExistsException;
+import com.couchbase.mock.subdoc.PathMismatchException;
+import com.couchbase.mock.subdoc.PathNotFoundException;
+import com.couchbase.mock.subdoc.PathParseException;
+import com.couchbase.mock.subdoc.Result;
+import com.couchbase.mock.subdoc.SubdocException;
+import com.couchbase.mock.subdoc.ZeroDeltaException;
 
 public class SubdocCommandExecutor implements CommandExecutor {
 

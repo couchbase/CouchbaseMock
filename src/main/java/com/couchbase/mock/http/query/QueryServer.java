@@ -17,15 +17,24 @@
 package com.couchbase.mock.http.query;
 
 import com.couchbase.mock.JsonUtils;
+import com.couchbase.mock.httpio.HandlerUtil;
 import com.couchbase.mock.util.Base64;
-import org.apache.http.*;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpEntityEnclosingRequest;
+import org.apache.http.HttpException;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestHandler;
 import org.apache.http.util.EntityUtils;
-import com.couchbase.mock.httpio.HandlerUtil;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 /**
  * Designed to handle fake N1QL queries

@@ -16,25 +16,28 @@
 
 package com.couchbase.mock.http;
 
+import com.couchbase.mock.Bucket;
 import com.couchbase.mock.CouchbaseMock;
 import com.couchbase.mock.JsonUtils;
+import com.couchbase.mock.http.capi.CAPIServer;
+import com.couchbase.mock.httpio.HandlerUtil;
 import com.couchbase.mock.httpio.HttpServer;
 import com.couchbase.mock.httpio.ResponseHandledException;
 import com.couchbase.mock.memcached.MemcachedServer;
-import org.apache.http.*;
+import org.apache.http.HttpException;
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpServerConnection;
+import org.apache.http.HttpStatus;
 import org.apache.http.entity.ContentType;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestHandler;
-import com.couchbase.mock.Bucket;
-import com.couchbase.mock.http.capi.CAPIServer;
-import com.couchbase.mock.httpio.HandlerUtil;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 public final class BucketAdminServer {
     private final CouchbaseMock mock;

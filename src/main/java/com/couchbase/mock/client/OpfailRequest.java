@@ -15,11 +15,10 @@
  */
 package com.couchbase.mock.client;
 
+import com.couchbase.mock.memcached.protocol.ErrorCode;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import com.couchbase.mock.memcached.protocol.ErrorCode;
-import com.sun.corba.se.spi.orb.OperationFactory;
 
 public class OpfailRequest extends MockRequest {
     public OpfailRequest(ErrorCode code, int count, List<Integer> servers) {

@@ -15,11 +15,11 @@
  */
 package com.couchbase.mock.memcached.protocol;
 
+import com.couchbase.mock.memcached.KeySpec;
+
 import java.net.ProtocolException;
 import java.nio.ByteBuffer;
 import java.util.UUID;
-
-import com.couchbase.mock.memcached.KeySpec;
 
 /**
  * @author Trond Norbye

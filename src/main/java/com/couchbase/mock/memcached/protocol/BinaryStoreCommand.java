@@ -15,10 +15,10 @@
  */
 package com.couchbase.mock.memcached.protocol;
 
+import com.couchbase.mock.memcached.Item;
+
 import java.net.ProtocolException;
 import java.nio.ByteBuffer;
-
-import com.couchbase.mock.memcached.Item;
 
 /**
  * @author Trond Norbye

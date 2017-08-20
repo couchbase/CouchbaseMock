@@ -25,7 +25,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigInteger;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 // Tests modelled after subjson/tests/t_ops.cc
 public class ExecutorTest {

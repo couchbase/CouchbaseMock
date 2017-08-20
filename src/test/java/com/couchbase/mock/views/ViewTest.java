@@ -15,16 +15,14 @@
  */
 package com.couchbase.mock.views;
 
-import com.couchbase.mock.memcached.Storage;
-import net.spy.memcached.internal.OperationFuture;
 import com.couchbase.mock.Bucket;
 import com.couchbase.mock.client.ClientBaseTest;
 import com.couchbase.mock.memcached.Item;
+import com.couchbase.mock.memcached.Storage;
+import net.spy.memcached.internal.OperationFuture;
 
 import java.io.IOException;
-import java.rmi.ConnectIOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 

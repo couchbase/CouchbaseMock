@@ -16,13 +16,15 @@
 
 package com.couchbase.mock.client;
 
-import com.couchbase.mock.CouchbaseMock;
 import com.couchbase.mock.Bucket;
+import com.couchbase.mock.CouchbaseMock;
 import com.couchbase.mock.http.Authenticator;
 import com.couchbase.mock.util.Base64;
 import com.couchbase.mock.util.ReaderUtils;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;

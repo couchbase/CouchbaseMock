@@ -18,8 +18,6 @@ package com.couchbase.mock.memcached.client;
 
 import com.couchbase.mock.memcached.errormap.RetrySpec;
 
-import java.io.IOException;
-
 /**
  * @author Mark Nunberg
  */

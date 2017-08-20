@@ -16,12 +16,12 @@
 
 package com.couchbase.mock.http;
 
+import com.couchbase.mock.Bucket;
+import com.couchbase.mock.httpio.HandlerUtil;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.protocol.HttpContext;
-import com.couchbase.mock.Bucket;
-import com.couchbase.mock.httpio.HandlerUtil;
 
 import java.io.IOException;
 

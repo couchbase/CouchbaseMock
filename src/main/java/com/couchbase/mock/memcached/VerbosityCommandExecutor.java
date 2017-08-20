@@ -15,12 +15,12 @@
  */
 package com.couchbase.mock.memcached;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import com.couchbase.mock.memcached.protocol.BinaryCommand;
 import com.couchbase.mock.memcached.protocol.BinaryResponse;
 import com.couchbase.mock.memcached.protocol.ErrorCode;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Implementation of the VERBOSITY command

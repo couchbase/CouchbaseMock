@@ -21,9 +21,9 @@ import com.couchbase.mock.util.Base64;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.fail;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 public class HttpAssert {
     public static void assertResponseOK(URL url, String username, String password) {

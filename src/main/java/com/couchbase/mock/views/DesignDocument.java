@@ -15,15 +15,14 @@
  */
 package com.couchbase.mock.views;
 
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Set;
-import javax.script.ScriptException;
-
 import com.couchbase.mock.JsonUtils;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+
+import javax.script.ScriptException;
+import java.util.ArrayList;
+import java.util.Map;
 
 /**
  * @author Mark Nunberg

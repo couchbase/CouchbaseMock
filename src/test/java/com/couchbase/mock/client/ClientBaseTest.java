@@ -19,6 +19,8 @@ import com.couchbase.client.CouchbaseClient;
 import com.couchbase.client.CouchbaseConnectionFactory;
 import com.couchbase.client.CouchbaseConnectionFactoryBuilder;
 import com.couchbase.client.vbucket.VBucketNodeLocator;
+import com.couchbase.mock.Bucket;
+import com.couchbase.mock.Bucket.BucketType;
 import com.couchbase.mock.BucketConfiguration;
 import com.couchbase.mock.CouchbaseMock;
 import com.couchbase.mock.memcached.Item;
@@ -28,8 +30,6 @@ import com.couchbase.mock.memcached.VBucketInfo;
 import com.couchbase.mock.memcached.client.MemcachedClient;
 import junit.framework.TestCase;
 import net.spy.memcached.MemcachedNode;
-import com.couchbase.mock.Bucket;
-import com.couchbase.mock.Bucket.BucketType;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;

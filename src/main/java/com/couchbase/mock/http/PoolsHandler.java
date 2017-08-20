@@ -15,24 +15,29 @@
  */
 package com.couchbase.mock.http;
 
-import com.couchbase.mock.*;
+import com.couchbase.mock.Bucket;
+import com.couchbase.mock.BucketAlreadyExistsException;
+import com.couchbase.mock.BucketConfiguration;
+import com.couchbase.mock.CouchbaseMock;
+import com.couchbase.mock.DocumentLoader;
+import com.couchbase.mock.JsonUtils;
+import com.couchbase.mock.httpio.HandlerUtil;
 import com.couchbase.mock.httpio.HttpServer;
 import com.google.gson.JsonElement;
-import com.sun.net.httpserver.HttpHandler;
-import org.apache.http.*;
+import org.apache.http.HttpEntityEnclosingRequest;
+import org.apache.http.HttpException;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestHandler;
 import org.apache.http.util.EntityUtils;
-import com.couchbase.mock.*;
-import com.couchbase.mock.httpio.HandlerUtil;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Handler;
 
 /**
  * @author Sergey Avseyev

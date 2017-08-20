@@ -21,14 +21,12 @@ import com.couchbase.mock.memcached.Item;
 import com.couchbase.mock.memcached.MemcachedServer;
 import com.couchbase.mock.memcached.Storage;
 import com.google.gson.JsonElement;
-import java.security.AccessControlException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
+
+import java.security.AccessControlException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Handler for various out-of-band key manipulations

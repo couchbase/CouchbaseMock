@@ -15,9 +15,9 @@
  */
 package com.couchbase.mock.memcached.protocol;
 
-import java.nio.ByteBuffer;
-
 import com.couchbase.mock.memcached.Item;
+
+import java.nio.ByteBuffer;
 
 /**
  * @author Trond Norbye

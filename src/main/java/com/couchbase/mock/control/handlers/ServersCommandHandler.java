@@ -15,16 +15,16 @@
  */
 package com.couchbase.mock.control.handlers;
 
-import java.util.HashSet;
-import java.util.Set;
-
+import com.couchbase.mock.Bucket;
 import com.couchbase.mock.CouchbaseMock;
 import com.couchbase.mock.control.CommandStatus;
+import com.couchbase.mock.control.MockCommand;
 import com.couchbase.mock.memcached.MemcachedServer;
 import com.google.gson.JsonObject;
-import com.couchbase.mock.Bucket;
-import com.couchbase.mock.control.MockCommand;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public abstract class ServersCommandHandler extends MockCommand {
 

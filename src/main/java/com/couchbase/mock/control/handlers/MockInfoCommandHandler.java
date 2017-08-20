@@ -15,15 +15,18 @@
  */
 package com.couchbase.mock.control.handlers;
 
-import java.util.*;
-
 import com.couchbase.mock.CouchbaseMock;
 import com.couchbase.mock.control.CommandStatus;
-import com.couchbase.mock.memcached.protocol.CommandCode;
-import com.google.gson.JsonObject;
 import com.couchbase.mock.control.MockCommand;
 import com.couchbase.mock.control.MockCommandDispatcher;
+import com.couchbase.mock.memcached.protocol.CommandCode;
+import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * This returns information about the current mock's supported

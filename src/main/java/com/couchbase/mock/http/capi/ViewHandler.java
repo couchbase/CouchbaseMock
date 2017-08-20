@@ -16,22 +16,27 @@
 
 package com.couchbase.mock.http.capi;
 
+import com.couchbase.mock.Bucket;
 import com.couchbase.mock.JsonUtils;
+import com.couchbase.mock.httpio.HandlerUtil;
+import com.couchbase.mock.memcached.Item;
 import com.couchbase.mock.memcached.Storage;
+import com.couchbase.mock.views.Configuration;
 import com.couchbase.mock.views.QueryExecutionException;
 import com.couchbase.mock.views.View;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import org.apache.http.*;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpEntityEnclosingRequest;
+import org.apache.http.HttpException;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestHandler;
 import org.apache.http.util.EntityUtils;
-import com.couchbase.mock.Bucket;
-import com.couchbase.mock.httpio.HandlerUtil;
-import com.couchbase.mock.memcached.Item;
-import com.couchbase.mock.views.Configuration;
 
 import java.io.IOException;
 import java.net.MalformedURLException;

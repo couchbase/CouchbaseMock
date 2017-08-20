@@ -15,8 +15,9 @@
  */
 package com.couchbase.mock.util;
 
-import java.util.List;
 import junit.framework.TestCase;
+
+import java.util.List;
 
 /**
  * Test the command line parser

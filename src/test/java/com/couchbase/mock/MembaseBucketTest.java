@@ -14,10 +14,11 @@
  *    limitations under the License.
  */
 package com.couchbase.mock;
+
 import com.couchbase.mock.Bucket.BucketType;
+import junit.framework.TestCase;
 
 import java.io.IOException;
-import junit.framework.TestCase;
 
 /**
  * Just a small test case to call the JSON generation..

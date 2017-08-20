@@ -16,17 +16,22 @@
 
 package com.couchbase.mock.http.capi;
 
+import com.couchbase.mock.Bucket;
 import com.couchbase.mock.JsonUtils;
+import com.couchbase.mock.http.HttpAuthVerifier;
+import com.couchbase.mock.httpio.HandlerUtil;
 import com.couchbase.mock.httpio.HttpServer;
+import com.couchbase.mock.views.DesignDocument;
 import com.couchbase.mock.views.View;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
-import com.couchbase.mock.Bucket;
-import com.couchbase.mock.http.HttpAuthVerifier;
-import com.couchbase.mock.httpio.HandlerUtil;
-import com.couchbase.mock.views.DesignDocument;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class CAPIServer {

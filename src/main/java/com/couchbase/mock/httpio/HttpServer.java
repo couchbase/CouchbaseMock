@@ -16,14 +16,32 @@
 
 package com.couchbase.mock.httpio;
 
-import org.apache.http.*;
-import org.apache.http.impl.DefaultBHttpServerConnectionFactory;
-import org.apache.http.protocol.*;
-import org.apache.http.util.VersionInfo;
 import com.couchbase.mock.Info;
+import org.apache.http.ConnectionClosedException;
+import org.apache.http.HttpException;
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpServerConnection;
+import org.apache.http.HttpStatus;
+import org.apache.http.impl.DefaultBHttpServerConnectionFactory;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
+import org.apache.http.protocol.HttpProcessor;
+import org.apache.http.protocol.HttpProcessorBuilder;
+import org.apache.http.protocol.HttpRequestHandler;
+import org.apache.http.protocol.HttpService;
+import org.apache.http.protocol.ResponseConnControl;
+import org.apache.http.protocol.ResponseContent;
+import org.apache.http.protocol.ResponseServer;
+import org.apache.http.protocol.UriHttpRequestHandlerMapper;
+import org.apache.http.util.VersionInfo;
 
 import java.io.IOException;
-import java.net.*;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.channels.ServerSocketChannel;
 import java.util.HashSet;
 import java.util.Set;

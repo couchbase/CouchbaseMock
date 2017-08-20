@@ -14,22 +14,30 @@
  *    limitations under the License.
  */
 package com.couchbase.mock.http;
+
+import com.couchbase.mock.control.CommandNotFoundException;
+import com.couchbase.mock.control.MockCommandDispatcher;
 import com.couchbase.mock.control.handlers.MockHelpCommandHandler;
+import com.couchbase.mock.httpio.HandlerUtil;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import java.io.*;
-import java.net.URL;
-import java.net.URLDecoder;
-
 import com.google.gson.JsonParser;
-import org.apache.http.*;
+import org.apache.http.Header;
+import org.apache.http.HttpEntityEnclosingRequest;
+import org.apache.http.HttpException;
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
 import org.apache.http.entity.ContentType;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestHandler;
 import org.apache.http.util.EntityUtils;
-import com.couchbase.mock.control.CommandNotFoundException;
-import com.couchbase.mock.control.MockCommandDispatcher;
-import com.couchbase.mock.httpio.HandlerUtil;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.net.URL;
+import java.net.URLDecoder;
 
 /**
  *

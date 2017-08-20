@@ -15,17 +15,18 @@
  */
 package com.couchbase.mock.control.handlers;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import java.util.LinkedList;
-import java.util.List;
 import com.couchbase.mock.Bucket;
 import com.couchbase.mock.CouchbaseMock;
 import com.couchbase.mock.control.CommandStatus;
 import com.couchbase.mock.control.MockCommand;
 import com.couchbase.mock.memcached.MemcachedServer;
 import com.couchbase.mock.memcached.protocol.ErrorCode;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.LinkedList;
+import java.util.List;
 
 public class OpfailCommandHandler extends MockCommand {
 

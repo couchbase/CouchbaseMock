@@ -17,8 +17,8 @@
 package com.couchbase.mock.memcached.errormap;
 
 import com.couchbase.mock.memcached.protocol.ErrorCode;
-import junit.framework.TestCase;
 import com.couchbase.mock.util.ReaderUtils;
+import junit.framework.TestCase;
 
 /**
  * Created by mnunberg on 4/12/17.

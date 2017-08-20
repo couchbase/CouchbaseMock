@@ -15,18 +15,17 @@
  */
 package com.couchbase.mock.memcached;
 
-import com.couchbase.mock.memcached.protocol.BinaryResponse;
-import com.couchbase.mock.memcached.protocol.BinaryHelloCommand;
 import com.couchbase.mock.memcached.protocol.BinaryCommand;
+import com.couchbase.mock.memcached.protocol.BinaryHelloCommand;
+import com.couchbase.mock.memcached.protocol.BinaryResponse;
+import com.couchbase.mock.memcached.protocol.CommandFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.util.Arrays;
-import java.util.List;
 import java.util.LinkedList;
-
-import com.couchbase.mock.memcached.protocol.CommandFactory;
+import java.util.List;
 
 /**
  * Class representing a single <i>client</i> connection to the server

@@ -15,16 +15,17 @@
  */
 package com.couchbase.mock.control.handlers;
 
+import com.couchbase.mock.Bucket;
 import com.couchbase.mock.CouchbaseMock;
 import com.couchbase.mock.control.CommandStatus;
 import com.couchbase.mock.control.MissingRequiredFieldException;
-import com.couchbase.mock.memcached.KeySpec;
-import com.google.gson.JsonObject;
-import java.security.AccessControlException;
-import com.couchbase.mock.Bucket;
 import com.couchbase.mock.control.MockCommand;
+import com.couchbase.mock.memcached.KeySpec;
 import com.couchbase.mock.memcached.VBucketInfo;
+import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
+
+import java.security.AccessControlException;
 
 /**
  *

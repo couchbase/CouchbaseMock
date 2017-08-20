@@ -15,8 +15,8 @@
  */
 package com.couchbase.mock.memcached;
 
-import com.couchbase.mock.memcached.protocol.BinaryResponse;
 import com.couchbase.mock.memcached.protocol.BinaryCommand;
+import com.couchbase.mock.memcached.protocol.BinaryResponse;
 import com.couchbase.mock.memcached.protocol.ErrorCode;
 
 public class UnlockCommandExecutor implements CommandExecutor {

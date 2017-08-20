@@ -17,8 +17,6 @@ package com.couchbase.mock.client;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
-
 public class KeyInfoRequest extends MockRequest {
     public KeyInfoRequest(@NotNull String key) {
         this(key, "");

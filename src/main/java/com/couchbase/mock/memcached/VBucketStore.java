@@ -15,11 +15,16 @@
  */
 package com.couchbase.mock.memcached;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-
 import com.couchbase.mock.Info;
 import com.couchbase.mock.memcached.protocol.ErrorCode;
+
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Storage operations representing a single vBucket. This is a replacement for

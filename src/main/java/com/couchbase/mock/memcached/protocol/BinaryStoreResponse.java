@@ -15,8 +15,8 @@
  */
 package com.couchbase.mock.memcached.protocol;
 
-import com.couchbase.mock.memcached.MutationStatus;
 import com.couchbase.mock.memcached.MutationInfoWriter;
+import com.couchbase.mock.memcached.MutationStatus;
 
 /**
  * @author Trond Norbye

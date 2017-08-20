@@ -19,10 +19,10 @@ package com.couchbase.mock.control.handlers;
 import com.couchbase.mock.CouchbaseMock;
 import com.couchbase.mock.control.CommandStatus;
 import com.couchbase.mock.memcached.MemcachedServer;
-import com.google.gson.JsonObject;
 import com.couchbase.mock.memcached.errormap.ErrorMap;
 import com.couchbase.mock.memcached.errormap.RetrySpec;
 import com.couchbase.mock.memcached.errormap.Verifier;
+import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;

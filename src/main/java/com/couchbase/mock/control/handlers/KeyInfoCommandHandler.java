@@ -15,11 +15,6 @@
  */
 package com.couchbase.mock.control.handlers;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.couchbase.mock.CouchbaseMock;
 import com.couchbase.mock.control.CommandStatus;
 import com.couchbase.mock.control.MockCommand;
@@ -29,6 +24,11 @@ import com.couchbase.mock.memcached.MemcachedServer;
 import com.couchbase.mock.memcached.VBucketInfo;
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  *

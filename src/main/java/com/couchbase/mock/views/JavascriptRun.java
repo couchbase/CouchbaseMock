@@ -18,7 +18,12 @@ package com.couchbase.mock.views;
 
 import com.couchbase.mock.util.ReaderUtils;
 import org.jetbrains.annotations.Nullable;
-import org.mozilla.javascript.*;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.Function;
+import org.mozilla.javascript.ImporterTopLevel;
+import org.mozilla.javascript.NativeObject;
+import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.Undefined;
 
 import java.io.IOException;
 

@@ -18,7 +18,11 @@ package com.couchbase.mock.views;
 
 import com.couchbase.mock.memcached.Item;
 import com.couchbase.mock.util.ReaderUtils;
-import org.mozilla.javascript.*;
+import org.mozilla.javascript.BoundFunction;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.Function;
+import org.mozilla.javascript.ImporterTopLevel;
+import org.mozilla.javascript.Scriptable;
 
 import java.io.IOException;
 

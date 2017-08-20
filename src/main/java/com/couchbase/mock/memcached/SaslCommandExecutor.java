@@ -15,10 +15,10 @@
  */
 package com.couchbase.mock.memcached;
 
+import com.couchbase.mock.Bucket;
 import com.couchbase.mock.memcached.protocol.BinaryCommand;
 import com.couchbase.mock.memcached.protocol.BinarySaslResponse;
 import com.couchbase.mock.memcached.protocol.CommandCode;
-import com.couchbase.mock.Bucket;
 
 /**
  * @author Sergey Avseyev

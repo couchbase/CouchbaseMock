@@ -19,8 +19,9 @@ import com.couchbase.mock.CouchbaseMock;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import java.io.IOException;
 import junit.framework.TestCase;
+
+import java.io.IOException;
 
 /**
  * Verify that our "/pools" JSON is "correct"

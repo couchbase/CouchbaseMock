@@ -16,8 +16,12 @@
 
 package com.couchbase.mock.memcached;
 
-import com.couchbase.mock.memcached.protocol.*;
 import com.couchbase.mock.Bucket;
+import com.couchbase.mock.memcached.protocol.BinaryCommand;
+import com.couchbase.mock.memcached.protocol.BinaryHelloCommand;
+import com.couchbase.mock.memcached.protocol.BinaryHelloResponse;
+import com.couchbase.mock.memcached.protocol.BinaryResponse;
+import com.couchbase.mock.memcached.protocol.ErrorCode;
 
 /**
  * Created by mnunberg on 2/4/15.

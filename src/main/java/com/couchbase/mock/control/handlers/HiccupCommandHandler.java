@@ -19,7 +19,6 @@ import com.couchbase.mock.CouchbaseMock;
 import com.couchbase.mock.control.CommandStatus;
 import com.couchbase.mock.memcached.MemcachedServer;
 import com.google.gson.JsonObject;
-
 import org.jetbrains.annotations.NotNull;
 
 /**

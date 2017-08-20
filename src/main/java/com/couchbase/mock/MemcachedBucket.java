@@ -15,14 +15,13 @@
  */
 package com.couchbase.mock;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.couchbase.mock.memcached.MemcachedServer;
 import com.couchbase.mock.memcached.protocol.ErrorCode;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Representation of a CacheBucket (aka memcached)

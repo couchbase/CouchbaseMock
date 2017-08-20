@@ -15,14 +15,14 @@
  */
 package com.couchbase.mock.memcached;
 
-import com.couchbase.mock.CouchbaseMock;
-import com.couchbase.mock.memcached.protocol.CommandCode;
 import com.couchbase.mock.Bucket;
 import com.couchbase.mock.Bucket.BucketType;
+import com.couchbase.mock.CouchbaseMock;
 import com.couchbase.mock.Info;
 import com.couchbase.mock.memcached.protocol.BinaryCommand;
 import com.couchbase.mock.memcached.protocol.BinaryConfigResponse;
 import com.couchbase.mock.memcached.protocol.BinaryResponse;
+import com.couchbase.mock.memcached.protocol.CommandCode;
 import com.couchbase.mock.memcached.protocol.ErrorCode;
 
 import java.io.IOException;
@@ -37,7 +37,12 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.security.AccessControlException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 

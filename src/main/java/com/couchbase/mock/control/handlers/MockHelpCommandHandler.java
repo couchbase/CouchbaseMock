@@ -15,18 +15,19 @@
  */
 package com.couchbase.mock.control.handlers;
 
+import com.couchbase.mock.CouchbaseMock;
+import com.couchbase.mock.control.CommandStatus;
+import com.couchbase.mock.control.MockCommand;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonWriter;
+import org.jetbrains.annotations.NotNull;
+
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import com.couchbase.mock.CouchbaseMock;
-import com.couchbase.mock.control.CommandStatus;
-import com.couchbase.mock.control.MockCommand;
-import org.jetbrains.annotations.NotNull;
 
 /**
  *

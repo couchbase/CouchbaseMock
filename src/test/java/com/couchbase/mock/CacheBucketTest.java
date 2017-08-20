@@ -16,8 +16,9 @@
 package com.couchbase.mock;
 
 import com.couchbase.mock.Bucket.BucketType;
-import java.io.IOException;
 import junit.framework.TestCase;
+
+import java.io.IOException;
 
 /**
  * Just a small test so that I can look at the generated JSON response ;)
