@@ -1,6 +1,10 @@
 # Keep the entries sorted to reduce the risk for a merge conflict
+*.iml
+*.ipr
+*.iws
 *~
-/target/
-/bin/
-/.settings/
-/.idea/workspace.xml
+.classpath
+.idea
+.project
+dependency-reduced-pom.xml
+target
