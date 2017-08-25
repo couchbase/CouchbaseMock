@@ -132,6 +132,8 @@ public final class BucketAdminServer {
 
     private static final String FMT_ONESHOT = "%s/buckets/%s";
     private static final String FMT_STREAM = "%s/bucketsStreaming/%s";
+    private static final String FMT_TERSE_ONESHOT = "%s/b/%s";
+    private static final String FMT_TERSE_STREAM = "%s/bs/%s";
     private static final String FMT_DOFLUSH = "%s/buckets/%s/controller/doFlush";
     private static final String FMT_DDOCS = "%s/buckets/%s/ddocs";
 
@@ -143,6 +145,8 @@ public final class BucketAdminServer {
         String prefix = getPoolPrefix();
         parentServer.register(String.format(FMT_ONESHOT, prefix, bucket.getName()), new OneShotHandler());
         parentServer.register(String.format(FMT_STREAM, prefix, bucket.getName()), new StreamingHandler());
+        parentServer.register(String.format(FMT_TERSE_ONESHOT, prefix, bucket.getName()), new OneShotHandler());
+        parentServer.register(String.format(FMT_TERSE_STREAM, prefix, bucket.getName()), new StreamingHandler());
         parentServer.register(String.format(FMT_DOFLUSH, prefix, bucket.getName()), new FlushHandler());
         parentServer.register(String.format(FMT_DDOCS, prefix, bucket.getName()), new DesignDocsHandler());
     }
