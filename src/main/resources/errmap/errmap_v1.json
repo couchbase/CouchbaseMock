@@ -5,7 +5,9 @@
     "0": {
       "name": "SUCCESS",
       "desc": "Success",
-      "attrs": []
+      "attrs": [
+        "success"
+      ]
     },
     "1": {
       "name": "KEY_ENOENT",
@@ -66,6 +68,15 @@
       "desc": "Not connected to any bucket",
       "attrs": [
         "conn-state-invalidated"
+      ]
+    },
+    "9": {
+      "name": "LOCKED",
+      "desc": "Requested resource is locked",
+      "attrs": [
+        "item-locked",
+        "item-only",
+        "retry-now"
       ]
     },
     "1f": {
@@ -164,6 +175,20 @@
       "attrs": [
         "temp",
         "retry-now"
+      ]
+    },
+    "87": {
+      "name": "XATTR_EINVAL",
+      "desc": "Invalid extended attribute",
+      "attrs": [
+        "invalid-input"
+      ]
+    },
+    "88": {
+      "name": "UNKNOWN_COLLECTION",
+      "desc": "Unknown collection (or no collection) in the key.",
+      "attrs": [
+        "invalid-input"
       ]
     },
     "c0": {
@@ -269,6 +294,72 @@
       "attrs": [
         "subdoc",
         "special-handling"
+      ]
+    },
+    "cd": {
+      "name": "SUBDOC_SUCCESS_DELETED",
+      "desc": "Subdoc: Success, but the affected document was (and still is) deleted",
+      "attrs": [
+        "item-deleted",
+        "success",
+        "subdoc"
+      ]
+    },
+    "ce": {
+      "name": "SUBDOC_XATTR_INVALID_FLAG_COMBO",
+      "desc": "Subdoc: The flag combination doesn't make any sense",
+      "attrs": [
+        "subdoc",
+        "invalid-input"
+      ]
+    },
+    "cf": {
+      "name": "SUBDOC_XATTR_INVALID_KEY_COMBO",
+      "desc": "Subdoc: The key combination of the xattrs is not allowed",
+      "attrs": [
+        "subdoc",
+        "invalid-input"
+      ]
+    },
+    "d0": {
+      "name": "SUBDOC_XATTR_UNKNOWN_MACRO",
+      "desc": "Subdoc: The server don't know about the specified macro",
+      "attrs": [
+        "subdoc",
+        "invalid-input"
+      ]
+    },
+    "d1": {
+      "name": "SUBDOC_XATTR_UNKNOWN_VATTR",
+      "desc": "Subdoc: The server don't know about the specified virtual attribute",
+      "attrs": [
+        "subdoc",
+        "invalid-input"
+      ]
+    },
+    "d2": {
+      "name": "SUBDOC_XATTR_CANT_MODIFY_VATTR",
+      "desc": "Subdoc: Can't modify virtual attributes",
+      "attrs": [
+        "subdoc",
+        "invalid-input"
+      ]
+    },
+    "d3": {
+      "name": "SUBDOC_MULTI_PATH_FAILURE_DELETED",
+      "desc": "Subdoc: One or more paths in a multi-path command failed on a deleted document",
+      "attrs": [
+        "item-deleted",
+        "subdoc",
+        "special-handling"
+      ]
+    },
+    "d4": {
+      "name": "SUBDOC_INVALID_XATTR_ORDER",
+      "desc": "Subdoc: Invalid XATTR order (xattrs should come first)",
+      "attrs": [
+        "subdoc",
+        "invalid-input"
       ]
     },
     "7ff0": {
