@@ -405,6 +405,28 @@ public class CouchbaseMock {
 
         if (monitorAddress != null) {
             startHarakiriMonitor(monitorAddress, true);
+        } else {
+            StringBuilder wireshark = new StringBuilder("couchbase && (");
+            System.out.println("\nConnection strings:");
+            for (Bucket bucket : getBuckets().values()) {
+                System.out.println("couchbase://127.0.0.1:" + port + "=http/" + bucket.getName());
+                StringBuilder connstr = new StringBuilder("couchbase://");
+                for (MemcachedServer server : bucket.getServers()) {
+                    connstr.append(server.getHostname())
+                            .append(":")
+                            .append(server.getPort())
+                            .append("=mcd,");
+                    wireshark.append("tcp.port == ").append(server.getPort()).append(" || ");
+                }
+                connstr.replace(connstr.length() - 1, connstr.length(), "");
+                connstr.append("/").append(bucket.getName());
+                System.out.println(connstr);
+            }
+            wireshark.replace(wireshark.length() - 4, wireshark.length(), "");
+            wireshark.append(")");
+            System.out.println("\nWireshark filters:");
+            System.out.println("http && tcp.port == " + port);
+            System.out.println(wireshark);
         }
 
         startupLatch.countDown();
