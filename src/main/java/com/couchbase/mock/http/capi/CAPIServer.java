@@ -71,7 +71,6 @@ public final class CAPIServer {
         for (View view : design.getViews()) {
             String path = makeViewPaths(design, view);
             if (enabled) {
-                System.err.printf("Registering name '%s'\n", path);
                 parentServer.register(path, new ViewHandler(view, bucket));
             } else {
                 parentServer.unregister(path);
