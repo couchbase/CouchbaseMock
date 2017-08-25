@@ -368,6 +368,9 @@ public class CouchbaseMock {
                 ServerSocketChannel ch = ServerSocketChannel.open();
                 ch.socket().bind(new InetSocketAddress(0));
                 port = ch.socket().getLocalPort();
+                if (monitorAddress == null) {
+                    System.out.println("port=" + port);
+                }
                 httpServer.bind(ch);
             } else {
                 httpServer.bind(new InetSocketAddress(port));
