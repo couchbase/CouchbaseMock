@@ -218,14 +218,14 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
                 MutationStatus ms;
                 if (needCreate) {
                     needCreate = false;
-                    ms = cache.add(newItem);
+                    ms = cache.add(newItem, client.supportsXerror());
                     if (ms.getStatus() == ErrorCode.KEY_EEXISTS) {
                         results.clear();
                         execute();
                         return;
                     }
                 } else {
-                    ms = cache.replace(newItem);
+                    ms = cache.replace(newItem, client.supportsXerror());
                 }
 
                 ByteArrayOutputStream bao = new ByteArrayOutputStream();

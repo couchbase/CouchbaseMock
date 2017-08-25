@@ -40,15 +40,15 @@ public class StoreCommandExecutor implements CommandExecutor {
         switch (cc) {
             case ADD:
             case ADDQ:
-                ms = cache.add(item);
+                ms = cache.add(item, client.supportsXerror());
                 break;
             case REPLACE:
             case REPLACEQ:
-                ms = cache.replace(item);
+                ms = cache.replace(item, client.supportsXerror());
                 break;
             case SET:
             case SETQ:
-                ms = cache.set(item);
+                ms = cache.set(item, client.supportsXerror());
                 break;
             default:
                 client.sendResponse(new BinaryResponse(cmd, ErrorCode.EINTERNAL));

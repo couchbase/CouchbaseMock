@@ -64,7 +64,7 @@ public class GetCommandExecutor implements CommandExecutor {
             client.sendResponse(new BinaryGetResponse(cmd, item, item.getCasReal()));
             return;
         } else if (cc == CommandCode.TOUCH || cc == CommandCode.GAT || cc == CommandCode.GATQ) {
-            ErrorCode ec = cache.touch(item, cmd.getExpiration());
+            ErrorCode ec = cache.touch(item, cmd.getExpiration(), client.supportsXerror());
             if (ec != ErrorCode.SUCCESS) {
                 client.sendResponse(new BinaryResponse(cmd, ec));
                 return;

@@ -38,7 +38,7 @@ public class ArithmeticCommandExecutor implements CommandExecutor {
         if (item == null) {
             if (cmd.create()) {
                 item = new Item(cmd.getKeySpec(), 0, cmd.getExpiration(), Long.toString(cmd.getInitial()).getBytes(), null, 0);
-                MutationStatus ms = cache.add(item);
+                MutationStatus ms = cache.add(item, client.supportsXerror());
                 ErrorCode err = ms.getStatus();
 
                 switch (err) {
@@ -79,7 +79,7 @@ public class ArithmeticCommandExecutor implements CommandExecutor {
 
             int exp = cmd.getExpiration() > 0 ? cmd.getExpiration() : item.getExpiryTime();
             Item newValue = new Item(cmd.getKeySpec(), item.getFlags(), exp, Long.toString(value).getBytes(), null, item.getCas());
-            MutationStatus ms = cache.set(newValue);
+            MutationStatus ms = cache.set(newValue, client.supportsXerror());
             if (ms.getStatus() == ErrorCode.SUCCESS) {
                 if (cc == CommandCode.INCREMENT || cc == CommandCode.DECREMENT) {
                     // return value

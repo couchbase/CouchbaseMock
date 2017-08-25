@@ -39,11 +39,11 @@ class AppendPrependCommandExecutor implements CommandExecutor {
         switch (cmd.getComCode()) {
             case APPEND:
             case APPENDQ:
-                ms = cache.append(command.getItem());
+                ms = cache.append(command.getItem(), client.supportsXerror());
                 break;
             case PREPEND:
             case PREPENDQ:
-                ms = cache.prepend(command.getItem());
+                ms = cache.prepend(command.getItem(), client.supportsXerror());
                 break;
             default:
                 return;

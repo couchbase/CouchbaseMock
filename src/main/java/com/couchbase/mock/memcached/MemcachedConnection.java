@@ -175,6 +175,10 @@ public class MemcachedConnection {
         return miw;
     }
 
+    public boolean supportsXerror() {
+        return supportedFeatures[BinaryHelloCommand.Feature.XERROR.getValue()];
+    }
+
     public boolean[] getSupportedFeatures() {
         return Arrays.copyOf(supportedFeatures, supportedFeatures.length);
     }

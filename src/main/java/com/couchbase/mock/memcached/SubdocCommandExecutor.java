@@ -199,13 +199,13 @@ public class SubdocCommandExecutor implements CommandExecutor {
                     existing.getKeySpec(), existing.getFlags(), subdocInput.getExpiryTime(),
                     body, xattr, subdocInput.getCas());
             if (needsCreate) {
-                ms = cache.add(newItm);
+                ms = cache.add(newItm, client.supportsXerror());
                 if (ms.getStatus() == ErrorCode.KEY_EEXISTS) {
                     execute(cmd, server, client);
                     return;
                 }
             } else {
-                ms = cache.replace(newItm);
+                ms = cache.replace(newItm, client.supportsXerror());
             }
 
             if (ms.getStatus() == ErrorCode.SUCCESS) {

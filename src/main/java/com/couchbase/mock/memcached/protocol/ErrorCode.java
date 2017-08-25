@@ -24,6 +24,7 @@ public enum ErrorCode {
             0x04), NOT_STORED(0x05), DELTA_BADVAL(0x06), NOT_MY_VBUCKET(0x07), AUTH_ERROR(
             0x20), AUTH_CONTINUE(0x21), UNKNOWN_COMMAND(0x81), ENOMEM(0x82), NOT_SUPPORTED(
             0x83), EINTERNAL(0x84), EBUSY(0x85), ETMPFAIL(0x86),
+            LOCKED(0x9),
             // RBAC:
             EACCESS(0x24),
     // Subdoc Codes

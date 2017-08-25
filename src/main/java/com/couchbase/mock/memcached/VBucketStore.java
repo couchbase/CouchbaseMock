@@ -134,9 +134,9 @@ public class VBucketStore {
         }
     }
 
-    public ErrorCode touch(Item item, int expiry) {
+    public ErrorCode touch(Item item, int expiry, boolean xerrorEnabled) {
         if (item.isLocked()) {
-            return ErrorCode.KEY_EEXISTS;
+            return lockedError(xerrorEnabled);
         }
         item.setExpiryTime(expiry);
         MutationStatus ms = incrCoords(item.getKeySpec());
@@ -144,11 +144,11 @@ public class VBucketStore {
         return ErrorCode.SUCCESS;
     }
 
-    public MutationStatus add(Item item) {
+    public MutationStatus add(Item item, boolean xerrorEnabled) {
         // I don't give a shit about atomicity right now..
         Item old = lookup(item.getKeySpec());
         if (old != null || item.getCas() != 0) {
-            return new MutationStatus(ErrorCode.KEY_EEXISTS);
+            return new MutationStatus(lockedError(xerrorEnabled));
         }
 
         item.setCas(++casCounter);
@@ -158,7 +158,7 @@ public class VBucketStore {
         return ms;
     }
 
-    public MutationStatus replace(Item item) {
+    public MutationStatus replace(Item item, boolean xerrorEnabled) {
         // I don't give a shit about atomicity right now..
         Item old = lookup(item.getKeySpec());
         if (old == null) {
@@ -166,7 +166,7 @@ public class VBucketStore {
         }
 
         if (!old.ensureUnlocked(item.getCas())) {
-            return new MutationStatus(ErrorCode.KEY_EEXISTS);
+            return new MutationStatus(lockedError(xerrorEnabled));
         }
 
         if (item.getCas() != old.getCas()) {
@@ -182,11 +182,11 @@ public class VBucketStore {
         return ms;
     }
 
-    public MutationStatus set(Item item) {
+    public MutationStatus set(Item item, boolean xerrorEnabled) {
         if (item.getCas() == 0) {
             Item old = lookup(item.getKeySpec());
             if (old != null && old.isLocked()) {
-                return new MutationStatus(ErrorCode.KEY_EEXISTS);
+                return new MutationStatus(lockedError(xerrorEnabled));
             }
 
             MutationStatus ms = incrCoords(item.getKeySpec());
@@ -195,11 +195,11 @@ public class VBucketStore {
             onItemMutated.onAction(this, item, ms.getCoords());
             return ms;
         } else {
-            return replace(item);
+            return replace(item, xerrorEnabled);
         }
     }
 
-    public MutationStatus delete(KeySpec ks, long cas) {
+    public MutationStatus delete(KeySpec ks, long cas, boolean xerrorEnabled) {
         // I don't give a shit about atomicity right now..
         Item i = lookup(ks);
         if (i == null) {
@@ -207,7 +207,7 @@ public class VBucketStore {
         }
 
         if (!i.ensureUnlocked(cas)) {
-            return new MutationStatus(ErrorCode.ETMPFAIL);
+            return new MutationStatus(lockedError(xerrorEnabled));
         }
 
         if (cas == 0 || cas == i.getCas()) {
@@ -219,13 +219,13 @@ public class VBucketStore {
         return new MutationStatus(ErrorCode.KEY_EEXISTS);
     }
 
-    private MutationStatus modifyItemValue(Item i, boolean isAppend) {
+    private MutationStatus modifyItemValue(Item i, boolean isAppend, boolean xerrorEnabled) {
         Item old = lookup(i.getKeySpec());
         if (old == null) {
             return new MutationStatus(ErrorCode.KEY_ENOENT);
         }
         if (!old.ensureUnlocked(i.getCas())) {
-            return new MutationStatus(ErrorCode.KEY_EEXISTS);
+            return new MutationStatus(lockedError(xerrorEnabled));
         }
         if (isAppend) {
             old.append(i);
@@ -238,12 +238,12 @@ public class VBucketStore {
         return ms;
     }
 
-    public MutationStatus append(Item i) {
-        return modifyItemValue(i, true);
+    public MutationStatus append(Item i, boolean xerrorEnabled) {
+        return modifyItemValue(i, true, xerrorEnabled);
     }
 
-    public MutationStatus prepend(Item i) {
-        return modifyItemValue(i, false);
+    public MutationStatus prepend(Item i, boolean xerrorEnabled) {
+        return modifyItemValue(i, false, xerrorEnabled);
     }
 
     public Item get(KeySpec ks) {
@@ -336,5 +336,7 @@ public class VBucketStore {
         return (int)((new Date().getTime() / 1000) + original + Info.getClockOffset());
     }
 
-
+    private ErrorCode lockedError(boolean xerrorEnabled) {
+        return xerrorEnabled ? ErrorCode.LOCKED : ErrorCode.KEY_EEXISTS;
+    }
 }

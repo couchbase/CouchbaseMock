@@ -141,6 +141,6 @@ public class CouchbaseBucket extends Bucket {
         Item item = new Item(ks, 0, 0, value, null, 0);
         MemcachedServer server = vbInfo[vbIndex].getOwner();
         VBucketStore vbStore = server.getStorage().getCache(vbIndex);
-        return vbStore.set(item).getStatus();
+        return vbStore.set(item, false).getStatus();
     }
 }
