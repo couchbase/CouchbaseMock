@@ -29,6 +29,7 @@ import com.couchbase.mock.http.UserManagementHandler;
 import com.couchbase.mock.http.capi.CAPIServer;
 import com.couchbase.mock.http.query.QueryServer;
 import com.couchbase.mock.httpio.HttpServer;
+import com.couchbase.mock.memcached.MemcachedServer;
 import com.couchbase.mock.util.Getopt;
 import com.couchbase.mock.util.Getopt.CommandLineOption;
 import com.couchbase.mock.util.Getopt.Entry;
@@ -69,10 +70,15 @@ public class CouchbaseMock {
     private final UserManagementHandler userManagementHandler;
     private BucketConfiguration defaultConfig = new BucketConfiguration();
     private final Map<String, User> users = new HashMap<String, User>();
+    private static boolean cccpBootstrap = false;
 
 
     private int port = 8091;
     private HarakiriMonitor harakiriMonitor;
+
+    public boolean isCccpBootstrap() {
+        return cccpBootstrap;
+    }
 
     /**
      * Tell the harakiri monitor to connect to the given address.
@@ -443,6 +449,7 @@ public class CouchbaseMock {
         o.printf("                      into the `default` bucket%n");
         o.printf("-E --empty            Initialize a blank cluster without any buckets. Buckets may then%n");
         o.printf("                      be later added via the REST API%n");
+        o.printf("-c --cccp             Enable Carrier Publication bootstrap protocol by default%n");
         o.printf("%n");
         o.printf("=== -- bucket option ===%n");
         o.printf("Buckets descriptions is a comma-separated list of {name}:{password}:{bucket type} pairs.%n");
@@ -478,6 +485,7 @@ public class CouchbaseMock {
                 addOption(new CommandLineOption('D', "--docs", true)).
                 addOption(new CommandLineOption('S', "--with-beer-sample", false)).
                 addOption(new CommandLineOption('E', "--empty", false)).
+                addOption(new CommandLineOption('c', "--cccp", false)).
                 addOption(new CommandLineOption('?', "--help", false));
 
         List<Entry> options = getopt.parse(args);
@@ -500,6 +508,8 @@ public class CouchbaseMock {
                 useBeerSample = true;
             } else if (e.key.equals("-E") || e.key.equals("--empty")) {
                 emptyCluster = true;
+            } else if (e.key.equals("-c") || e.key.equals("--cccp")) {
+                cccpBootstrap = true;
             } else if (e.key.equals("--harakiri-monitor")) {
                 int idx = e.value.indexOf(':');
                 if (idx == -1) {

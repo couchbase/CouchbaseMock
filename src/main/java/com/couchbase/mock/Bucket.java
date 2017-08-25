@@ -179,7 +179,7 @@ public abstract class Bucket {
             servers[ii] = new MemcachedServer(this,
                     config.hostname,
                     (config.bucketStartPort == 0 ? 0 : config.bucketStartPort + ii),
-                    vbInfo);
+                    vbInfo, cluster.isCccpBootstrap());
         }
 
         rebalance();

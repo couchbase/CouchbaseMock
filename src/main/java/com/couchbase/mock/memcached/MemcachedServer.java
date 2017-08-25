@@ -130,9 +130,10 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
      * @param vbi       Vbucket Info
      * @throws IOException If we fail to create the server socket
      */
-    public MemcachedServer(Bucket bucket, String hostname, int port, VBucketInfo[] vbi) throws IOException {
+    public MemcachedServer(Bucket bucket, String hostname, int port, VBucketInfo[] vbi, boolean cccpEnabled) throws IOException {
         this.bucket = bucket;
         this.storage = new Storage(vbi, this);
+        this.cccpEnabled = cccpEnabled;
 
         for (int ii = 0; ii < executors.length; ++ii) {
             executors[ii] = unknownHandler;
@@ -582,7 +583,7 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
             for (int ii = 0; ii < vbi.length; ++ii) {
                 vbi[ii] = new VBucketInfo();
             }
-            MemcachedServer server = new MemcachedServer(null, null, 11211, vbi);
+            MemcachedServer server = new MemcachedServer(null, null, 11211, vbi, false);
             for (VBucketInfo aVbi : vbi) {
                 aVbi.setOwner(server);
             }
