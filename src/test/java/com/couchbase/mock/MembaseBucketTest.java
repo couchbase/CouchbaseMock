@@ -39,7 +39,8 @@ public class MembaseBucketTest extends TestCase {
         BucketConfiguration config = new BucketConfiguration();
         config.type = BucketType.COUCHBASE;
         config.name = "membase";
-        CouchbaseBucket instance = new CouchbaseBucket(null, config);
+        CouchbaseMock mock = new CouchbaseMock("localhost", 8091, 1, 1024);
+        CouchbaseBucket instance = new CouchbaseBucket(mock, config);
         assertNotNull(instance.getJSON());
     }
 }

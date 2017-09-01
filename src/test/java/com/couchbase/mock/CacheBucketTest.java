@@ -38,7 +38,8 @@ public class CacheBucketTest extends TestCase {
         config.type = BucketType.MEMCACHED;
         config.name = "default";
 
-        MemcachedBucket instance = new MemcachedBucket(null, config);
+        CouchbaseMock mock = new CouchbaseMock("localhost", 8091, 1, 1024);
+        MemcachedBucket instance = new MemcachedBucket(mock, config);
         instance.getJSON();
     }
 }
