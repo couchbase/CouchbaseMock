@@ -147,8 +147,10 @@ public class VBucketStore {
     public MutationStatus add(Item item, boolean xerrorEnabled) {
         // I don't give a shit about atomicity right now..
         Item old = lookup(item.getKeySpec());
-        if (old != null || item.getCas() != 0) {
+        if (old != null && old.isLocked()) {
             return new MutationStatus(lockedError(xerrorEnabled));
+        } else if (old != null || item.getCas() != 0) {
+            return new MutationStatus(ErrorCode.KEY_EEXISTS);
         }
 
         item.setCas(++casCounter);
