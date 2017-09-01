@@ -15,6 +15,7 @@
  */
 package com.couchbase.mock.memcached;
 
+import com.couchbase.mock.Info;
 import com.couchbase.mock.memcached.protocol.BinaryCommand;
 import com.couchbase.mock.memcached.protocol.BinaryResponse;
 import com.couchbase.mock.memcached.protocol.BinaryStoreCommand;
@@ -35,6 +36,11 @@ public class StoreCommandExecutor implements CommandExecutor {
         MutationStatus ms;
         MutationInfoWriter miw = client.getMutinfoWriter();
         Item item = command.getItem();
+        if (item.getValue().length > Info.itemSizeMax()) {
+            client.sendResponse(new BinaryResponse(cmd, ErrorCode.E2BIG));
+            return;
+        }
+
         CommandCode cc = cmd.getComCode();
 
         switch (cc) {

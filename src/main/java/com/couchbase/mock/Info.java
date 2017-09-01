@@ -50,6 +50,9 @@ public final class Info {
         return clockOffset.get();
     }
 
+    public static int itemSizeMax() {
+        return 20 * 1024 * 1024;
+    }
 
     private Info() {
     }

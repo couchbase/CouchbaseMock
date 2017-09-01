@@ -15,6 +15,7 @@
  */
 package com.couchbase.mock.memcached;
 
+import com.couchbase.mock.Info;
 import com.couchbase.mock.memcached.protocol.BinaryCommand;
 import com.couchbase.mock.memcached.protocol.BinaryResponse;
 import com.couchbase.mock.memcached.protocol.BinaryStoreCommand;
@@ -35,6 +36,10 @@ class AppendPrependCommandExecutor implements CommandExecutor {
 
         MutationStatus ms;
         Item existing = cache.get(command.getKeySpec());
+        if (existing != null && existing.getValue().length + command.getItem().getValue().length > Info.itemSizeMax()) {
+            client.sendResponse(new BinaryResponse(cmd, ErrorCode.E2BIG));
+            return;
+        }
 
         switch (cmd.getComCode()) {
             case APPEND:
