@@ -71,6 +71,7 @@ public class CouchbaseMock {
     private BucketConfiguration defaultConfig = new BucketConfiguration();
     private final Map<String, User> users = new HashMap<String, User>();
     private static boolean cccpBootstrap = false;
+    private static boolean debug = false;
 
 
     private int port = 8091;
@@ -374,7 +375,7 @@ public class CouchbaseMock {
                 ServerSocketChannel ch = ServerSocketChannel.open();
                 ch.socket().bind(new InetSocketAddress(0));
                 port = ch.socket().getLocalPort();
-                if (monitorAddress == null) {
+                if (monitorAddress == null && debug) {
                     System.out.println("port=" + port);
                 }
                 httpServer.bind(ch);
@@ -405,7 +406,7 @@ public class CouchbaseMock {
 
         if (monitorAddress != null) {
             startHarakiriMonitor(monitorAddress, true);
-        } else {
+        } else if (debug) {
             StringBuilder wireshark = new StringBuilder("couchbase && (");
             System.out.println("\nConnection strings:");
             for (Bucket bucket : getBuckets().values()) {
@@ -472,6 +473,7 @@ public class CouchbaseMock {
         o.printf("-E --empty            Initialize a blank cluster without any buckets. Buckets may then%n");
         o.printf("                      be later added via the REST API%n");
         o.printf("-c --cccp             Enable Carrier Publication bootstrap protocol by default%n");
+        o.printf("-d --debug            Enable debug mode%n");
         o.printf("%n");
         o.printf("=== -- bucket option ===%n");
         o.printf("Buckets descriptions is a comma-separated list of {name}:{password}:{bucket type} pairs.%n");
@@ -508,6 +510,7 @@ public class CouchbaseMock {
                 addOption(new CommandLineOption('S', "--with-beer-sample", false)).
                 addOption(new CommandLineOption('E', "--empty", false)).
                 addOption(new CommandLineOption('c', "--cccp", false)).
+                addOption(new CommandLineOption('d', "--debug", false)).
                 addOption(new CommandLineOption('?', "--help", false));
 
         List<Entry> options = getopt.parse(args);
@@ -532,6 +535,8 @@ public class CouchbaseMock {
                 emptyCluster = true;
             } else if (e.key.equals("-c") || e.key.equals("--cccp")) {
                 cccpBootstrap = true;
+            } else if (e.key.equals("-d") || e.key.equals("--debug")) {
+                debug = true;
             } else if (e.key.equals("--harakiri-monitor")) {
                 int idx = e.value.indexOf(':');
                 if (idx == -1) {
