@@ -26,7 +26,11 @@ public final class FailoverCommandHandler extends BucketCommandHandler {
     @Override
     public CommandStatus execute(@NotNull CouchbaseMock mock, @NotNull Command command, @NotNull JsonObject payload) {
         super.execute(mock, command, payload);
-        bucket.failover(idx);
+        boolean rebalance = true; // backward compatibility
+        if (payload.has("rebalance")) {
+            rebalance = payload.get("rebalance").getAsBoolean();
+        }
+        bucket.failover(idx, rebalance);
         return getResponse();
     }
 }

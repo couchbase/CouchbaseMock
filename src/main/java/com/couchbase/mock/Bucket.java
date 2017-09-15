@@ -308,16 +308,19 @@ public abstract class Bucket {
      *              is the index of the node within the {@link #servers}
      *              (or {@link #getServers()} array; not the logical index
      *              within the vBucket map!
+     * @param rebalance Should we rebalance after failover
      *
      * Note this will also automatically rebalance the cluster
      */
-    public void failover(int index) {
+    public void failover(int index, boolean rebalance) {
         configurationRwLock.writeLock().lock();
         try {
             if (index >= 0 && index < servers.length) {
                 servers[index].shutdown();
             }
-            rebalance();
+            if (rebalance) {
+                rebalance();
+            }
         } finally {
             configurationRwLock.writeLock().unlock();
         }

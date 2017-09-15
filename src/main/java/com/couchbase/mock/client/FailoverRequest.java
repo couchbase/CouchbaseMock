@@ -20,8 +20,13 @@ public class FailoverRequest extends MockRequest {
         this(index, null);
     }
     public FailoverRequest(int index, String bucket) {
+        this(index, bucket, true);
+    }
+
+    public FailoverRequest(int index, String bucket, boolean rebalance) {
         super();
         payload.put("idx", index);
+        payload.put("rebalance", rebalance);
         if (bucket != null && !bucket.isEmpty()) {
             payload.put("bucket", bucket);
         }
