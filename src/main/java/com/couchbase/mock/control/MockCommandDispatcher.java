@@ -31,6 +31,7 @@ import com.couchbase.mock.control.handlers.PersistenceCommandHandler;
 import com.couchbase.mock.control.handlers.RegenCoordsHandler;
 import com.couchbase.mock.control.handlers.ResetQueryStateHandler;
 import com.couchbase.mock.control.handlers.RespawnCommandHandler;
+import com.couchbase.mock.control.handlers.SetQueryErrorStateCommandHandler;
 import com.couchbase.mock.control.handlers.StartCmdLogCommandHandler;
 import com.couchbase.mock.control.handlers.StartRetryVerifyComandHandler;
 import com.couchbase.mock.control.handlers.StopCmdLogCommandHandler;
@@ -90,6 +91,7 @@ public class MockCommandDispatcher {
         registerClass(MockCommand.Command.START_RETRY_VERIFY, StartRetryVerifyComandHandler.class);
         registerClass(MockCommand.Command.CHECK_RETRY_VERIFY, CheckRetryVerifyCommandHandler.class);
         registerClass(MockCommand.Command.SET_ENHANCED_ERRORS, EnhancedErrorsCommandHandler.class);
+        registerClass(MockCommand.Command.SET_QUERY_ERROR_STATE, SetQueryErrorStateCommandHandler.class);
     }
 
 

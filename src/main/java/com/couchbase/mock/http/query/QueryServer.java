@@ -41,6 +41,8 @@ import java.util.Random;
  */
 public class QueryServer implements HttpRequestHandler {
     static private volatile int randNumber = new Random().nextInt();
+    private static ErrorState errorState = null;
+
     public QueryServer() {
     }
 
@@ -61,6 +63,7 @@ public class QueryServer implements HttpRequestHandler {
         mm.put("errors", ll);
         String json = JsonUtils.encode(mm);
         HandlerUtil.makeJsonResponse(response, json);
+        response.setStatusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
     }
 
     static private Map<String,Object> resultMeta() {
@@ -151,7 +154,7 @@ public class QueryServer implements HttpRequestHandler {
         }
         HttpEntity entity = ((HttpEntityEnclosingRequest)request).getEntity();
         String txt = EntityUtils.toString(entity);
-        Map<String,Object> mm;
+        Map<String, Object> mm;
 
         try {
             mm = JsonUtils.decodeAsMap(txt);
@@ -162,10 +165,22 @@ public class QueryServer implements HttpRequestHandler {
             HandlerUtil.make400Response(response, ex.toString());
             return;
         }
+        if (errorState != null && errorState.shouldReturnError(mm)) {
+            doError(response, errorState.getMessage(), errorState.getCode());
+            return;
+        }
         if (!mm.containsKey("statement")) {
             handlePrepared(mm, response);
         } else {
             handleString((String)mm.get("statement"), response);
         }
+    }
+
+    public static void setErrorState(ErrorState state) {
+        errorState = state;
+    }
+
+    public static void resetErrorState() {
+        errorState = null;
     }
 }
