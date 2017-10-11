@@ -183,6 +183,16 @@ public class ClientSubdocTest extends ClientBaseTest {
                 .subdoc("counter", "bad number");
         resp = client.sendRequest(storeCb);
         assertEquals(ErrorCode.SUBDOC_DELTA_ERANGE, resp.getStatus());
+
+        // Valid large value and small increment resulting in overflow
+        storeCb = new CommandBuilder(CommandCode.SUBDOC_DICT_UPSERT)
+                .key(docId, vbId)
+                .subdoc("counter", "9223372036854775807");
+        resp = client.sendRequest(storeCb);
+        assertTrue(resp.success());
+        resp = client.sendRequest(cb);
+        assertEquals(ErrorCode.SUBDOC_VALUE_CANTINSERT, resp.getStatus());
+
     }
 
 

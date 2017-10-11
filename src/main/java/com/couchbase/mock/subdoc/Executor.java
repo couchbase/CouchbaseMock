@@ -388,11 +388,11 @@ public class Executor {
             /*
             if (delta >= 0 && numres >= 0) {
                 if (std::numeric_limits<int64_t>::max() - delta < numres) {
-                    return Error::DELTA_E2BIG;
+                    return Error::DELTA_OVERFLOW;
                 }
             } else if (delta < 0 && numres < 0) {
                 if (delta < std::numeric_limits<int64_t>::min() - numres) {
-                    return Error::DELTA_E2BIG;
+                    return Error::DELTA_OVERFLOW;
                 }
             }
              */

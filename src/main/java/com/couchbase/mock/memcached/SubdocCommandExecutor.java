@@ -78,7 +78,7 @@ public class SubdocCommandExecutor implements CommandExecutor {
         } catch (NumberTooBigException ex7) {
             ec = ErrorCode.SUBDOC_NUM_ERANGE;
         } catch (DeltaTooBigException ex8) {
-            ec = ErrorCode.SUBDOC_DELTA_ERANGE;
+            ec = ErrorCode.SUBDOC_VALUE_CANTINSERT;
         } catch (CannotInsertException ex9) {
             ec = ErrorCode.SUBDOC_VALUE_CANTINSERT;
         } catch (PathParseException ex10) {
