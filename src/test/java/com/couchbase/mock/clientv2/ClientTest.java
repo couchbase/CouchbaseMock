@@ -51,7 +51,7 @@ public class ClientTest extends TestCase {
     protected void getPortInfo(String bucket) throws Exception {
         httpPort = couchbaseMock.getHttpPort();
         URIBuilder builder = new URIBuilder();
-        builder.setScheme("http").setHost("localhost").setPort(httpPort).setPath("mock/get_mcports")
+        builder.setScheme("http").setHost("localhost").setPort(httpPort).setPath("/mock/get_mcports")
                 .setParameter("bucket", bucket);
         HttpGet request = new HttpGet(builder.build());
         HttpClient client = HttpClientBuilder.create().build();
