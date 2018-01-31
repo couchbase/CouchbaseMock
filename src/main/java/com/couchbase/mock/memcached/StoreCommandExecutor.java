@@ -23,19 +23,21 @@ import com.couchbase.mock.memcached.protocol.BinaryStoreResponse;
 import com.couchbase.mock.memcached.protocol.CommandCode;
 import com.couchbase.mock.memcached.protocol.ErrorCode;
 
+import java.net.ProtocolException;
+
 /**
  * @author Trond Norbye
  */
 public class StoreCommandExecutor implements CommandExecutor {
 
     @Override
-    public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
+    public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) throws ProtocolException {
         BinaryStoreCommand command = (BinaryStoreCommand) cmd;
         VBucketStore cache = server.getStorage().getCache(server, cmd.getVBucketId());
 
         MutationStatus ms;
         MutationInfoWriter miw = client.getMutinfoWriter();
-        Item item = command.getItem();
+        Item item = command.getItem(client.snappyMode());
         if (item.getValue().length > Info.itemSizeMax()) {
             client.sendResponse(new BinaryResponse(cmd, ErrorCode.E2BIG));
             return;

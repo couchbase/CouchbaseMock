@@ -22,9 +22,11 @@ import com.couchbase.mock.memcached.Item;
 import com.couchbase.mock.memcached.KeySpec;
 import com.couchbase.mock.memcached.MemcachedServer;
 import com.couchbase.mock.memcached.VBucketInfo;
+import com.couchbase.mock.memcached.protocol.Datatype;
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
 
+import javax.xml.crypto.Data;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -47,6 +49,7 @@ public final class KeyInfoCommandHandler extends KeyCommandHandler {
             }
             ret.put("Value", valueString);
             ret.put("CAS", itm.getCas());
+            ret.put("Snappy", (itm.getDatatype() & Datatype.SNAPPY.value()) > 0);
         }
         return ret;
     }

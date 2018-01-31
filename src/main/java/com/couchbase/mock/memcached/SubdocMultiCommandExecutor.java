@@ -23,6 +23,7 @@ import com.couchbase.mock.memcached.protocol.BinarySubdocCommand;
 import com.couchbase.mock.memcached.protocol.BinarySubdocMultiCommand;
 import com.couchbase.mock.memcached.protocol.BinarySubdocMultiMutationCommand;
 import com.couchbase.mock.memcached.protocol.CommandCode;
+import com.couchbase.mock.memcached.protocol.Datatype;
 import com.couchbase.mock.memcached.protocol.ErrorCode;
 import com.couchbase.mock.subdoc.Operation;
 
@@ -122,7 +123,7 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
             } else {
                 topLevelRc = ErrorCode.SUBDOC_MULTI_FAILURE;
             }
-            BinaryResponse br = BinaryResponse.createWithValue(topLevelRc, command, bb.array(), 0);
+            BinaryResponse br = BinaryResponse.createWithValue(topLevelRc, command, Datatype.RAW.value(), bb.array(), 0);
             client.sendResponse(br);
             return false;
         }
@@ -213,7 +214,7 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
                         command.getNewExpiry(existing.getExpiryTime()),
                         currentDoc.getBytes(),
                         newXattrs,
-                        command.getCas());
+                        command.getCas(), Datatype.RAW.value());
 
                 MutationStatus ms;
                 if (needCreate) {
@@ -250,7 +251,7 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
                         throw new RuntimeException(ex);
                     }
                 }
-                client.sendResponse(new BinaryResponse(command, ms, miw, newItem.getCas(), bao.toByteArray()));
+                client.sendResponse(new BinaryResponse(command, ms, miw, Datatype.RAW.value(), newItem.getCas(), bao.toByteArray()));
             } else {
                 ByteArrayOutputStream bao = new ByteArrayOutputStream();
                 boolean hasError = false;
@@ -276,7 +277,7 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
                 }
                 byte[] multiPayload  = bao.toByteArray();
                 ErrorCode finalEc = hasError ? ErrorCode.SUBDOC_MULTI_FAILURE : ErrorCode.SUCCESS;
-                BinaryResponse resp = BinaryResponse.createWithValue(finalEc, command, multiPayload, existing.getCas());
+                BinaryResponse resp = BinaryResponse.createWithValue(finalEc, command, Datatype.RAW.value(), multiPayload, existing.getCas());
                 client.sendResponse(resp);
             }
         }
@@ -307,7 +308,7 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
                 return;
             }
 
-            Item newItem = new Item(cmd.getKeySpec(), 0, 0, rootString.getBytes(), "{}".getBytes(), 0);
+            Item newItem = new Item(cmd.getKeySpec(), 0, 0, rootString.getBytes(), "{}".getBytes(), 0, Datatype.RAW.value());
             cx = new ExecutorContext(cmd, client, newItem, cache, true);
 
         } else {

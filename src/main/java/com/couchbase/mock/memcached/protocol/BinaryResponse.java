@@ -27,16 +27,14 @@ import java.nio.ByteBuffer;
  */
 public class BinaryResponse {
     private static final byte MAGIC = (byte) 0x81;
-    private static final byte DATA_TYPE = 0;
-    private static final byte DATA_TYPE_JSON = 1;
     final ByteBuffer buffer;
 
     BinaryResponse(final ByteBuffer buffer) {
         this.buffer = buffer;
     }
 
-    BinaryResponse(BinaryCommand command, ErrorCode errorCode, int extraLength, int keyLength, int dataLength, long cas) {
-        buffer = createAndRewind(command, errorCode, extraLength, keyLength, dataLength, cas);
+    BinaryResponse(BinaryCommand command, ErrorCode errorCode, byte datatype, int extraLength, int keyLength, int dataLength, long cas) {
+        buffer = createAndRewind(command, errorCode, datatype, extraLength, keyLength, dataLength, cas);
     }
 
     public BinaryResponse(BinaryCommand command, ErrorCode errorCode, String errorContext) {
@@ -51,14 +49,14 @@ public class BinaryResponse {
             JsonObject body = new JsonObject();
             body.add("error", error);
             byte[] value = new Gson().toJson(body).getBytes();
-            buffer = create(command, errorCode, 0, 0, value.length, 0);
+            buffer = create(command, errorCode,  Datatype.RAW.value(), 0, 0, value.length, 0);
             buffer.position(5);
-            buffer.put(DATA_TYPE_JSON);
+            buffer.put(Datatype.JSON.value());
             buffer.position(24);
             buffer.put(value);
             buffer.rewind();
         } else {
-            buffer = createAndRewind(command, errorCode, 0, 0, 0, 0);
+            buffer = createAndRewind(command, errorCode,  Datatype.RAW.value(), 0, 0, 0, 0);
         }
     }
 
@@ -67,16 +65,16 @@ public class BinaryResponse {
     }
 
     public BinaryResponse(BinaryCommand command, MutationStatus ms, MutationInfoWriter miw, long cas) {
-        this(command, ms, miw, cas, null);
+        this(command, ms, miw, Datatype.RAW.value(), cas, null);
     }
 
-    public static BinaryResponse createWithValue(BinaryCommand command, byte[] value, long cas) {
-        return createWithValue(ErrorCode.SUCCESS, command, value, cas);
+    public static BinaryResponse createWithValue(BinaryCommand command, byte datatype, byte[] value, long cas) {
+        return createWithValue(ErrorCode.SUCCESS, command, datatype, value, cas);
     }
 
-    public static BinaryResponse createWithValue(ErrorCode ec, BinaryCommand command, byte[] value, long cas) {
+    public static BinaryResponse createWithValue(ErrorCode ec, BinaryCommand command, byte datatype, byte[] value, long cas) {
         int vallen = value == null ? 0 : value.length;
-        BinaryResponse resp = new BinaryResponse(command, ec, 0, 0, vallen, cas);
+        BinaryResponse resp = new BinaryResponse(command, ec, datatype,0,  0, vallen, cas);
         if (vallen > 0) {
             resp.buffer.position(24);
             resp.buffer.put(value);
@@ -85,7 +83,7 @@ public class BinaryResponse {
         return resp;
     }
 
-    public BinaryResponse(BinaryCommand command, MutationStatus ms, MutationInfoWriter miw, long cas, byte[] value) {
+    public BinaryResponse(BinaryCommand command, MutationStatus ms, MutationInfoWriter miw, byte datatype, long cas, byte[] value) {
         int extlen = 0;
         int valLen = 0;
         if (value != null) {
@@ -97,7 +95,7 @@ public class BinaryResponse {
             shouldWrite = true;
         }
 
-        buffer = createAndRewind(command, ms.getStatus(), extlen, 0, valLen, cas);
+        buffer = createAndRewind(command, ms.getStatus(), datatype, extlen, 0, valLen, cas);
         buffer.position(24);
         if (shouldWrite && extlen != 0) {
             miw.write(buffer, ms.getCoords());
@@ -109,19 +107,19 @@ public class BinaryResponse {
         buffer.rewind();
     }
 
-    private static ByteBuffer createAndRewind(BinaryCommand command, ErrorCode errorCode, int extraLength, int keyLength, int dataLength, long cas) {
-        ByteBuffer message = create(command, errorCode, extraLength, keyLength, dataLength, cas);
+    private static ByteBuffer createAndRewind(BinaryCommand command, ErrorCode errorCode, byte datatype, int extraLength, int keyLength, int dataLength, long cas) {
+        ByteBuffer message = create(command, errorCode, datatype, extraLength, keyLength, dataLength, cas);
         message.rewind();
         return message;
     }
 
-    static ByteBuffer create(BinaryCommand command, ErrorCode errorCode, int extraLength, int keyLength, int dataLength, long cas) {
+    static ByteBuffer create(BinaryCommand command, ErrorCode errorCode, byte datatype, int extraLength, int keyLength, int dataLength, long cas) {
         ByteBuffer message = ByteBuffer.allocate(24 + extraLength + keyLength + dataLength);
            message.put(MAGIC);
            message.put(command.getOpcode());
            message.putShort((short)keyLength);
            message.put((byte)extraLength);
-           message.put(DATA_TYPE);
+           message.put(datatype);
            message.putShort(errorCode.value());
            message.putInt(dataLength + keyLength + extraLength);
            message.putInt(command.getOpaque());

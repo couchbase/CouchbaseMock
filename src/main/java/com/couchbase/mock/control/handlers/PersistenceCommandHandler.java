@@ -20,6 +20,7 @@ import com.couchbase.mock.control.CommandStatus;
 import com.couchbase.mock.memcached.Item;
 import com.couchbase.mock.memcached.MemcachedServer;
 import com.couchbase.mock.memcached.Storage;
+import com.couchbase.mock.memcached.protocol.Datatype;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
@@ -95,7 +96,7 @@ public final class PersistenceCommandHandler extends KeyCommandHandler {
         if (source == null) {
             assert value != null;
             assert value.getBytes() != null;
-            source = new Item(keySpec, 0, 0, value.getBytes(), null, cas);
+            source = new Item(keySpec, 0, 0, value.getBytes(), null, cas, Datatype.RAW.value());
         }
 
         if (cas < 0) {
@@ -109,7 +110,7 @@ public final class PersistenceCommandHandler extends KeyCommandHandler {
                     source.getExpiryTime(),
                     value.getBytes(),
                     source.getXattr(),
-                    cas);
+                    cas, Datatype.RAW.value());
 
         } else {
             newItem = new Item(source);

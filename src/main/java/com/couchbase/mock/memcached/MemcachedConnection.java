@@ -34,6 +34,7 @@ public class MemcachedConnection {
 
     private final BinaryProtocolHandler protocolHandler;
     private final byte header[];
+    private final MemcachedServer server;
     private BinaryCommand command;
     private final ByteBuffer input;
     private List<ByteBuffer> pending = new LinkedList<ByteBuffer>();
@@ -48,6 +49,7 @@ public class MemcachedConnection {
         header = new byte[24];
         input = ByteBuffer.wrap(header);
         protocolHandler = server.getProtocolHandler();
+        this.server = server;
     }
 
     /**
@@ -179,6 +181,14 @@ public class MemcachedConnection {
         return supportedFeatures[BinaryHelloCommand.Feature.XERROR.getValue()];
     }
 
+    public CompressionMode snappyMode() {
+        if (!supportedFeatures[BinaryHelloCommand.Feature.SNAPPY.getValue()]) {
+            return CompressionMode.OFF;
+        } else {
+            return server.getCompression();
+        }
+    }
+
     public boolean[] getSupportedFeatures() {
         return Arrays.copyOf(supportedFeatures, supportedFeatures.length);
     }
@@ -211,6 +221,10 @@ public class MemcachedConnection {
                 case XATTR:
                 case SELECT_BUCKET:
                     supportedFeatures[i] = input[i];
+                    break;
+
+                case SNAPPY:
+                    supportedFeatures[i] = input[i] && server.getCompression() != CompressionMode.OFF;
                     break;
 
                 default:

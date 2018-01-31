@@ -16,8 +16,12 @@
 package com.couchbase.mock.control;
 
 import com.couchbase.mock.CouchbaseMock;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Set;
 
 /**
  * The MockCommand class is the base class for all commands
@@ -69,7 +73,8 @@ public abstract class MockCommand {
         START_RETRY_VERIFY,
         CHECK_RETRY_VERIFY,
         SET_ENHANCED_ERRORS,
-        SET_QUERY_ERROR_STATE
+        SET_QUERY_ERROR_STATE,
+        SET_COMPRESSION
     }
 
     /**
@@ -93,4 +98,14 @@ public abstract class MockCommand {
     public abstract
     @NotNull
     CommandStatus execute(@NotNull CouchbaseMock mock, @NotNull Command command, @NotNull JsonObject payload);
+
+    public static void loadServers(@NotNull JsonObject payload, Set<Integer> enabledServers) {
+        if (payload.has("servers")) {
+            JsonArray arr = payload.get("servers").getAsJsonArray();
+            for (int ii = 0; ii < arr.size(); ii++) {
+                JsonElement e = arr.get(ii);
+                enabledServers.add(e.getAsInt());
+            }
+        }
+    }
 }

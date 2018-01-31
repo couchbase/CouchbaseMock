@@ -18,6 +18,7 @@ package com.couchbase.mock.control;
 import com.couchbase.mock.CouchbaseMock;
 import com.couchbase.mock.control.handlers.CCCPCommandHandler;
 import com.couchbase.mock.control.handlers.CheckRetryVerifyCommandHandler;
+import com.couchbase.mock.control.handlers.CompressionCommandHandler;
 import com.couchbase.mock.control.handlers.EnhancedErrorsCommandHandler;
 import com.couchbase.mock.control.handlers.FailoverCommandHandler;
 import com.couchbase.mock.control.handlers.GetCmdLogCommandHandler;
@@ -92,6 +93,7 @@ public class MockCommandDispatcher {
         registerClass(MockCommand.Command.CHECK_RETRY_VERIFY, CheckRetryVerifyCommandHandler.class);
         registerClass(MockCommand.Command.SET_ENHANCED_ERRORS, EnhancedErrorsCommandHandler.class);
         registerClass(MockCommand.Command.SET_QUERY_ERROR_STATE, SetQueryErrorStateCommandHandler.class);
+        registerClass(MockCommand.Command.SET_COMPRESSION, CompressionCommandHandler.class);
     }
 
 

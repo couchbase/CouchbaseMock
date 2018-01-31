@@ -20,6 +20,7 @@ import com.couchbase.mock.memcached.protocol.BinaryArithmeticResponse;
 import com.couchbase.mock.memcached.protocol.BinaryCommand;
 import com.couchbase.mock.memcached.protocol.BinaryResponse;
 import com.couchbase.mock.memcached.protocol.CommandCode;
+import com.couchbase.mock.memcached.protocol.Datatype;
 import com.couchbase.mock.memcached.protocol.ErrorCode;
 
 /**
@@ -37,7 +38,7 @@ public class ArithmeticCommandExecutor implements CommandExecutor {
 
         if (item == null) {
             if (cmd.create()) {
-                item = new Item(cmd.getKeySpec(), 0, cmd.getExpiration(), Long.toString(cmd.getInitial()).getBytes(), null, 0);
+                item = new Item(cmd.getKeySpec(), 0, cmd.getExpiration(), Long.toString(cmd.getInitial()).getBytes(), null, 0, Datatype.RAW.value());
                 MutationStatus ms = cache.add(item, client.supportsXerror());
                 ErrorCode err = ms.getStatus();
 
@@ -78,7 +79,7 @@ public class ArithmeticCommandExecutor implements CommandExecutor {
             }
 
             int exp = cmd.getExpiration() > 0 ? cmd.getExpiration() : item.getExpiryTime();
-            Item newValue = new Item(cmd.getKeySpec(), item.getFlags(), exp, Long.toString(value).getBytes(), null, item.getCas());
+            Item newValue = new Item(cmd.getKeySpec(), item.getFlags(), exp, Long.toString(value).getBytes(), null, item.getCas(), Datatype.RAW.value());
             MutationStatus ms = cache.set(newValue, client.supportsXerror());
             if (ms.getStatus() == ErrorCode.SUCCESS) {
                 if (cc == CommandCode.INCREMENT || cc == CommandCode.DECREMENT) {

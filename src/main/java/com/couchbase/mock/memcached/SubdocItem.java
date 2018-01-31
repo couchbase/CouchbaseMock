@@ -16,10 +16,12 @@
 
 package com.couchbase.mock.memcached;
 
+import com.couchbase.mock.memcached.protocol.Datatype;
+
 public class SubdocItem extends Item {
     private final String path;
     public SubdocItem(KeySpec ks, int flags, int expiryTime, byte[] path, byte[] value, long cas) {
-        super(ks, flags, expiryTime, value, null, cas);
+        super(ks, flags, expiryTime, value, null, cas, Datatype.RAW.value());
         this.path = new String(path);
     }
 

@@ -53,15 +53,25 @@ public class BinaryHelloCommand extends BinaryCommand {
     }
 
     public enum Feature {
-        DATATYPE (1), TLS (2), TCP_NODELAY (3), MUTATION_SEQNO (4), XATTR(6), XERROR(7), SELECT_BUCKET(8), MAX (9);
+        DATATYPE(1),
+        TLS(2),
+        TCP_NODELAY(3),
+        MUTATION_SEQNO(4),
+        XATTR(6),
+        XERROR(7),
+        SELECT_BUCKET(8),
+        COLLECTIONS(9),
+        SNAPPY(10),
+        JSON(11),
+        DUPLEX(12),
+        MAX(13);
 
         private final int value;
+
         private Feature(int value) {
             this.value = value;
         }
-        public int getValue() {
-            return value;
-        }
+
         public static Feature valueOf(int value) {
             for (Feature feature : values()) {
                 if (feature.value == value) {
@@ -69,6 +79,10 @@ public class BinaryHelloCommand extends BinaryCommand {
                 }
             }
             return null;
+        }
+
+        public int getValue() {
+            return value;
         }
     }
 

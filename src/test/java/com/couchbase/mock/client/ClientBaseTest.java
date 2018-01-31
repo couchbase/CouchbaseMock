@@ -28,6 +28,7 @@ import com.couchbase.mock.memcached.KeySpec;
 import com.couchbase.mock.memcached.MemcachedServer;
 import com.couchbase.mock.memcached.VBucketInfo;
 import com.couchbase.mock.memcached.client.MemcachedClient;
+import com.couchbase.mock.memcached.protocol.Datatype;
 import junit.framework.TestCase;
 import net.spy.memcached.MemcachedNode;
 import org.jetbrains.annotations.NotNull;
@@ -196,6 +197,6 @@ public abstract class ClientBaseTest extends TestCase {
 
     protected void storeItem(String key, short vbId, String value) {
         MemcachedServer server = getBucket().getVBucketInfo()[vbId].getOwner();
-        server.getStorage().putCached(new Item(new KeySpec(key, vbId), 0, 0, value.getBytes(), null, 0));
+        server.getStorage().putCached(new Item(new KeySpec(key, vbId), 0, 0, value.getBytes(), null, 0, Datatype.RAW.value()));
     }
 }

@@ -21,7 +21,7 @@ package com.couchbase.mock.memcached.protocol;
  */
 public class BinaryGetErrmapResponse extends BinaryResponse {
     public BinaryGetErrmapResponse(BinaryCommand cmd, String errmap) {
-        super(cmd, ErrorCode.SUCCESS, 0, 0, errmap.length(), 0);
+        super(cmd, ErrorCode.SUCCESS, Datatype.RAW.value(), 0, 0, errmap.length(), 0);
         buffer.position(24);
         buffer.put(errmap.getBytes());
         buffer.rewind();

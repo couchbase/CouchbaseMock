@@ -22,6 +22,8 @@ import com.couchbase.mock.memcached.protocol.BinaryStoreCommand;
 import com.couchbase.mock.memcached.protocol.BinaryStoreResponse;
 import com.couchbase.mock.memcached.protocol.ErrorCode;
 
+import java.net.ProtocolException;
+
 /**
  * Implementation of the APPEND[Q] and PREPEND[Q] commands
  *
@@ -30,13 +32,13 @@ import com.couchbase.mock.memcached.protocol.ErrorCode;
 class AppendPrependCommandExecutor implements CommandExecutor {
 
     @Override
-    public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
+    public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) throws ProtocolException {
         BinaryStoreCommand command = (BinaryStoreCommand) cmd;
         VBucketStore cache = server.getStorage().getCache(server, cmd.getVBucketId());
 
         MutationStatus ms;
         Item existing = cache.get(command.getKeySpec());
-        if (existing != null && existing.getValue().length + command.getItem().getValue().length > Info.itemSizeMax()) {
+        if (existing != null && existing.getValue().length + command.getItem(client.snappyMode()).getValue().length > Info.itemSizeMax()) {
             client.sendResponse(new BinaryResponse(cmd, ErrorCode.E2BIG));
             return;
         }
@@ -44,11 +46,11 @@ class AppendPrependCommandExecutor implements CommandExecutor {
         switch (cmd.getComCode()) {
             case APPEND:
             case APPENDQ:
-                ms = cache.append(command.getItem(), client.supportsXerror());
+                ms = cache.append(command.getItem(client.snappyMode()), client.supportsXerror());
                 break;
             case PREPEND:
             case PREPENDQ:
-                ms = cache.prepend(command.getItem(), client.supportsXerror());
+                ms = cache.prepend(command.getItem(client.snappyMode()), client.supportsXerror());
                 break;
             default:
                 return;

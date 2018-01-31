@@ -19,6 +19,7 @@ package com.couchbase.mock.memcached;
 import com.couchbase.mock.memcached.protocol.BinaryCommand;
 import com.couchbase.mock.memcached.protocol.BinaryResponse;
 import com.couchbase.mock.memcached.protocol.BinarySubdocCommand;
+import com.couchbase.mock.memcached.protocol.Datatype;
 import com.couchbase.mock.memcached.protocol.ErrorCode;
 import com.couchbase.mock.subdoc.BadNumberException;
 import com.couchbase.mock.subdoc.CannotInsertException;
@@ -134,7 +135,7 @@ public class SubdocCommandExecutor implements CommandExecutor {
                 newAttr = null;
                 newBody = newValue.getBytes();
             }
-            existing = new Item(subdocInput.getKeySpec(), 0, 0, newBody, newAttr, 0);
+            existing = new Item(subdocInput.getKeySpec(), 0, 0, newBody, newAttr, 0, Datatype.RAW.value());
             needsCreate = true;
 
         } else {
@@ -197,7 +198,7 @@ public class SubdocCommandExecutor implements CommandExecutor {
             }
             Item newItm = new Item(
                     existing.getKeySpec(), existing.getFlags(), subdocInput.getExpiryTime(),
-                    body, xattr, subdocInput.getCas());
+                    body, xattr, subdocInput.getCas(), Datatype.RAW.value());
             if (needsCreate) {
                 ms = cache.add(newItm, client.supportsXerror());
                 if (ms.getStatus() == ErrorCode.KEY_EEXISTS) {
@@ -209,12 +210,12 @@ public class SubdocCommandExecutor implements CommandExecutor {
             }
 
             if (ms.getStatus() == ErrorCode.SUCCESS) {
-                client.sendResponse(new BinaryResponse(cmd, ms, miw, newItm.getCas(), value));
+                client.sendResponse(new BinaryResponse(cmd, ms, miw, Datatype.RAW.value(), newItm.getCas(), value));
             } else {
                 client.sendResponse(new BinaryResponse(cmd, ms.getStatus()));
             }
         } else {
-            client.sendResponse(BinaryResponse.createWithValue(command, value, existing.getCas()));
+            client.sendResponse(BinaryResponse.createWithValue(command, Datatype.RAW.value(), value, existing.getCas()));
         }
     }
 }

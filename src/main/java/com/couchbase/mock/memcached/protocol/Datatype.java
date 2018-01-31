@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Couchbase, Inc.
+ * Copyright 2018 Couchbase, Inc.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -13,25 +13,22 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
+
 package com.couchbase.mock.memcached.protocol;
 
-import java.nio.ByteBuffer;
+public enum Datatype {
+    RAW((byte)0),
+    JSON((byte)1),
+    SNAPPY((byte)2),
+    XATTR((byte)4);
 
-/**
- * @author Sergey Avseyev
- */
-public class BinaryStatResponse extends BinaryResponse {
+    private final byte value;
 
-    public BinaryStatResponse(BinaryCommand command, String key, String value) {
-        super(create(command, key.getBytes(), value.getBytes()));
+    Datatype(byte value) {
+        this.value = value;
     }
 
-    private static ByteBuffer create(BinaryCommand command, byte[] key, byte[] value) {
-        final ByteBuffer message = BinaryResponse.create(command, ErrorCode.SUCCESS, Datatype.RAW.value(), 0,
-                key.length, value.length, 0);
-        message.put(key);
-        message.put(value);
-        message.rewind();
-        return message;
+    public byte value() {
+        return value;
     }
 }

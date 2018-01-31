@@ -24,10 +24,9 @@ import com.couchbase.mock.memcached.protocol.ErrorCode;
 public class GetRandomCommandExecutor implements CommandExecutor {
     @Override
     public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
-        VBucketStore cache;
         Item itm = server.getStorage().getRandomItem();
         if (itm != null) {
-            client.sendResponse(new BinaryGetResponse(cmd, itm));
+            client.sendResponse(new BinaryGetResponse(cmd, itm, client.snappyMode()));
         } else {
             client.sendResponse(new BinaryResponse(cmd, ErrorCode.KEY_ENOENT));
         }

@@ -17,6 +17,7 @@
 package com.couchbase.mock.memcached;
 
 import com.couchbase.mock.Info;
+import com.couchbase.mock.memcached.protocol.Datatype;
 import com.couchbase.mock.util.Base64;
 
 import java.nio.ByteBuffer;
@@ -37,29 +38,28 @@ public class Item {
     private String cached_UTF8 = null;
     private String cached_B64 = null;
     private long cas;
+    private byte datatype;
     private long modificationTime;
     final static private Charset UTF8_CHARSET = Charset.forName("UTF-8");
 
     /** When the lock expires, if any */
     private int lockExpiryTime;
 
-    public Item(KeySpec ks, int flags, int expiryTime, byte[] value, byte[] xattr, long cas) {
+    public Item(KeySpec ks, int flags, int expiryTime, byte[] value, byte[] xattr, long cas, byte datatype) {
         this.keySpec = ks;
         this.flags = flags;
         this.value = value;
         this.xattr = xattr;
         this.cas = cas;
         this.expiryTime = VBucketStore.convertExpiryTime(expiryTime);
+        this.datatype = datatype;
     }
+//    public Item(KeySpec ks, int flags, int expiryTime, byte[] value, byte[] xattr, long cas) {
+//        this(ks, flags, expiryTime, value, xattr, cas, Datatype.RAW.value());
+//    }
 
     public Item(KeySpec ks) {
-        this.keySpec = ks;
-        this.flags = -1;
-        this.expiryTime = -1;
-        this.value = null;
-        this.xattr = null;
-        this.cas = -1;
-        this.modificationTime = -1;
+        this(ks, -1, -1, null, null, -1, Datatype.RAW.value());
     }
 
     /**
@@ -77,6 +77,7 @@ public class Item {
         this.cached_B64 = src.cached_B64;
         this.cached_UTF8 = src.cached_UTF8;
         this.xattr = src.xattr;
+        this.datatype = src.datatype;
     }
 
     public int getExpiryTime() {
@@ -94,6 +95,8 @@ public class Item {
     public long getModificationTime() {
         return modificationTime;
     }
+
+    public byte getDatatype() { return datatype; }
 
     public int getFlags() {
         return flags;

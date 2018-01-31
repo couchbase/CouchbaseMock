@@ -70,6 +70,7 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
     private final List<CommandLogEntry> commandLog = new ArrayList<CommandLogEntry>();
     private boolean shouldLogCommands = false;
     private boolean enhancedErrorsEnabled = false;
+    private CompressionMode compression = CompressionMode.PASSIVE;
 
     public void setEnhancedErrorsEnabled(boolean enhancedErrorsEnabled) {
         this.enhancedErrorsEnabled = enhancedErrorsEnabled;
@@ -77,6 +78,14 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
 
     public boolean isEnhancedErrorsEnabled() {
         return enhancedErrorsEnabled;
+    }
+
+    public void setCompression(CompressionMode compression) {
+        this.compression = compression;
+    }
+
+    public CompressionMode getCompression() {
+        return compression;
     }
 
     public static class CommandLogEntry {

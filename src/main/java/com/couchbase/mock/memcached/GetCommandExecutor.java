@@ -61,7 +61,7 @@ public class GetCommandExecutor implements CommandExecutor {
                         server.isEnhancedErrorsEnabled() ? "Failed to lock item" : null));
                 return;
             }
-            client.sendResponse(new BinaryGetResponse(cmd, item, item.getCasReal()));
+            client.sendResponse(new BinaryGetResponse(cmd, item, item.getCasReal(), client.snappyMode()));
             return;
         } else if (cc == CommandCode.TOUCH || cc == CommandCode.GAT || cc == CommandCode.GATQ) {
             ErrorCode ec = cache.touch(item, cmd.getExpiration(), client.supportsXerror());
@@ -74,7 +74,7 @@ public class GetCommandExecutor implements CommandExecutor {
         if (cc == CommandCode.TOUCH) {
             client.sendResponse(new BinaryGetResponse(cmd, ErrorCode.SUCCESS));
         } else {
-            client.sendResponse(new BinaryGetResponse(cmd, item));
+            client.sendResponse(new BinaryGetResponse(cmd, item, client.snappyMode()));
         }
     }
 }

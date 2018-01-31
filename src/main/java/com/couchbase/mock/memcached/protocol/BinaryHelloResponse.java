@@ -21,7 +21,7 @@ package com.couchbase.mock.memcached.protocol;
  */
 public class BinaryHelloResponse extends BinaryResponse {
     public BinaryHelloResponse(BinaryHelloCommand cmd, int[] supported) {
-        super(cmd, ErrorCode.SUCCESS, 0, 0, supported.length * 2, 0);
+        super(cmd, ErrorCode.SUCCESS, Datatype.RAW.value(), 0, 0, supported.length * 2, 0);
         for (int i = 0; i < supported.length; i++) {
             buffer.putShort(24 + (i * 2), (short)supported[i]);
         }

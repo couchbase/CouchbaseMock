@@ -45,15 +45,7 @@ public final class EnhancedErrorsCommandHandler extends MockCommand {
             enabledBuckets.addAll(mock.getBuckets().keySet());
         }
 
-        boolean enabledForAllServers = false;
-        if (payload.has("servers")) {
-            JsonArray arr = payload.get("servers").getAsJsonArray();
-            for (int ii = 0; ii < arr.size(); ii++) {
-                enabledServers.add(arr.get(ii).getAsInt());
-            }
-        } else {
-            enabledForAllServers = true;
-        }
+        loadServers(payload, enabledServers);
 
         for (Bucket bucket : mock.getBuckets().values()) {
             if (!enabledBuckets.contains(bucket.getName())) {
@@ -61,7 +53,7 @@ public final class EnhancedErrorsCommandHandler extends MockCommand {
             }
             MemcachedServer[] servers = bucket.getServers();
             for (int ii = 0; ii < servers.length; ii++) {
-                if (enabledServers.contains(ii) || enabledForAllServers) {
+                if (enabledServers.contains(ii) || enabledServers.isEmpty()) {
                     servers[ii].setEnhancedErrorsEnabled(enabled);
                 }
             }

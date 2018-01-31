@@ -20,6 +20,7 @@ import com.couchbase.mock.Bucket;
 import com.couchbase.mock.CouchbaseMock;
 import com.couchbase.mock.control.CommandStatus;
 import com.couchbase.mock.control.MockCommand;
+import com.couchbase.mock.memcached.CompressionMode;
 import com.couchbase.mock.memcached.MemcachedServer;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -32,13 +33,13 @@ import java.util.Set;
 /**
  * @author Mark Nunberg
  */
-public final class CCCPCommandHandler extends MockCommand {
+public final class CompressionCommandHandler extends MockCommand {
     @Override
     @NotNull
     public CommandStatus execute(@NotNull CouchbaseMock mock, @NotNull Command command, @NotNull JsonObject payload) {
         Set<String> enabledBuckets = new HashSet<String>();
         Set<Integer> enabledServers = new HashSet<Integer>();
-        boolean enabled = payload.get("enabled").getAsBoolean();
+        CompressionMode mode = CompressionMode.of(payload.get("mode").getAsString());
 
         if (payload.has("bucket")) {
             enabledBuckets.add(payload.get("bucket").getAsString());
@@ -59,7 +60,7 @@ public final class CCCPCommandHandler extends MockCommand {
                         enabledServers.contains(ii) == false) {
                     continue;
                 }
-                servers[ii].setCccpEnabled(enabled);
+                servers[ii].setCompression(mode);
             }
         }
 

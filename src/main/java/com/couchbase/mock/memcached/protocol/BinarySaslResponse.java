@@ -32,7 +32,7 @@ public class BinarySaslResponse extends BinaryResponse {
 
     private static ByteBuffer create(BinaryCommand command, String data) {
         final ByteBuffer message = BinaryResponse.create(command,
-                ErrorCode.SUCCESS, 0, 0, data.getBytes().length, 0);
+                ErrorCode.SUCCESS, Datatype.RAW.value(), 0, 0, data.getBytes().length, 0);
         message.put(data.getBytes());
         message.rewind();
         return message;

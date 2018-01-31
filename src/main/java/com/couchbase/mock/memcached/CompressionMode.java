@@ -13,22 +13,30 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
+
 package com.couchbase.mock.memcached;
 
-import com.couchbase.mock.memcached.protocol.BinaryCommand;
+public enum CompressionMode {
+    OFF("off"),
+    PASSIVE("passive"),
+    ACTIVE("active");
 
-import java.net.ProtocolException;
+    private final String value;
 
-/**
- * @author Trond Norbye
- */
-interface CommandExecutor {
-    /**
-     * Execute a single command
-     *
-     * @param cmd    The incoming command
-     * @param server The server handling the command
-     * @param client The client requesting the command
-     */
-    void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) throws ProtocolException;
+    CompressionMode(String value) {
+        this.value = value;
+    }
+
+    public static CompressionMode of(String value) {
+        for (CompressionMode mode : CompressionMode.values()) {
+            if (mode.value.equalsIgnoreCase(value)) {
+                return mode;
+            }
+        }
+        throw new IllegalArgumentException("No enum constant for \"" + value + "\"");
+    }
+
+    public String value() {
+        return value;
+    }
 }

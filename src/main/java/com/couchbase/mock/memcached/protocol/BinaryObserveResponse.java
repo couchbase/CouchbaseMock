@@ -44,7 +44,7 @@ public class BinaryObserveResponse extends BinaryResponse {
     private static ByteBuffer create(BinaryCommand command, List<ObsKeyState> states) {
         int len = calculateLength(states);
         final ByteBuffer message = BinaryResponse.create(
-                command, ErrorCode.SUCCESS, 0, 0, len, 0);
+                command, ErrorCode.SUCCESS, Datatype.RAW.value(), 0, 0, len, 0);
 
         for (ObsKeyState ks : states) {
             message.putShort(ks.vbId);

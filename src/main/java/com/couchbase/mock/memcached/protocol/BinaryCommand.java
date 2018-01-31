@@ -30,6 +30,7 @@ public class BinaryCommand {
     protected final short keyLength;
     protected final byte extraLength;
     protected final byte opcode;
+    protected final byte datatype;
     private final short vbucket;
     protected final int bodyLength;
     private final int opaque;
@@ -44,9 +45,7 @@ public class BinaryCommand {
         cc = CommandCode.valueOf(opcode);
         keyLength = header.getShort();
         extraLength = header.get();
-        if (header.get() != 0) {
-            throw new ProtocolException("Illegal data type");
-        }
+        datatype = header.get();
         vbucket = header.getShort();
         bodyLength = header.getInt();
         opaque = header.getInt();

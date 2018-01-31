@@ -15,7 +15,9 @@
  */
 package com.couchbase.mock.memcached.protocol;
 
+import com.couchbase.mock.memcached.CompressionMode;
 import com.couchbase.mock.memcached.Item;
+import org.iq80.snappy.Snappy;
 
 import java.net.ProtocolException;
 import java.nio.ByteBuffer;
@@ -28,13 +30,22 @@ public class BinaryStoreCommand extends BinaryCommand {
         super(header);
     }
 
-    public Item getItem() {
+    public Item getItem(CompressionMode snappyMode) throws ProtocolException {
         int flags = 0, expiryTime = 0;
 
         if (extraLength == 8) {
             flags = bodyBuffer.getInt(0);
             expiryTime = bodyBuffer.getInt(4);
         }
-        return new Item(getKeySpec(), flags, expiryTime, getValue(), null, cas);
+        byte[] value = getValue();
+        if ((datatype & Datatype.SNAPPY.value()) > 0) {
+            if (snappyMode == CompressionMode.OFF) {
+                throw new ProtocolException("Cannot handle compressed data");
+            } else {
+                value = Snappy.uncompress(value, 0, value.length);
+            }
+        }
+
+        return new Item(getKeySpec(), flags, expiryTime, value, null, cas, datatype);
     }
 }

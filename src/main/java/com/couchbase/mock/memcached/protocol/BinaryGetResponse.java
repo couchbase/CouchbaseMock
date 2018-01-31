@@ -15,7 +15,9 @@
  */
 package com.couchbase.mock.memcached.protocol;
 
+import com.couchbase.mock.memcached.CompressionMode;
 import com.couchbase.mock.memcached.Item;
+import org.iq80.snappy.Snappy;
 
 import java.nio.ByteBuffer;
 
@@ -31,19 +33,19 @@ public class BinaryGetResponse extends BinaryResponse {
         super(command, error, errorContext);
     }
 
-    public BinaryGetResponse(BinaryCommand command, Item item) {
-        super(create(command, item));
+    public BinaryGetResponse(BinaryCommand command, Item item, CompressionMode snappyMode) {
+        super(create(command, item, snappyMode));
     }
 
-    public BinaryGetResponse(BinaryGetCommand cmd, Item item, long casOverride) {
-        super(create(cmd, item, casOverride));
+    public BinaryGetResponse(BinaryGetCommand cmd, Item item, long casOverride, CompressionMode snappyMode) {
+        super(create(cmd, item, casOverride, snappyMode));
     }
 
-    private static ByteBuffer create(BinaryCommand command, Item item) {
-        return create(command, item, null);
+    private static ByteBuffer create(BinaryCommand command, Item item, CompressionMode snappyMode) {
+        return create(command, item, null, snappyMode);
     }
 
-    private static ByteBuffer create(BinaryCommand command, Item item, Long casOverride) {
+    private static ByteBuffer create(BinaryCommand command, Item item, Long casOverride, CompressionMode snappyMode) {
         int keySize;
         byte[] keyBytes;
         switch (command.getComCode()) {
@@ -61,15 +63,32 @@ public class BinaryGetResponse extends BinaryResponse {
                 keySize = 0;
                 keyBytes = null;
         }
+        byte[] value = item.getValue();
+        byte datatype = item.getDatatype();
+        switch (snappyMode) {
+            case ACTIVE:
+                datatype |= ~Datatype.SNAPPY.value();
+                value = Snappy.compress(value);
+                break;
+            case PASSIVE:
+                if ((datatype & Datatype.SNAPPY.value()) > 0) {
+                    value = Snappy.compress(value);
+                }
+                break;
+            default:
+                datatype &= ~Datatype.SNAPPY.value();
+        }
+
         final ByteBuffer message = create(command, ErrorCode.SUCCESS,
+                datatype,
                 4 /* flags */,
                 keySize,
-                item.getValue().length, casOverride == null ? item.getCas() : casOverride);
+                value.length, casOverride == null ? item.getCas() : casOverride);
         message.putInt(item.getFlags());
         if (keySize > 0) {
             message.put(keyBytes);
         }
-        message.put(item.getValue());
+        message.put(value);
         message.rewind();
         return message;
     }

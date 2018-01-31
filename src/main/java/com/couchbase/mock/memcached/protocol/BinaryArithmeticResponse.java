@@ -24,7 +24,7 @@ import com.couchbase.mock.memcached.MutationStatus;
 public class BinaryArithmeticResponse extends BinaryResponse {
 
     public BinaryArithmeticResponse(BinaryArithmeticCommand command, long val, long cas, MutationStatus ms, MutationInfoWriter miw) {
-        super(command, ErrorCode.SUCCESS, miw.extrasLength(), 0, 8, cas);
+        super(command, ErrorCode.SUCCESS, Datatype.RAW.value(), miw.extrasLength(), 0, 8, cas);
 
         if (miw.extrasLength() != 0) {
             miw.write(buffer, ms.getCoords());

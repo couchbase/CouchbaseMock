@@ -52,7 +52,7 @@ public class BinaryConfigResponse extends BinaryResponse {
                                    Matcher.quoteReplacement("$HOST"));
 
         byte[] jsBytes = config.getBytes();
-        ByteBuffer buf = create(command, errOk, 0, 0, jsBytes.length, 0);
+        ByteBuffer buf = create(command, errOk, Datatype.RAW.value(), 0, 0, jsBytes.length, 0);
         buf.put(jsBytes);
         buf.rewind();
         return new BinaryResponse(buf);

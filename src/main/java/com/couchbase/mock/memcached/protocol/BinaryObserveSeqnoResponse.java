@@ -48,7 +48,7 @@ public class BinaryObserveSeqnoResponse extends BinaryResponse {
      * @param seqDisk The sequence number for persistence
      */
     public BinaryObserveSeqnoResponse(BinaryObserveSeqnoCommand cmd, long seqCache, long seqDisk) {
-        super(cmd, ErrorCode.SUCCESS, 0, 0, REPLY_LENGTH_NORMAL, 0);
+        super(cmd, ErrorCode.SUCCESS, Datatype.RAW.value(), 0, 0, REPLY_LENGTH_NORMAL, 0);
         buffer.put(24, (byte) 0x00);
         writeInfoCommon(cmd.getVBucketId(), cmd.getUuid(), seqCache, seqDisk);
         buffer.rewind();
@@ -65,7 +65,7 @@ public class BinaryObserveSeqnoResponse extends BinaryResponse {
     public BinaryObserveSeqnoResponse(
             BinaryObserveSeqnoCommand cmd, VBucketCoordinates coordCur, VBucketCoordinates coordOld, long seqDisk) {
 
-        super(cmd, ErrorCode.SUCCESS, 0, 0, REPLY_LENGTH_FAILOVER, 0);
+        super(cmd, ErrorCode.SUCCESS, Datatype.RAW.value(), 0, 0, REPLY_LENGTH_FAILOVER, 0);
         buffer.put(24, (byte)0x01);
 
         writeInfoCommon(cmd.getVBucketId(), coordCur.getUuid(), coordCur.getSeqno(), seqDisk);

@@ -19,6 +19,7 @@ import com.couchbase.mock.memcached.Item;
 import com.couchbase.mock.memcached.KeySpec;
 import com.couchbase.mock.memcached.MemcachedServer;
 import com.couchbase.mock.memcached.VBucketStore;
+import com.couchbase.mock.memcached.protocol.Datatype;
 import com.couchbase.mock.memcached.protocol.ErrorCode;
 
 import java.io.IOException;
@@ -138,7 +139,7 @@ public class CouchbaseBucket extends Bucket {
     public ErrorCode storeItem(String key, byte[] value) {
         short vbIndex = getVbIndexForKey(key);
         KeySpec ks = new KeySpec(key, vbIndex);
-        Item item = new Item(ks, 0, 0, value, null, 0);
+        Item item = new Item(ks, 0, 0, value, null, 0, Datatype.RAW.value());
         MemcachedServer server = vbInfo[vbIndex].getOwner();
         VBucketStore vbStore = server.getStorage().getCache(vbIndex);
         return vbStore.set(item, false).getStatus();

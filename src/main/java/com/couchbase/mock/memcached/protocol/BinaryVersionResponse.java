@@ -27,7 +27,7 @@ public class BinaryVersionResponse extends BinaryResponse {
     }
 
     private static ByteBuffer create(BinaryCommand command, String version) {
-        final ByteBuffer message = create(command, ErrorCode.SUCCESS,
+        final ByteBuffer message = create(command, ErrorCode.SUCCESS, Datatype.RAW.value(),
                 0, 0, version.length(), 0);
         message.put(version.getBytes());
         message.rewind();
