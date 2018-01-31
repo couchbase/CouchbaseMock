@@ -69,6 +69,6 @@ public class CommandStatus {
             header.put("error", sw.toString());
         }
 
-        return new Gson().toJson(header).toString();
+        return new Gson().toJson(header);
     }
 }

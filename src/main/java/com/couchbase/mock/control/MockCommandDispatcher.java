@@ -169,12 +169,9 @@ public class MockCommandDispatcher {
 
         try {
             status = dispatch(command, payload);
-        } catch (CommandNotFoundException ex) {
-            status = new CommandStatus();
-            status.fail("No such command");
         } catch (Throwable t) {
             status = new CommandStatus();
-            status.fail(t);
+            status.fail(t).setPayload(payload);
         }
 
         return status.toString();
