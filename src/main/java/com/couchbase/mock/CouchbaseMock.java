@@ -455,10 +455,15 @@ public class CouchbaseMock {
         }
     }
 
+    private static void printVersion() {
+        System.out.println(Info.getFullVersion());
+    }
+
     private static void printHelp() {
         final PrintStream o = System.out;
         BucketConfiguration defaultConfig = new BucketConfiguration();
 
+        o.printf("%s%n%n", Info.getFullVersion());
         o.printf("Options are:%n");
         o.printf("-h --host             The hostname for the REST port. Default=8091%n");
         o.printf("-b --buckets          (See description below%n");
@@ -511,6 +516,7 @@ public class CouchbaseMock {
                 addOption(new CommandLineOption('E', "--empty", false)).
                 addOption(new CommandLineOption('c', "--cccp", false)).
                 addOption(new CommandLineOption('d', "--debug", false)).
+                addOption(new CommandLineOption('\0', "--version", false)).
                 addOption(new CommandLineOption('?', "--help", false));
 
         List<Entry> options = getopt.parse(args);
@@ -545,6 +551,9 @@ public class CouchbaseMock {
                 harakiriMonitorAddress = e.value;
             } else if (e.key.equals("-?") || e.key.equals("--help")) {
                 printHelp();
+                System.exit(0);
+            } else if (e.key.equals("--version")) {
+                printVersion();
                 System.exit(0);
             }
         }
