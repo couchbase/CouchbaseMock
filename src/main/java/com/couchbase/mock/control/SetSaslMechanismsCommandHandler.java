@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Couchbase, Inc.
+ * Copyright 2018 Couchbase, Inc.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -14,33 +14,30 @@
  *    limitations under the License.
  */
 
-package com.couchbase.mock.control.handlers;
+package com.couchbase.mock.control;
 
 import com.couchbase.mock.Bucket;
 import com.couchbase.mock.CouchbaseMock;
-import com.couchbase.mock.control.CommandStatus;
-import com.couchbase.mock.control.MockCommand;
-import com.couchbase.mock.memcached.CompressionMode;
 import com.couchbase.mock.memcached.MemcachedServer;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
-/**
- * @author Mark Nunberg
- */
-public final class CompressionCommandHandler extends MockCommand {
-    @Override
+public class SetSaslMechanismsCommandHandler extends MockCommand {
     @NotNull
+    @Override
     public CommandStatus execute(@NotNull CouchbaseMock mock, @NotNull Command command, @NotNull JsonObject payload) {
-        Set<String> enabledBuckets = new HashSet<String>();
         Set<Integer> enabledServers = new HashSet<Integer>();
-        CompressionMode mode = CompressionMode.of(payload.get("mode").getAsString());
-
+        Set<String> enabledBuckets = new HashSet<String>();
+        List<String> enabledMechs = new ArrayList<String>();
+        for (JsonElement mech : payload.get("mechs").getAsJsonArray()) {
+            enabledMechs.add(mech.getAsString());
+        }
         loadBuckets(mock, payload, enabledBuckets);
         loadServers(payload, enabledServers);
 
@@ -55,7 +52,7 @@ public final class CompressionCommandHandler extends MockCommand {
                         enabledServers.contains(ii) == false) {
                     continue;
                 }
-                servers[ii].setCompression(mode);
+                servers[ii].setSaslMechanisms(enabledMechs);
             }
         }
 

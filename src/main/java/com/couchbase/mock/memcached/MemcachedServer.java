@@ -73,6 +73,7 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
     private boolean shouldLogCommands = false;
     private boolean enhancedErrorsEnabled = false;
     private CompressionMode compression = CompressionMode.DISABLED;
+    private List<String> saslMechanisms;
 
     public void setEnhancedErrorsEnabled(boolean enhancedErrorsEnabled) {
         this.enhancedErrorsEnabled = enhancedErrorsEnabled;
@@ -88,6 +89,18 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
 
     public CompressionMode getCompression() {
         return compression;
+    }
+
+    public void setSaslMechanisms(List<String> saslMechanisms) {
+        this.saslMechanisms = saslMechanisms;
+    }
+
+    public List<String> getSaslMechanisms() {
+        return saslMechanisms;
+    }
+
+    public boolean supportsSaslMechanism(String mechanism) {
+        return saslMechanisms.indexOf(mechanism) >= 0;
     }
 
     public static class CommandLogEntry {
@@ -145,6 +158,8 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
         this.bucket = bucket;
         this.storage = new Storage(vbi, this);
         this.cccpEnabled = cccpEnabled;
+        this.saslMechanisms = new ArrayList<String>();
+        saslMechanisms.add("PLAIN"); /* only PLAIN should be supported by default */
 
         for (int ii = 0; ii < executors.length; ++ii) {
             executors[ii] = unknownHandler;

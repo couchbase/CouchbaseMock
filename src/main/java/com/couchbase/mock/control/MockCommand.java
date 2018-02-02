@@ -74,7 +74,8 @@ public abstract class MockCommand {
         CHECK_RETRY_VERIFY,
         SET_ENHANCED_ERRORS,
         SET_QUERY_ERROR_STATE,
-        SET_COMPRESSION
+        SET_COMPRESSION,
+        SET_SASL_MECHANISMS
     }
 
     /**
@@ -106,6 +107,14 @@ public abstract class MockCommand {
                 JsonElement e = arr.get(ii);
                 enabledServers.add(e.getAsInt());
             }
+        }
+    }
+
+    public static void loadBuckets(@NotNull CouchbaseMock mock, @NotNull JsonObject payload, Set<String> enabledBuckets) {
+        if (payload.has("bucket")) {
+            enabledBuckets.add(payload.get("bucket").getAsString());
+        } else {
+            enabledBuckets.addAll(mock.getBuckets().keySet());
         }
     }
 }

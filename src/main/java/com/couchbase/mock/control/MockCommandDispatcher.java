@@ -94,6 +94,7 @@ public class MockCommandDispatcher {
         registerClass(MockCommand.Command.SET_ENHANCED_ERRORS, EnhancedErrorsCommandHandler.class);
         registerClass(MockCommand.Command.SET_QUERY_ERROR_STATE, SetQueryErrorStateCommandHandler.class);
         registerClass(MockCommand.Command.SET_COMPRESSION, CompressionCommandHandler.class);
+        registerClass(MockCommand.Command.SET_SASL_MECHANISMS, SetSaslMechanismsCommandHandler.class);
     }
 
 

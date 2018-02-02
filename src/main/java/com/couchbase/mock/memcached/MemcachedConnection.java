@@ -35,12 +35,12 @@ public class MemcachedConnection {
     private final BinaryProtocolHandler protocolHandler;
     private final byte header[];
     private final MemcachedServer server;
-    private BinaryCommand command;
     private final ByteBuffer input;
+    private final MutationInfoWriter miw = new MutationInfoWriter();
+    private BinaryCommand command;
     private List<ByteBuffer> pending = new LinkedList<ByteBuffer>();
     private boolean authenticated;
     private boolean closed;
-    private final MutationInfoWriter miw = new MutationInfoWriter();
     private boolean[] supportedFeatures = new boolean[BinaryHelloCommand.Feature.MAX.getValue()];
 
     public MemcachedConnection(MemcachedServer server) {
@@ -79,6 +79,7 @@ public class MemcachedConnection {
     /**
      * Places the response into the current connection's output buffer.
      * Note that the actual I/O is not performed in this method
+     *
      * @param response the response to enqueue
      */
     public synchronized void sendResponse(BinaryResponse response) {
@@ -90,6 +91,7 @@ public class MemcachedConnection {
 
     /**
      * Determines whether this connection has pending responses to be sent
+     *
      * @return true  there are pending responses
      */
     boolean hasOutput() {
@@ -109,6 +111,7 @@ public class MemcachedConnection {
 
     /**
      * Gets the raw input buffer. This may be used to add additional request data
+     *
      * @return The input buffer
      */
     public ByteBuffer getInputBuffer() {
@@ -124,6 +127,7 @@ public class MemcachedConnection {
      * to efficiently send responses or perform socket/buffer manipulation.
      *
      * When done with the context, ensure to call {@link #returnOutputContext(OutputContext)}
+     *
      * @return The output context
      */
     public OutputContext borrowOutputContext() {
@@ -138,6 +142,7 @@ public class MemcachedConnection {
 
     /**
      * Re-transfer ownership of a given output buffer to the connection
+     *
      * @param ctx An OutputContext previously returned by {@link #borrowOutputContext()}
      */
     public void returnOutputContext(OutputContext ctx) {
@@ -167,6 +172,7 @@ public class MemcachedConnection {
 
     /**
      * Check if this connection is authenticated
+     *
      * @return true if the client has already authenticated
      */
     public boolean isAuthenticated() {
