@@ -428,7 +428,8 @@ Parameters:
     </tr>
     <tr>
         <td><b>mode</b></td>
-        <td>Operating mode for the server: `"off"`, `"passive"`, `"active"` (see spec for details)</td>
+        <td>Operating mode for the server: <code>"off"</code>, <code>"passive"</code>, <code>"active"</code> (see spec for details).
+        It also has extra mode <code>"disabled"</code>, which makes mock to behave like it does not know Snappy at all.</td>
         <td>String</td>
     </tr>
     <tr>

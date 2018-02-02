@@ -17,6 +17,7 @@
 package com.couchbase.mock.memcached;
 
 public enum CompressionMode {
+    DISABLED("disabled"), /* do not use snappy at all, as in pre-vulcan servers */
     OFF("off"),
     PASSIVE("passive"),
     ACTIVE("active");

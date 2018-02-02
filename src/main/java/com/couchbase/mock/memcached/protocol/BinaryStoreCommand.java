@@ -38,10 +38,14 @@ public class BinaryStoreCommand extends BinaryCommand {
             expiryTime = bodyBuffer.getInt(4);
         }
         byte[] value = getValue();
+        byte datatype = this.datatype;
         if ((datatype & Datatype.SNAPPY.value()) > 0) {
-            if (snappyMode == CompressionMode.OFF) {
+            if (snappyMode == CompressionMode.DISABLED) {
                 throw new ProtocolException("Cannot handle compressed data");
             } else {
+                if (snappyMode == CompressionMode.OFF) {
+                    datatype &= ~Datatype.SNAPPY.value();
+                }
                 value = Snappy.uncompress(value, 0, value.length);
             }
         }

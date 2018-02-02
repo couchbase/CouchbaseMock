@@ -183,7 +183,7 @@ public class MemcachedConnection {
 
     public CompressionMode snappyMode() {
         if (!supportedFeatures[BinaryHelloCommand.Feature.SNAPPY.getValue()]) {
-            return CompressionMode.OFF;
+            return CompressionMode.DISABLED;
         } else {
             return server.getCompression();
         }
@@ -224,7 +224,7 @@ public class MemcachedConnection {
                     break;
 
                 case SNAPPY:
-                    supportedFeatures[i] = input[i] && server.getCompression() != CompressionMode.OFF;
+                    supportedFeatures[i] = input[i] && server.getCompression() != CompressionMode.DISABLED;
                     break;
 
                 default:
