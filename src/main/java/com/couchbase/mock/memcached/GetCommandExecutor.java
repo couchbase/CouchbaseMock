@@ -22,6 +22,7 @@ import com.couchbase.mock.memcached.protocol.BinaryResponse;
 import com.couchbase.mock.memcached.protocol.CommandCode;
 import com.couchbase.mock.memcached.protocol.ErrorCode;
 
+import java.net.ProtocolException;
 import java.security.AccessControlException;
 
 /**
@@ -30,7 +31,7 @@ import java.security.AccessControlException;
 public class GetCommandExecutor implements CommandExecutor {
 
     @Override
-    public void execute(BinaryCommand command, MemcachedServer server, MemcachedConnection client) {
+    public BinaryResponse execute(BinaryCommand command, MemcachedServer server, MemcachedConnection client) throws ProtocolException {
         BinaryGetCommand cmd = (BinaryGetCommand) command;
         VBucketStore cache;
         CommandCode cc = cmd.getComCode();
@@ -48,33 +49,31 @@ public class GetCommandExecutor implements CommandExecutor {
 
         if (item == null) {
             if (cc != CommandCode.GETKQ && cc != CommandCode.GETQ && cc != CommandCode.GATQ) {
-                client.sendResponse(new BinaryGetResponse(cmd, ErrorCode.KEY_ENOENT,
-                        server.isEnhancedErrorsEnabled() ? "Failed to lookup item" : null));
+                return new BinaryGetResponse(cmd, ErrorCode.KEY_ENOENT,
+                        server.isEnhancedErrorsEnabled() ? "Failed to lookup item" : null);
+            } else {
+                throw new ProtocolException("invalid opcode for Get handler: " + cmd.getComCode());
             }
-            return;
         }
 
         if (cc == CommandCode.GETL) {
             ErrorCode ec = cache.lock(item, cmd.getExpiration());
             if (ec != ErrorCode.SUCCESS) {
-                client.sendResponse(new BinaryResponse(cmd, ec,
-                        server.isEnhancedErrorsEnabled() ? "Failed to lock item" : null));
-                return;
+                return new BinaryResponse(cmd, ec,
+                        server.isEnhancedErrorsEnabled() ? "Failed to lock item" : null);
             }
-            client.sendResponse(new BinaryGetResponse(cmd, item, item.getCasReal(), client.snappyMode()));
-            return;
+            return new BinaryGetResponse(cmd, item, item.getCasReal(), client.snappyMode());
         } else if (cc == CommandCode.TOUCH || cc == CommandCode.GAT || cc == CommandCode.GATQ) {
             ErrorCode ec = cache.touch(item, cmd.getExpiration(), client.supportsXerror());
             if (ec != ErrorCode.SUCCESS) {
-                client.sendResponse(new BinaryResponse(cmd, ec));
-                return;
+                return new BinaryResponse(cmd, ec);
             }
         }
 
         if (cc == CommandCode.TOUCH) {
-            client.sendResponse(new BinaryGetResponse(cmd, ErrorCode.SUCCESS));
+            return new BinaryGetResponse(cmd, ErrorCode.SUCCESS);
         } else {
-            client.sendResponse(new BinaryGetResponse(cmd, item, client.snappyMode()));
+            return new BinaryGetResponse(cmd, item, client.snappyMode());
         }
     }
 }

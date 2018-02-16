@@ -99,7 +99,7 @@ public class SubdocCommandExecutor implements CommandExecutor {
     }
 
     @Override
-    public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
+    public BinaryResponse execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
         BinarySubdocCommand command = (BinarySubdocCommand)cmd;
         Operation subdocOp = command.getSubdocOp();
         VBucketStore cache = server.getCache(cmd);
@@ -110,22 +110,19 @@ public class SubdocCommandExecutor implements CommandExecutor {
         boolean needsCreate = false;
 
         if (isMkdoc && !subdocOp.isCreative()) {
-            client.sendResponse(new BinaryResponse(cmd, ErrorCode.EINVAL));
-            return;
+            return new BinaryResponse(cmd, ErrorCode.EINVAL);
         }
 
         Item existing = cache.get(subdocInput.getKeySpec());
 
         if (existing == null) {
             if (!isMkdoc) {
-                client.sendResponse(new BinaryResponse(cmd, ErrorCode.KEY_ENOENT));
-                return;
+                return new BinaryResponse(cmd, ErrorCode.KEY_ENOENT);
             }
 
             String newValue = Executor.getRootType(subdocInput.getPath(), subdocOp);
             if (newValue == null) {
-                client.sendResponse(new BinaryResponse(cmd, ErrorCode.KEY_ENOENT));
-                return;
+                return new BinaryResponse(cmd, ErrorCode.KEY_ENOENT);
             }
             byte[] newBody, newAttr;
             if (isXattr) {
@@ -140,8 +137,7 @@ public class SubdocCommandExecutor implements CommandExecutor {
 
         } else {
             if ((command.getSubdocDocFlags() & BinarySubdocCommand.DOCFLAG_ADD) != 0) {
-                client.sendResponse(new BinaryResponse(command, ErrorCode.KEY_EEXISTS));
-                return;
+                return new BinaryResponse(command, ErrorCode.KEY_EEXISTS);
             }
         }
 
@@ -176,8 +172,7 @@ public class SubdocCommandExecutor implements CommandExecutor {
                 pathflags);
 
         if (rci.getStatus() != ErrorCode.SUCCESS) {
-            client.sendResponse(new BinaryResponse(cmd, rci.getStatus()));
-            return;
+            return new BinaryResponse(cmd, rci.getStatus());
         }
 
         byte[] value = null;
@@ -202,20 +197,19 @@ public class SubdocCommandExecutor implements CommandExecutor {
             if (needsCreate) {
                 ms = cache.add(newItm, client.supportsXerror());
                 if (ms.getStatus() == ErrorCode.KEY_EEXISTS) {
-                    execute(cmd, server, client);
-                    return;
+                    return execute(cmd, server, client);
                 }
             } else {
                 ms = cache.replace(newItm, client.supportsXerror());
             }
 
             if (ms.getStatus() == ErrorCode.SUCCESS) {
-                client.sendResponse(new BinaryResponse(cmd, ms, miw, Datatype.RAW.value(), newItm.getCas(), value));
+                return new BinaryResponse(cmd, ms, miw, Datatype.RAW.value(), newItm.getCas(), value);
             } else {
-                client.sendResponse(new BinaryResponse(cmd, ms.getStatus()));
+                return new BinaryResponse(cmd, ms.getStatus());
             }
         } else {
-            client.sendResponse(BinaryResponse.createWithValue(command, Datatype.RAW.value(), value, existing.getCas()));
+            return BinaryResponse.createWithValue(command, Datatype.RAW.value(), value, existing.getCas());
         }
     }
 }

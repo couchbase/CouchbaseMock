@@ -26,8 +26,9 @@ import java.nio.ByteBuffer;
  * @author Trond Norbye
  */
 public class BinaryResponse {
-    private static final byte MAGIC = (byte) 0x81;
-    final ByteBuffer buffer;
+    public static final byte MAGIC = (byte) 0x81;
+    public static final byte ALT_MAGIC = (byte) 0x18;
+    ByteBuffer buffer;
 
     BinaryResponse(final ByteBuffer buffer) {
         this.buffer = buffer;
@@ -127,7 +128,15 @@ public class BinaryResponse {
         return message;
     }
 
+    public ErrorCode getErrorCode() {
+        return ErrorCode.valueOf(buffer.getShort(6));
+    }
+
     public ByteBuffer getBuffer() {
         return buffer;
+    }
+
+    public void setBuffer(ByteBuffer buffer) {
+        this.buffer = buffer;
     }
 }

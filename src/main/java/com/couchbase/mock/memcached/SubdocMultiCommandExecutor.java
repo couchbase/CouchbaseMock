@@ -34,15 +34,54 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SubdocMultiCommandExecutor implements CommandExecutor {
+    @Override
+    public BinaryResponse execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
+        VBucketStore cache = server.getCache(cmd);
+        Item existing = cache.get(cmd.getKeySpec());
+        ExecutorContext cx;
+
+        if (existing == null) {
+            // Not a mutation. No point in making fake documents
+            if (!(cmd instanceof BinarySubdocMultiMutationCommand)) {
+                return new BinaryResponse(cmd, ErrorCode.KEY_ENOENT);
+            }
+
+            BinarySubdocMultiMutationCommand mcmd = (BinarySubdocMultiMutationCommand) cmd;
+            if ((mcmd.getSubdocDocFlags() & (BinarySubdocCommand.DOCFLAG_CREATEMASK)) == 0) {
+                return new BinaryResponse(cmd, ErrorCode.KEY_ENOENT);
+            }
+
+            String rootString = mcmd.getRootType();
+            if (rootString == null) {
+                return new BinaryResponse(cmd, ErrorCode.KEY_ENOENT);
+            }
+
+            Item newItem = new Item(cmd.getKeySpec(), 0, 0, rootString.getBytes(), "{}".getBytes(), 0, Datatype.RAW.value());
+            cx = new ExecutorContext(cmd, client, newItem, cache, true);
+
+        } else {
+            if (cmd instanceof BinarySubdocMultiMutationCommand) {
+                if ((((BinarySubdocMultiMutationCommand) cmd).getSubdocDocFlags() & BinarySubdocCommand.DOCFLAG_ADD) != 0) {
+                    return new BinaryResponse(cmd, ErrorCode.KEY_EEXISTS);
+                }
+            }
+            cx = new ExecutorContext(cmd, client, existing, cache, false);
+        }
+
+        return cx.execute();
+    }
+
     static class SpecResult {
         final int index;
         final ErrorCode ec;
         final String value;
+
         SpecResult(int index, ErrorCode ec) {
             this.index = index;
             this.ec = ec;
             this.value = null;
         }
+
         SpecResult(int index, String value) {
             this.index = index;
             this.value = value;
@@ -65,16 +104,12 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
         String currentDoc;
         String currentAttrs;
 
-        boolean isMutator() {
-            return command.getComCode() == CommandCode.SUBDOC_MULTI_MUTATION;
-        }
-
         ExecutorContext(
-				BinaryCommand cmd, MemcachedConnection client, Item existing, VBucketStore cache, boolean needCreate) {
+                BinaryCommand cmd, MemcachedConnection client, Item existing, VBucketStore cache, boolean needCreate) {
             this.existing = existing;
             currentDoc = new String(existing.getValue());
             currentAttrs = new String(existing.getXattr() == null ? "{}".getBytes() : existing.getXattr());
-            this.command = (BinarySubdocMultiCommand)cmd;
+            this.command = (BinarySubdocMultiCommand) cmd;
             this.client = client;
             this.specs = command.getLookupSpecs();
             this.cache = cache;
@@ -83,15 +118,18 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
             results = new ArrayList<SpecResult>();
         }
 
-        private boolean handleLookupSpec(BinarySubdocMultiCommand.MultiSpec spec, int index) {
+        boolean isMutator() {
+            return command.getComCode() == CommandCode.SUBDOC_MULTI_MUTATION;
+        }
+
+        private BinaryResponse handleLookupSpec(BinarySubdocMultiCommand.MultiSpec spec, int index) {
             Operation op = spec.getOp();
             if (op == null) {
                 results.add(new SpecResult(index, ErrorCode.UNKNOWN_COMMAND));
-                return true;
+                return null;
             }
             if (!op.isLookup()) {
-                client.sendResponse(new BinaryResponse(command, ErrorCode.SUBDOC_INVALID_COMBO));
-                return false;
+                return new BinaryResponse(command, ErrorCode.SUBDOC_INVALID_COMBO);
             }
             boolean isXattr = (spec.getFlags() & BinarySubdocCommand.PATHFLAG_XATTR) != 0;
             ResultInfo rsi = SubdocCommandExecutor.executeSubdocLookup(op, isXattr ? currentAttrs : currentDoc, spec.getPath());
@@ -102,20 +140,19 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
                     } else {
                         results.add(new SpecResult(index, ErrorCode.SUCCESS));
                     }
-                    return true;
+                    return null;
                 case SUBDOC_DOC_NOTJSON:
                 case SUBDOC_DOC_E2DEEP:
-                    client.sendResponse(new BinaryResponse(command, rsi.getStatus()));
-                    return false;
+                    return new BinaryResponse(command, rsi.getStatus());
                 default:
                     results.add(new SpecResult(index, rsi.getStatus()));
-                    return true;
+                    return null;
             }
         }
 
-        private boolean sendMutationError(ErrorCode ec, int index) {
+        private BinaryResponse buildMutationError(ErrorCode ec, int index) {
             ByteBuffer bb = ByteBuffer.allocate(3);
-            bb.put((byte)index);
+            bb.put((byte) index);
             bb.putShort(ec.value());
             ErrorCode topLevelRc;
             if (ec == ErrorCode.SUBDOC_INVALID_COMBO) {
@@ -123,16 +160,7 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
             } else {
                 topLevelRc = ErrorCode.SUBDOC_MULTI_FAILURE;
             }
-            BinaryResponse br = BinaryResponse.createWithValue(topLevelRc, command, Datatype.RAW.value(), bb.array(), 0);
-            client.sendResponse(br);
-            return false;
-        }
-
-        private class MutationError extends Exception {
-            ErrorCode code;
-            MutationError(ErrorCode ec) {
-                code = ec;
-            }
+            return BinaryResponse.createWithValue(topLevelRc, command, Datatype.RAW.value(), bb.array(), 0);
         }
 
         private ResultInfo handleMutationSpecInner(Operation op, String input,
@@ -150,15 +178,15 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
             return rsi;
         }
 
-        private boolean handleMutationSpec(BinarySubdocMultiCommand.MultiSpec spec, int index) {
+        private BinaryResponse handleMutationSpec(BinarySubdocMultiCommand.MultiSpec spec, int index) {
             Operation op = spec.getOp();
 
             if (op == null) {
-                return sendMutationError(ErrorCode.UNKNOWN_COMMAND, index);
+                return buildMutationError(ErrorCode.UNKNOWN_COMMAND, index);
             }
 
             if (!op.isMutator()) {
-                return sendMutationError(ErrorCode.SUBDOC_INVALID_COMBO, index);
+                return buildMutationError(ErrorCode.SUBDOC_INVALID_COMBO, index);
             }
 
             boolean isXattr = (spec.getFlags() & BinarySubdocCommand.PATHFLAG_XATTR) != 0;
@@ -173,28 +201,26 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
                     currentDoc = rsi.getNewDocString();
                 }
             } catch (MutationError ex) {
-                return sendMutationError(ex.code, index);
+                return buildMutationError(ex.code, index);
             }
 
             if (op.returnsMatch()) {
                 results.add(new SpecResult(index, rsi.getMatchString()));
             }
-
-            return true;
+            return null;
         }
 
-        void execute() {
+        BinaryResponse execute() {
             for (int i = 0; i < specs.size(); i++) {
                 BinarySubdocMultiCommand.MultiSpec spec = specs.get(i);
-                boolean result;
+                BinaryResponse result;
                 if (isMutator()) {
                     result = handleMutationSpec(spec, i);
                 } else {
                     result = handleLookupSpec(spec, i);
                 }
-                if (!result) {
-                    // Assume response was sent.
-                    return;
+                if (result != null) {
+                    return result;
                 }
             }
 
@@ -222,8 +248,7 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
                     ms = cache.add(newItem, client.supportsXerror());
                     if (ms.getStatus() == ErrorCode.KEY_EEXISTS) {
                         results.clear();
-                        execute();
-                        return;
+                        return execute();
                     }
                 } else {
                     ms = cache.replace(newItem, client.supportsXerror());
@@ -239,7 +264,7 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
                     }
 
                     ByteBuffer bb = ByteBuffer.allocate(specLen);
-                    bb.put((byte)result.index);
+                    bb.put((byte) result.index);
                     bb.putShort(result.ec.value());
                     if (result.ec == ErrorCode.SUCCESS) {
                         bb.putInt(result.value.length());
@@ -251,7 +276,7 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
                         throw new RuntimeException(ex);
                     }
                 }
-                client.sendResponse(new BinaryResponse(command, ms, miw, Datatype.RAW.value(), newItem.getCas(), bao.toByteArray()));
+                return new BinaryResponse(command, ms, miw, Datatype.RAW.value(), newItem.getCas(), bao.toByteArray());
             } else {
                 ByteArrayOutputStream bao = new ByteArrayOutputStream();
                 boolean hasError = false;
@@ -275,52 +300,18 @@ public class SubdocMultiCommandExecutor implements CommandExecutor {
                         throw new RuntimeException(ex);
                     }
                 }
-                byte[] multiPayload  = bao.toByteArray();
+                byte[] multiPayload = bao.toByteArray();
                 ErrorCode finalEc = hasError ? ErrorCode.SUBDOC_MULTI_FAILURE : ErrorCode.SUCCESS;
-                BinaryResponse resp = BinaryResponse.createWithValue(finalEc, command, Datatype.RAW.value(), multiPayload, existing.getCas());
-                client.sendResponse(resp);
+                return BinaryResponse.createWithValue(finalEc, command, Datatype.RAW.value(), multiPayload, existing.getCas());
             }
         }
-    }
 
-    @Override
-    public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
-        VBucketStore cache = server.getCache(cmd);
-        Item existing = cache.get(cmd.getKeySpec());
-        ExecutorContext cx;
+        private class MutationError extends Exception {
+            ErrorCode code;
 
-        if (existing == null) {
-            // Not a mutation. No point in making fake documents
-            if (! (cmd instanceof  BinarySubdocMultiMutationCommand)) {
-                client.sendResponse(new BinaryResponse(cmd, ErrorCode.KEY_ENOENT));
-                return;
+            MutationError(ErrorCode ec) {
+                code = ec;
             }
-
-            BinarySubdocMultiMutationCommand mcmd = (BinarySubdocMultiMutationCommand)cmd;
-            if ((mcmd.getSubdocDocFlags() & (BinarySubdocCommand.DOCFLAG_CREATEMASK)) == 0) {
-                client.sendResponse(new BinaryResponse(cmd, ErrorCode.KEY_ENOENT));
-                return;
-            }
-
-            String rootString = mcmd.getRootType();
-            if (rootString == null) {
-                client.sendResponse(new BinaryResponse(cmd, ErrorCode.KEY_ENOENT));
-                return;
-            }
-
-            Item newItem = new Item(cmd.getKeySpec(), 0, 0, rootString.getBytes(), "{}".getBytes(), 0, Datatype.RAW.value());
-            cx = new ExecutorContext(cmd, client, newItem, cache, true);
-
-        } else {
-            if (cmd instanceof BinarySubdocMultiMutationCommand) {
-                if ((((BinarySubdocMultiMutationCommand) cmd).getSubdocDocFlags() & BinarySubdocCommand.DOCFLAG_ADD) != 0) {
-                    client.sendResponse(new BinaryResponse(cmd, ErrorCode.KEY_EEXISTS));
-                    return;
-                }
-            }
-            cx = new ExecutorContext(cmd, client, existing, cache, false);
         }
-
-        cx.execute();
     }
 }

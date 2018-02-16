@@ -20,19 +20,23 @@ import com.couchbase.mock.memcached.protocol.BinaryResponse;
 import com.couchbase.mock.memcached.protocol.CommandCode;
 import com.couchbase.mock.memcached.protocol.ErrorCode;
 
+import java.net.ProtocolException;
+
 /**
  * @author Trond Norbye
  */
 public class DeleteCommandExecutor implements CommandExecutor {
 
     @Override
-    public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
+    public BinaryResponse execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) throws ProtocolException {
         VBucketStore cache = server.getStorage().getCache(server, cmd.getVBucketId());
         MutationStatus ms = cache.delete(cmd.getKeySpec(), cmd.getCas(), client.supportsXerror());
         ErrorCode err = ms.getStatus();
 
         if (!(cmd.getComCode() == CommandCode.DELETEQ && err == ErrorCode.SUCCESS)) {
-            client.sendResponse(new BinaryResponse(cmd, ms, client.getMutinfoWriter(), 0));
+            return new BinaryResponse(cmd, ms, client.getMutinfoWriter(), 0);
+        } else {
+            throw new ProtocolException("invalid opcode for Delete handler: " + cmd.getComCode());
         }
     }
 }

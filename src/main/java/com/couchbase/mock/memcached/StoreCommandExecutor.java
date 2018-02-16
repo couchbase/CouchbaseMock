@@ -31,7 +31,7 @@ import java.net.ProtocolException;
 public class StoreCommandExecutor implements CommandExecutor {
 
     @Override
-    public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) throws ProtocolException {
+    public BinaryResponse execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) throws ProtocolException {
         BinaryStoreCommand command = (BinaryStoreCommand) cmd;
         VBucketStore cache = server.getStorage().getCache(server, cmd.getVBucketId());
 
@@ -39,8 +39,7 @@ public class StoreCommandExecutor implements CommandExecutor {
         MutationInfoWriter miw = client.getMutinfoWriter();
         Item item = command.getItem(client.snappyMode());
         if (item.getValue().length > Info.itemSizeMax()) {
-            client.sendResponse(new BinaryResponse(cmd, ErrorCode.E2BIG));
-            return;
+            return new BinaryResponse(cmd, ErrorCode.E2BIG);
         }
 
         CommandCode cc = cmd.getComCode();
@@ -59,14 +58,13 @@ public class StoreCommandExecutor implements CommandExecutor {
                 ms = cache.set(item, client.supportsXerror());
                 break;
             default:
-                client.sendResponse(new BinaryResponse(cmd, ErrorCode.EINTERNAL));
-                return;
+                return new BinaryResponse(cmd, ErrorCode.EINTERNAL);
         }
 
         // Quiet commands doesn't send a reply for success.
         if (ms.getStatus() == ErrorCode.SUCCESS && (cc == CommandCode.ADDQ || cc == CommandCode.SETQ || cc == CommandCode.REPLACEQ)) {
-            return;
+            return null;
         }
-        client.sendResponse(new BinaryStoreResponse(command, ms, miw, item.getCas()));
+        return new BinaryStoreResponse(command, ms, miw, item.getCas());
     }
 }

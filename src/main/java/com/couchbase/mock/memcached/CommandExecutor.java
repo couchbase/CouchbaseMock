@@ -16,6 +16,7 @@
 package com.couchbase.mock.memcached;
 
 import com.couchbase.mock.memcached.protocol.BinaryCommand;
+import com.couchbase.mock.memcached.protocol.BinaryResponse;
 
 import java.net.ProtocolException;
 
@@ -25,10 +26,9 @@ import java.net.ProtocolException;
 interface CommandExecutor {
     /**
      * Execute a single command
-     *
      * @param cmd    The incoming command
      * @param server The server handling the command
      * @param client The client requesting the command
      */
-    void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) throws ProtocolException;
+    BinaryResponse execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) throws ProtocolException;
 }

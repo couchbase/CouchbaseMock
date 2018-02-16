@@ -26,12 +26,12 @@ import com.couchbase.mock.memcached.protocol.ErrorCode;
  */
 public class SelectBucketCommandExecutor implements CommandExecutor {
     @Override
-    public void execute(BinaryCommand cmdBase, MemcachedServer server, MemcachedConnection client) {
-        BinarySelectBucketCommand cmd = (BinarySelectBucketCommand)cmdBase;
+    public BinaryResponse execute(BinaryCommand cmdBase, MemcachedServer server, MemcachedConnection client) {
+        BinarySelectBucketCommand cmd = (BinarySelectBucketCommand) cmdBase;
         if (!cmd.getKey().equals(server.getBucket().getName())) {
-            client.sendResponse(new BinaryResponse(cmd, ErrorCode.EACCESS));
+            return new BinaryResponse(cmd, ErrorCode.EACCESS);
         } else {
-            client.sendResponse(new BinaryResponse(cmd, ErrorCode.SUCCESS));
+            return new BinaryResponse(cmd, ErrorCode.SUCCESS);
         }
     }
 }

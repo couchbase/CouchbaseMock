@@ -20,6 +20,8 @@ import com.couchbase.mock.memcached.protocol.BinaryResponse;
 import com.couchbase.mock.memcached.protocol.CommandCode;
 import com.couchbase.mock.memcached.protocol.ErrorCode;
 
+import java.net.ProtocolException;
+
 /**
  * Implementation of the callback function for a flush command.
  *
@@ -28,10 +30,12 @@ import com.couchbase.mock.memcached.protocol.ErrorCode;
 public class FlushCommandExecutor implements CommandExecutor {
 
     @Override
-    public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
+    public BinaryResponse execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) throws ProtocolException {
         server.flushAll();
         if (cmd.getComCode() == CommandCode.FLUSH) {
-            client.sendResponse(new BinaryResponse(cmd, ErrorCode.SUCCESS));
+            return new BinaryResponse(cmd, ErrorCode.SUCCESS);
+        } else {
+            throw new ProtocolException("invalid opcode for Flush handler: " + cmd.getComCode());
         }
     }
 }

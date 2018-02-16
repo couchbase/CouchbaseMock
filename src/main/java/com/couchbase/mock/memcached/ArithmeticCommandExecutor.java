@@ -23,13 +23,15 @@ import com.couchbase.mock.memcached.protocol.CommandCode;
 import com.couchbase.mock.memcached.protocol.Datatype;
 import com.couchbase.mock.memcached.protocol.ErrorCode;
 
+import java.net.ProtocolException;
+
 /**
  * @author Trond Norbye
  */
 public class ArithmeticCommandExecutor implements CommandExecutor {
 
     @Override
-    public void execute(BinaryCommand command, MemcachedServer server, MemcachedConnection client) {
+    public BinaryResponse execute(BinaryCommand command, MemcachedServer server, MemcachedConnection client) throws ProtocolException {
         BinaryArithmeticCommand cmd = (BinaryArithmeticCommand) command;
         VBucketStore cache = server.getStorage().getCache(server, cmd.getVBucketId());
         Item item = cache.get(cmd.getKeySpec());
@@ -44,32 +46,30 @@ public class ArithmeticCommandExecutor implements CommandExecutor {
 
                 switch (err) {
                     case KEY_EEXISTS:
-                        execute(command, server, client);
-                        break;
+                        return execute(command, server, client);
                     case SUCCESS:
                         if (cc == CommandCode.INCREMENT || cc == CommandCode.DECREMENT) {
-                            client.sendResponse(new BinaryArithmeticResponse(cmd, cmd.getInitial(), item.getCas(), ms, miw));
+                            return new BinaryArithmeticResponse(cmd, cmd.getInitial(), item.getCas(), ms, miw);
+                        } else {
+                            throw new ProtocolException("invalid opcode for Arithmetic handler: " + cc);
                         }
-                        break;
                     default:
-                        client.sendResponse(new BinaryResponse(command, err));
+                        return new BinaryResponse(command, err);
                 }
             } else {
-                client.sendResponse(new BinaryResponse(command, ErrorCode.KEY_ENOENT));
+                return new BinaryResponse(command, ErrorCode.KEY_ENOENT);
             }
         } else {
             long value;
 
             if (!item.ensureUnlocked(command.getCas())) {
-                client.sendResponse(new BinaryResponse(command, ErrorCode.ETMPFAIL));
-                return;
+                return new BinaryResponse(command, ErrorCode.ETMPFAIL);
             }
 
             try {
                 value = Long.parseLong(new String(item.getValue()));
             } catch (NumberFormatException ex) {
-                client.sendResponse(new BinaryResponse(command, ErrorCode.DELTA_BADVAL));
-                return;
+                return new BinaryResponse(command, ErrorCode.DELTA_BADVAL);
             }
 
             if (cc == CommandCode.INCREMENT || cc == CommandCode.INCREMENTQ) {
@@ -83,11 +83,12 @@ public class ArithmeticCommandExecutor implements CommandExecutor {
             MutationStatus ms = cache.set(newValue, client.supportsXerror());
             if (ms.getStatus() == ErrorCode.SUCCESS) {
                 if (cc == CommandCode.INCREMENT || cc == CommandCode.DECREMENT) {
-                    // return value
-                    client.sendResponse(new BinaryArithmeticResponse(cmd, value, newValue.getCas(), ms, miw));
+                    return new BinaryArithmeticResponse(cmd, value, newValue.getCas(), ms, miw);
+                } else {
+                    throw new ProtocolException("invalid opcode for Arithmetic handler: " + cc);
                 }
             } else {
-                client.sendResponse(new BinaryResponse(command, ms.getStatus()));
+                return new BinaryResponse(command, ms.getStatus());
             }
         }
     }

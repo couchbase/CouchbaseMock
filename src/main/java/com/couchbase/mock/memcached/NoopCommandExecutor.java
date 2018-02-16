@@ -27,7 +27,7 @@ import com.couchbase.mock.memcached.protocol.ErrorCode;
 public class NoopCommandExecutor implements CommandExecutor {
 
     @Override
-    public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
-        client.sendResponse(new BinaryResponse(cmd, ErrorCode.SUCCESS));
+    public BinaryResponse execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
+        return new BinaryResponse(cmd, ErrorCode.SUCCESS);
     }
 }

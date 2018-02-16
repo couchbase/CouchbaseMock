@@ -18,13 +18,14 @@ package com.couchbase.mock.memcached;
 
 import com.couchbase.mock.memcached.protocol.BinaryCommand;
 import com.couchbase.mock.memcached.protocol.BinaryConfigResponse;
+import com.couchbase.mock.memcached.protocol.BinaryResponse;
 
 /**
  * Created by mnunberg on 1/15/14.
  */
 public class ConfigCommandExecutor implements CommandExecutor {
     @Override
-    public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
-        client.sendResponse(BinaryConfigResponse.createGetConfig(cmd, server));
+    public BinaryResponse execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
+        return BinaryConfigResponse.createGetConfig(cmd, server);
     }
 }

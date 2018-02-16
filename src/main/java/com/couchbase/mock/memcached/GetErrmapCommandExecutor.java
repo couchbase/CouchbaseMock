@@ -39,14 +39,14 @@ public class GetErrmapCommandExecutor implements CommandExecutor {
     }
 
     @Override
-    public void execute(BinaryCommand cmdBase, MemcachedServer server, MemcachedConnection client) {
+    public BinaryResponse execute(BinaryCommand cmdBase, MemcachedServer server, MemcachedConnection client) {
         BinaryGetErrmapCommand cmd = (BinaryGetErrmapCommand)cmdBase;
         // Get the version:
         short version = cmd.getVersion();
         if (version < 1) {
-            client.sendResponse(new BinaryResponse(cmd, ErrorCode.KEY_ENOENT));
+            return new BinaryResponse(cmd, ErrorCode.KEY_ENOENT);
         } else {
-            client.sendResponse(new BinaryGetErrmapResponse(cmd, ERRMAP_V1));
+            return new BinaryGetErrmapResponse(cmd, ERRMAP_V1);
         }
     }
 }

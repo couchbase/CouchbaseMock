@@ -23,12 +23,12 @@ import com.couchbase.mock.memcached.protocol.ErrorCode;
 
 public class GetRandomCommandExecutor implements CommandExecutor {
     @Override
-    public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
+    public BinaryResponse execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
         Item itm = server.getStorage().getRandomItem();
         if (itm != null) {
-            client.sendResponse(new BinaryGetResponse(cmd, itm, client.snappyMode()));
+            return new BinaryGetResponse(cmd, itm, client.snappyMode());
         } else {
-            client.sendResponse(new BinaryResponse(cmd, ErrorCode.KEY_ENOENT));
+            return new BinaryResponse(cmd, ErrorCode.KEY_ENOENT);
         }
     }
 }

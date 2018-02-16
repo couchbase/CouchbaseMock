@@ -46,6 +46,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static com.couchbase.mock.memcached.protocol.BinaryResponse.MAGIC;
+
 /**
  * This is a small implementation of a Memcached server. It listens
  * to exactly one port and implements the binary protocol.
@@ -523,7 +525,46 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
             if (failcode != ErrorCode.SUCCESS) {
                 client.sendResponse(new BinaryResponse(cmd, failcode));
             } else if (authOk(cmd, client)) {
-                getExecutor(cmd.getComCode()).execute(cmd, this, client);
+                long start = System.nanoTime();
+                BinaryResponse response = getExecutor(cmd.getComCode()).execute(cmd, this, client);
+                long end = System.nanoTime();
+                if (response != null) {
+                    if (client.supportsTracing()) {
+                        long elapsedMicros = (end - start) / 1000;
+                        long maxVal = 120125042;
+                        elapsedMicros = Math.min(elapsedMicros, maxVal);
+                        short encodedMicros = (short)Math.round(Math.pow(elapsedMicros * 2, 1.0 / 1.74));
+                        response.getBuffer().get();
+                        byte opcode = response.getBuffer().get();
+                        short keyLength = response.getBuffer().getShort();
+                        byte extraLength = response.getBuffer().get();
+                        byte datatype = response.getBuffer().get();
+                        short errorCode = response.getBuffer().getShort();
+                        int bodyLength = response.getBuffer().getInt();
+                        int opaque = response.getBuffer().getInt();
+                        long cas = response.getBuffer().getLong();
+                        byte framingExtrasLength = 3;
+                        bodyLength += framingExtrasLength;
+                        ByteBuffer message = ByteBuffer.allocate(24 + bodyLength);
+                        message.put(BinaryResponse.ALT_MAGIC);
+                        message.put(opcode);
+                        message.put(framingExtrasLength);
+                        message.put((byte)keyLength);
+                        message.put(extraLength);
+                        message.put(datatype);
+                        message.putShort(errorCode);
+                        message.putInt(bodyLength);
+                        message.putInt(opaque);
+                        message.putLong(cas);
+                        byte tracing_framing_id = 0x02;
+                        message.put(tracing_framing_id);
+                        message.putShort(encodedMicros);
+                        message.put(response.getBuffer());
+                        message.rewind();
+                        response.setBuffer(message);
+                    }
+                    client.sendResponse(response);
+                }
             } else {
                 client.sendResponse(new BinaryResponse(cmd, ErrorCode.AUTH_ERROR));
             }

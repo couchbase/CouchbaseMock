@@ -64,7 +64,10 @@ public class BinaryHelloCommand extends BinaryCommand {
         SNAPPY(10),
         JSON(11),
         DUPLEX(12),
-        MAX(13);
+        CLUSTERMAP_CHANGE_NOTIFICATION(13),
+        UNORDERED_EXECUTION(14),
+        TRACING(15),
+        MAX(16);
 
         private final int value;
 

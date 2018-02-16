@@ -181,6 +181,10 @@ public class MemcachedConnection {
         return supportedFeatures[BinaryHelloCommand.Feature.XERROR.getValue()];
     }
 
+    public boolean supportsTracing() {
+        return supportedFeatures[BinaryHelloCommand.Feature.TRACING.getValue()];
+    }
+
     public CompressionMode snappyMode() {
         if (!supportedFeatures[BinaryHelloCommand.Feature.SNAPPY.getValue()]) {
             return CompressionMode.DISABLED;
@@ -220,6 +224,7 @@ public class MemcachedConnection {
                 case XERROR:
                 case XATTR:
                 case SELECT_BUCKET:
+                case TRACING:
                     supportedFeatures[i] = input[i];
                     break;
 

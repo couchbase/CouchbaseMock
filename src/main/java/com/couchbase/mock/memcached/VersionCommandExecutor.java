@@ -17,6 +17,7 @@ package com.couchbase.mock.memcached;
 
 import com.couchbase.mock.Info;
 import com.couchbase.mock.memcached.protocol.BinaryCommand;
+import com.couchbase.mock.memcached.protocol.BinaryResponse;
 import com.couchbase.mock.memcached.protocol.BinaryVersionResponse;
 
 /**
@@ -26,7 +27,7 @@ import com.couchbase.mock.memcached.protocol.BinaryVersionResponse;
  */
 class VersionCommandExecutor implements CommandExecutor {
     @Override
-    public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
-        client.sendResponse(new BinaryVersionResponse(cmd, Info.getFullVersion()));
+    public BinaryResponse execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
+        return new BinaryVersionResponse(cmd, Info.getFullVersion());
     }
 }

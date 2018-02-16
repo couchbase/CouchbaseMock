@@ -21,13 +21,13 @@ import com.couchbase.mock.memcached.protocol.ErrorCode;
 
 public class EvictCommandExecutor implements CommandExecutor {
     @Override
-    public void execute(BinaryCommand command, MemcachedServer server, MemcachedConnection client) {
+    public BinaryResponse execute(BinaryCommand command, MemcachedServer server, MemcachedConnection client) {
         VBucketStore cache = server.getStorage().getCache(server, command.getVBucketId());
 
         if (cache.get(command.getKeySpec()) == null) {
-            client.sendResponse(new BinaryResponse(command, ErrorCode.KEY_ENOENT));
+            return new BinaryResponse(command, ErrorCode.KEY_ENOENT);
         } else {
-            client.sendResponse(new BinaryResponse(command, ErrorCode.SUCCESS));
+            return new BinaryResponse(command, ErrorCode.SUCCESS);
         }
     }
 }

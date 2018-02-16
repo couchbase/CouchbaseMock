@@ -31,10 +31,11 @@ class QuitCommandExecutor implements CommandExecutor {
     }
 
     @Override
-    public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
+    public BinaryResponse execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
         if (cmd.getComCode() == CommandCode.QUIT) {
             client.sendResponse(new BinaryResponse(cmd, ErrorCode.SUCCESS));
         }
         client.shutdown();
+        return null;
     }
 }

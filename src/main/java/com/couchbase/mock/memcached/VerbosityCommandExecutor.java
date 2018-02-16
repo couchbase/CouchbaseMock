@@ -30,7 +30,7 @@ import java.util.logging.Logger;
 class VerbosityCommandExecutor implements CommandExecutor {
 
     @Override
-    public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
+    public BinaryResponse execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
         int req = cmd.getInputBuffer().getInt(0);
         Level level;
 
@@ -49,6 +49,6 @@ class VerbosityCommandExecutor implements CommandExecutor {
         }
 
         Logger.getLogger("com.couchbase.mock").setLevel(level);
-        client.sendResponse(new BinaryResponse(cmd, ErrorCode.SUCCESS));
+        return new BinaryResponse(cmd, ErrorCode.SUCCESS);
     }
 }

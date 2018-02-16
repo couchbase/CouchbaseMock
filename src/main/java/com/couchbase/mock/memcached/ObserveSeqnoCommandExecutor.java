@@ -27,7 +27,7 @@ import com.couchbase.mock.memcached.protocol.ErrorCode;
  */
 public class ObserveSeqnoCommandExecutor implements CommandExecutor {
     @Override
-    public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
+    public BinaryResponse execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
         Storage ss = server.getStorage();
 
         BinaryObserveSeqnoCommand ocmd = (BinaryObserveSeqnoCommand)cmd;
@@ -40,8 +40,7 @@ public class ObserveSeqnoCommandExecutor implements CommandExecutor {
 
         if (coordRequest == null) {
             // No such coordinates!
-            client.sendResponse(new BinaryResponse(cmd, ErrorCode.EINTERNAL));
-            return;
+            return new BinaryResponse(cmd, ErrorCode.EINTERNAL);
         }
 
         long seqnoDisk = ss.getPersistedSeqno(cmd.getVBucketId());
@@ -49,9 +48,9 @@ public class ObserveSeqnoCommandExecutor implements CommandExecutor {
 
         if (coordRequest.getUuid() != coordCurr.getUuid()) {
             // Failover:
-            client.sendResponse(new BinaryObserveSeqnoResponse(ocmd, coordCurr, coordRequest, seqnoDisk));
+            return new BinaryObserveSeqnoResponse(ocmd, coordCurr, coordRequest, seqnoDisk);
         } else {
-            client.sendResponse(new BinaryObserveSeqnoResponse(ocmd, seqnoCache, seqnoDisk));
+            return new BinaryObserveSeqnoResponse(ocmd, seqnoCache, seqnoDisk);
         }
     }
 }

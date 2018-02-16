@@ -69,7 +69,7 @@ public class StatCommandExecutor implements CommandExecutor {
     }
 
     @Override
-    public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
+    public BinaryResponse execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
         String key = cmd.getKey();
         if (key != null && key.startsWith("key ")) {
             try {
@@ -77,7 +77,7 @@ public class StatCommandExecutor implements CommandExecutor {
             } catch (IllegalArgumentException ex) {
                 client.sendResponse(new BinaryResponse(cmd, ErrorCode.EINVAL));
             }
-            return;
+            return null;
         }
 
         if ("uuid".equals(key)) {
@@ -87,7 +87,7 @@ public class StatCommandExecutor implements CommandExecutor {
             Map<String,String> myStats = server.getStats(key);
             if (myStats == null) {
                 client.sendResponse(new BinaryResponse(cmd, ErrorCode.KEY_ENOENT));
-                return;
+                return null;
             }
 
             for (Entry<String, String> stat : myStats.entrySet()) {
@@ -95,5 +95,6 @@ public class StatCommandExecutor implements CommandExecutor {
             }
         }
         client.sendResponse(new BinaryResponse(cmd, ErrorCode.SUCCESS));
+        return null;
     }
 }

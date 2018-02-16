@@ -32,15 +32,14 @@ import java.net.ProtocolException;
 class AppendPrependCommandExecutor implements CommandExecutor {
 
     @Override
-    public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) throws ProtocolException {
+    public BinaryResponse execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) throws ProtocolException {
         BinaryStoreCommand command = (BinaryStoreCommand) cmd;
         VBucketStore cache = server.getStorage().getCache(server, cmd.getVBucketId());
 
         MutationStatus ms;
         Item existing = cache.get(command.getKeySpec());
         if (existing != null && existing.getValue().length + command.getItem(client.snappyMode()).getValue().length > Info.itemSizeMax()) {
-            client.sendResponse(new BinaryResponse(cmd, ErrorCode.E2BIG));
-            return;
+            return new BinaryResponse(cmd, ErrorCode.E2BIG);
         }
 
         switch (cmd.getComCode()) {
@@ -53,23 +52,23 @@ class AppendPrependCommandExecutor implements CommandExecutor {
                 ms = cache.prepend(command.getItem(client.snappyMode()), client.supportsXerror());
                 break;
             default:
-                return;
+                throw new ProtocolException("invalid opcode for Append/Prepend handler: " + cmd.getComCode());
         }
 
         if (ms.getStatus() == ErrorCode.SUCCESS) {
             switch (cmd.getComCode()) {
                 case APPEND:
                 case PREPEND:
-                    client.sendResponse(new BinaryStoreResponse(command, ms, client.getMutinfoWriter(), existing.getCas()));
+                    return new BinaryStoreResponse(command, ms, client.getMutinfoWriter(), existing.getCas());
                 default:
-                    break;
+                    throw new ProtocolException("invalid opcode for Append/Prepend handler: " + cmd.getComCode());
             }
         } else {
             ErrorCode err = ms.getStatus();
             if (err == ErrorCode.KEY_ENOENT) {
                 err = ErrorCode.NOT_STORED;
             }
-            client.sendResponse(new BinaryResponse(cmd, err));
+            return new BinaryResponse(cmd, err);
         }
     }
 }

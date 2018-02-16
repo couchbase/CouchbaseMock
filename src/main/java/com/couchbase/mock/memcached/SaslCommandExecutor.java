@@ -17,6 +17,7 @@ package com.couchbase.mock.memcached;
 
 import com.couchbase.mock.Bucket;
 import com.couchbase.mock.memcached.protocol.BinaryCommand;
+import com.couchbase.mock.memcached.protocol.BinaryResponse;
 import com.couchbase.mock.memcached.protocol.BinarySaslResponse;
 import com.couchbase.mock.memcached.protocol.CommandCode;
 
@@ -27,13 +28,12 @@ public class SaslCommandExecutor implements CommandExecutor {
     // http://www.ietf.org/rfc/rfc4616.txt
 
     @Override
-    public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
+    public BinaryResponse execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
         CommandCode cc = cmd.getComCode();
 
         switch (cc) {
             case SASL_LIST_MECHS:
-                client.sendResponse(new BinarySaslResponse(cmd, "PLAIN"));
-                break;
+                return new BinarySaslResponse(cmd, "PLAIN");
             case SASL_AUTH:
                 byte[] raw = cmd.getValue();
                 String[] strs = new String[3];
@@ -43,8 +43,8 @@ public class SaslCommandExecutor implements CommandExecutor {
 
                 for (int ii = 0; ii < raw.length; ii++) {
                     if (raw[ii] == 0x0) {
-                        strs[oix++] = new String(raw, offset, ii-offset);
-                        offset = ii+1;
+                        strs[oix++] = new String(raw, offset, ii - offset);
+                        offset = ii + 1;
                     }
                 }
                 strs[oix] = new String(raw, offset, raw.length - offset);
@@ -54,26 +54,22 @@ public class SaslCommandExecutor implements CommandExecutor {
 
                 Bucket bucket = server.getBucket();
                 if (!bucket.getName().equals(user)) {
-                    client.sendResponse(new BinarySaslResponse(cmd));
-                    break;
+                    return new BinarySaslResponse(cmd);
                 }
 
                 String bPass = bucket.getPassword();
                 if (bPass.equals(pass)) {
-                    client.sendResponse(new BinarySaslResponse(cmd, "Authenticated"));
                     client.setAuthenticated();
+                    return new BinarySaslResponse(cmd, "Authenticated");
                 } else {
-                    client.sendResponse(new BinarySaslResponse(cmd));
+                    return new BinarySaslResponse(cmd);
                 }
-
-                break;
             case SASL_STEP:
-                client.sendResponse(new BinarySaslResponse(cmd));
                 // This is only useful when the above returns SASL_CONTINUE.  In this
                 // implementation, only PLAIN is supported, so it never will
-                break;
+                return new BinarySaslResponse(cmd);
             default:
-                client.sendResponse(new BinarySaslResponse(cmd));
+                return new BinarySaslResponse(cmd);
         }
     }
 }

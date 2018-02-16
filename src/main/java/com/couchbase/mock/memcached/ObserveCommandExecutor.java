@@ -18,6 +18,7 @@ package com.couchbase.mock.memcached;
 import com.couchbase.mock.memcached.protocol.BinaryCommand;
 import com.couchbase.mock.memcached.protocol.BinaryObserveCommand;
 import com.couchbase.mock.memcached.protocol.BinaryObserveResponse;
+import com.couchbase.mock.memcached.protocol.BinaryResponse;
 import com.couchbase.mock.memcached.protocol.ObserveCode;
 
 import java.security.AccessControlException;
@@ -25,14 +26,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
  * @author Mark Nunberg
  */
 public class ObserveCommandExecutor implements CommandExecutor {
 
     @Override
-    public void execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
-        BinaryObserveCommand command = (BinaryObserveCommand)cmd;
+    public BinaryResponse execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
+        BinaryObserveCommand command = (BinaryObserveCommand) cmd;
         Storage storage = server.getStorage();
         List<ObsKeyState> states = new ArrayList<ObsKeyState>();
 
@@ -48,9 +48,9 @@ public class ObserveCommandExecutor implements CommandExecutor {
             ObsKeyState kState;
 
             if (cached == null) {
-                /**
-                 * Not in cache. It's either not existing at all, or has
-                 * not yet been removed from persistent store
+                /*
+                  Not in cache. It's either not existing at all, or has
+                  not yet been removed from persistent store
                  */
                 if (persisted == null) {
                     code = ObserveCode.NOT_FOUND;
@@ -61,13 +61,12 @@ public class ObserveCommandExecutor implements CommandExecutor {
                 kState = new ObsKeyState(spec, code, 0);
 
             } else {
-                /** Exists in cache */
-
+                /* Exists in cache */
                 if (persisted == null) {
                     code = ObserveCode.NOT_PERSISTED;
 
                 } else {
-                    /** Check versions */
+                    /* Check versions */
                     if (persisted.getCas() != cached.getCas()) {
                         code = ObserveCode.NOT_PERSISTED;
 
@@ -81,6 +80,6 @@ public class ObserveCommandExecutor implements CommandExecutor {
             states.add(kState);
         }
 
-        client.sendResponse(new BinaryObserveResponse(cmd, states));
+        return new BinaryObserveResponse(cmd, states);
     }
 }
