@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * about the Couchbase Mock
  */
 public final class Info {
-    private static final String VERSION = "1.5.14";
+    private static final String VERSION = "1.5.15";
 
     /**
      * get major version
