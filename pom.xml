@@ -195,6 +195,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>com.couchbase.client</groupId>
+      <artifactId>core-io</artifactId>
+      <version>1.4.2</version>
+    </dependency>
+    <dependency>
       <groupId>org.mozilla</groupId>
       <artifactId>rhino</artifactId>
       <version>1.7R4</version>

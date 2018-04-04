@@ -245,4 +245,10 @@ public class MemcachedConnection {
             miw.setEnabled(false);
         }
     }
+
+    public MemcachedServer getServer() {
+        return server;
+    }
+    
+    
 }

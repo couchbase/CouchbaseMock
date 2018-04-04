@@ -49,6 +49,7 @@ public class SaslAuthTest extends ClientBaseTest {
         CommandBuilder cBuilder = new CommandBuilder(CommandCode.SASL_AUTH);
         ClientResponse resp;
 
+        cBuilder.key("PLAIN", (short)0);
         cBuilder.value(buildPLAIN("foo", "protected", "secret"));
         resp = binClient.sendRequest(cBuilder);
         assertEquals(ErrorCode.SUCCESS, resp.getStatus());
