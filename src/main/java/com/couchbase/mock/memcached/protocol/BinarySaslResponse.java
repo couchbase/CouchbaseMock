@@ -27,12 +27,16 @@ public class BinarySaslResponse extends BinaryResponse {
     }
 
     public BinarySaslResponse(BinaryCommand command, String data) {
-        super(create(command, data));
+        super(create(command, data, ErrorCode.SUCCESS));
     }
 
-    private static ByteBuffer create(BinaryCommand command, String data) {
+    public BinarySaslResponse(BinaryCommand command, String data, ErrorCode errorCode) {
+        super(create(command, data, errorCode));
+    }
+
+    private static ByteBuffer create(BinaryCommand command, String data, ErrorCode errorCode) {
         final ByteBuffer message = BinaryResponse.create(command,
-                ErrorCode.SUCCESS, Datatype.RAW.value(), 0, 0, data.getBytes().length, 0);
+                errorCode, Datatype.RAW.value(), 0, 0, data.getBytes().length, 0);
         message.put(data.getBytes());
         message.rewind();
         return message;

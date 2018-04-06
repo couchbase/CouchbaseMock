@@ -23,6 +23,7 @@ import com.couchbase.mock.memcached.protocol.BinaryCommand;
 import com.couchbase.mock.memcached.protocol.BinaryResponse;
 import com.couchbase.mock.memcached.protocol.BinarySaslResponse;
 import com.couchbase.mock.memcached.protocol.CommandCode;
+import com.couchbase.mock.memcached.protocol.ErrorCode;
 import com.couchbase.mock.security.sasl.Sasl;
 
 /**
@@ -114,9 +115,9 @@ public class SaslCommandExecutor implements CommandExecutor {
             final byte[] challenge = saslServer.evaluateResponse(raw);
             if (saslServer.isComplete()) {
                 client.setAuthenticated();
-                return new BinarySaslResponse(cmd, "Authenticated");
-            } else {
                 return new BinarySaslResponse(cmd, new String(challenge));
+            } else {
+                return new BinarySaslResponse(cmd, new String(challenge), ErrorCode.AUTH_CONTINUE);
             }
         } catch (SaslException e) {
             throw new ProtocolException(e.getMessage());
