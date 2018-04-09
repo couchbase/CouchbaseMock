@@ -29,7 +29,7 @@ import com.couchbase.client.core.endpoint.kv.AuthenticationException;
  * mechanism uses the NameCallback and PasswordCallback to obtain the password
  * required to verify the SASL client's response.
  * 
- * @author sozer
+ * @author Senol Ozer / Amadeus IT Group
  *
  */
 public class SaslCallbackHandler implements CallbackHandler {

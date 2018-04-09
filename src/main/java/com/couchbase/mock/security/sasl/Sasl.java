@@ -28,7 +28,7 @@ import java.util.Map;
  * mechanisms that are supported out of the box and then tries our extended
  * range.
  * 
- * @author sozer
+ * @author Senol Ozer / Amadeus IT Group
  */
 public class Sasl {
 

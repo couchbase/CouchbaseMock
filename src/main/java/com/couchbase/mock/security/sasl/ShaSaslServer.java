@@ -41,7 +41,7 @@ import com.couchbase.client.core.utils.Base64;
  * 
  * source from https://github.com/trondn/java-sasl-scram-sha1/blob/master/src/com/couchbase/security/sasl/scram/ShaImpl.java
  * 
- * @author sozer
+ * @author Senol Ozer / Amadeus IT Group
  */
 public class ShaSaslServer implements SaslServer {
 

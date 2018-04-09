@@ -25,6 +25,11 @@ import org.junit.Test;
 import com.couchbase.client.core.security.sasl.ShaSaslClientFactory;
 import com.couchbase.mock.memcached.SaslCallbackHandler;
 
+/**
+ * 
+ * @author Senol Ozer / Amadeus IT Group
+ *
+ */
 public class ShaSaslServerTest {
 
     @Test

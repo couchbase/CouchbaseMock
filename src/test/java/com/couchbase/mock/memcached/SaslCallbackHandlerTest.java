@@ -25,7 +25,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- * @author sozer
+ * @author Senol Ozer / Amadeus IT Group
  */
 public class SaslCallbackHandlerTest {
     

@@ -26,7 +26,7 @@ import javax.security.sasl.SaslServerFactory;
  * The {@link SaslServerFactory} supporting SCRAM-SHA512, SCRAM-SHA256 and
  * SCRAM-SHA1 authentication methods.
  *
- * @author sozer
+ * @author Senol Ozer / Amadeus IT Group
  */
 public class ShaSaslServerFactory implements SaslServerFactory {
 
@@ -39,16 +39,10 @@ public class ShaSaslServerFactory implements SaslServerFactory {
     public SaslServer createSaslServer(String mechanism, String protocol, String serverName, Map<String, ?> props,
             CallbackHandler cbh) throws SaslException {
 
-        int sha = 0;
+        int sha = getDigestSize(mechanism);
 
-        if (mechanism.equals(SCRAM_SHA512)) {
-            sha = 512;
-        } else if (mechanism.equals(SCRAM_SHA256)) {
-            sha = 256;
-        } else if (mechanism.equals(SCRAM_SHA1)) {
-            sha = 1;
-        } else {
-            return null;
+        if (sha == 0) {
+            throw new SaslException("This SCRAM-SHA mechanism is not supported " + mechanism);
         }
 
         if (cbh == null) {
@@ -58,8 +52,22 @@ public class ShaSaslServerFactory implements SaslServerFactory {
         try {
             return new ShaSaslServer(cbh, sha);
         } catch (NoSuchAlgorithmException e) {
-            return null;
+            throw new SaslException(e.getMessage(), e);
         }
+    }
+
+    private int getDigestSize(String mechanism) {
+        int sha = 0;
+
+        if (mechanism.equals(SCRAM_SHA512)) {
+            sha = 512;
+        } else if (mechanism.equals(SCRAM_SHA256)) {
+            sha = 256;
+        } else if (mechanism.equals(SCRAM_SHA1)) {
+            sha = 1;
+        }
+
+        return sha;
     }
 
     @Override
