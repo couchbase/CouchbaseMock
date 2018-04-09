@@ -33,11 +33,9 @@ public class SaslTest {
      * 
      * @throws SaslException
      */
-    @Test
+    @Test(expected = SaslException.class)
     public void testSaslPlain() throws SaslException {
-        SaslServer saslServer =
-                Sasl.createSaslServer("PLAIN", "couchbase", "localhost", null, new SaslCallbackHandler("foo", "bar"));
-        Assert.assertNull(saslServer);
+        Sasl.createSaslServer("PLAIN", "couchbase", "localhost", null, new SaslCallbackHandler("foo", "bar"));
     }
 
     @Test
