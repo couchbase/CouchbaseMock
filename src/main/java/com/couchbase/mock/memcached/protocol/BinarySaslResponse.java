@@ -27,7 +27,7 @@ public class BinarySaslResponse extends BinaryResponse {
     }
 
     public BinarySaslResponse(BinaryCommand command, String data) {
-        super(create(command, data, ErrorCode.SUCCESS));
+        this(command, data, ErrorCode.SUCCESS);
     }
 
     public BinarySaslResponse(BinaryCommand command, String data, ErrorCode errorCode) {
