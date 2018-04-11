@@ -26,7 +26,7 @@ import com.couchbase.client.core.endpoint.kv.AuthenticationException;
 
 /**
  * Represents a chain of {@code CallbackHandler}s. The SCRAM-SHA* server
- * mechanism uses the NameCallback and PasswordCallback to obtain the password
+ * mechanism uses the {@code NameCallback} and {@code PasswordCallback} to obtain the password
  * required to verify the SASL client's response.
  * 
  * @author Senol Ozer / Amadeus IT Group
