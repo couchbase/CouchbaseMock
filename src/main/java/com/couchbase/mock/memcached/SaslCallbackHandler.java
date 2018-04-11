@@ -32,7 +32,7 @@ import com.couchbase.client.core.endpoint.kv.AuthenticationException;
  * @author Senol Ozer / Amadeus IT Group
  *
  */
-public class SaslCallbackHandler implements CallbackHandler {
+public final class SaslCallbackHandler implements CallbackHandler {
 
     /**
      * The username to auth against.
