@@ -102,9 +102,7 @@ public class SaslCommandExecutor implements CommandExecutor {
             String username = bucket.getName();
             saslServer = Sasl.createSaslServer(mechanism, PROTOCOL_COUCHBASE, serverName, null,
                     new SaslCallbackHandler(username, password));
-        } catch (
-
-        SaslException e) {
+        } catch (SaslException e) {
             throw new ProtocolException(e.getMessage());
         }
     }
