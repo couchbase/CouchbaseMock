@@ -37,8 +37,8 @@ import com.couchbase.client.core.utils.Base64;
 
 /**
  * Implementation of a SCRAM-SHA512, SCRAM-SHA256 and SCRAM-SHA1 enabled
- * {@link SaslServer}.</br>
- * 
+ * {@link SaslServer}.
+ * <p>
  * Freely inspired from <a href="https://github.com/trondn/java-sasl-scram-sha1/blob/master/src/com/couchbase/security/sasl/scram/ShaImpl.java">java-sasl-scram-sha1 by Trond Norbye</a>
  * 
  * @author Senol Ozer / Amadeus IT Group

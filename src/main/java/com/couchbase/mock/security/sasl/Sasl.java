@@ -38,8 +38,8 @@ public class Sasl {
     private static ShaSaslServerFactory saslServerFactory = new ShaSaslServerFactory();
 
     /**
-     * Creates a new {@link SaslServer} and first tries the JVM built in servers
-     * before falling back to our custom implementations. The mechanisms are tried
+     * Creates a new {@link SaslServer} and first tries the JVM built-in servers
+     * before falling back to {@link ShaSaslServer} implementations. The mechanisms are tried
      * in the order they arrive.
      * 
      * @param mechanism The non-null mechanism name. It must be an IANA-registered
@@ -68,6 +68,7 @@ public class Sasl {
      *        from, and by using a RealmCallback if the realm must be entered.
      * @return A possibly null SaslServer created using the parameters supplied. If
      *         null, cannot find a SaslServerFactory that will produce one.
+     * @throws SaslException If cannot create a SaslServer because of an error.
      */
     public static SaslServer createSaslServer(String mechanism, String protocol, String serverName,
             Map<String, ?> props, CallbackHandler cbh) throws SaslException {
