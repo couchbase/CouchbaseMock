@@ -46,7 +46,7 @@ public class SaslCommandExecutor implements CommandExecutor {
             case SASL_LIST_MECHS:
                 return new BinarySaslResponse(cmd, "SCRAM-SHA512 SCRAM-SHA256 SCRAM-SHA1 PLAIN");
             case SASL_AUTH:
-                if (cmd.getKey().equals("PLAIN")) {
+                if (cmd.getKey() == null || "PLAIN".equals(cmd.getKey())) {
                     return plainAuth(cmd, server, client);
                 } else {
                     createSaslServer(cmd, server, client);
