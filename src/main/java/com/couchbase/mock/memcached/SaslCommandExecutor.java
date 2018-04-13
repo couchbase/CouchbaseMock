@@ -84,18 +84,18 @@ public class SaslCommandExecutor implements CommandExecutor {
         String user = strs[1];
         String pass = strs[2];
 
+        BinarySaslResponse response;
+        
         Bucket bucket = server.getBucket();
-        if (!bucket.getName().equals(user)) {
-            return new BinarySaslResponse(cmd);
-        }
-
         String bPass = bucket.getPassword();
-        if (bPass.equals(pass)) {
+
+        if (!bucket.getName().equals(user) || !bPass.equals(pass)) {
+            response = new BinarySaslResponse(cmd);
+        }else {
             client.setAuthenticated();
-            return new BinarySaslResponse(cmd, "Authenticated");
-        } else {
-            return new BinarySaslResponse(cmd);
+            response = new BinarySaslResponse(cmd, "Authenticated");
         }
+        return response;
     }
 
     private void createSaslServer(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client)
