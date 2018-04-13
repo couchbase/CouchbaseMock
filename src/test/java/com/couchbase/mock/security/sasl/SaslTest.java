@@ -55,5 +55,9 @@ public class SaslTest {
         Assert.assertEquals(false, saslServer.isComplete());
         Assert.assertTrue(saslServer instanceof ShaSaslServer);
     }
-
+    
+    @Test(expected = SaslException.class)
+    public void testNonexistentMechanism() throws SaslException {
+        Sasl.createSaslServer("SCRAP-SHA512", "couchbase", "localhost", null, new SaslCallbackHandler("foo", "bar"));
+    }
 }
