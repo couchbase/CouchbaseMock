@@ -116,13 +116,15 @@ public class SaslCommandExecutor implements CommandExecutor {
     private BinaryResponse saslAuth(BinaryCommand cmd, MemcachedConnection client) throws ProtocolException {
         byte[] raw = cmd.getValue();
         try {
+            BinaryResponse response;
             final byte[] challenge = saslServer.evaluateResponse(raw);
             if (saslServer.isComplete()) {
                 client.setAuthenticated();
-                return new BinarySaslResponse(cmd, new String(challenge));
+                response = new BinarySaslResponse(cmd, new String(challenge));
             } else {
-                return new BinarySaslResponse(cmd, new String(challenge), ErrorCode.AUTH_CONTINUE);
+                response = new BinarySaslResponse(cmd, new String(challenge), ErrorCode.AUTH_CONTINUE);
             }
+            return response;
         } catch (SaslException e) {
             throw new ProtocolException(e.getMessage());
         }
