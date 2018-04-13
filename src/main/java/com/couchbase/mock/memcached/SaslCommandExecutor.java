@@ -42,21 +42,27 @@ public class SaslCommandExecutor implements CommandExecutor {
             throws ProtocolException {
         CommandCode cc = cmd.getComCode();
 
+        BinaryResponse response;
         switch (cc) {
             case SASL_LIST_MECHS:
-                return new BinarySaslResponse(cmd, "SCRAM-SHA512 SCRAM-SHA256 SCRAM-SHA1 PLAIN");
+                response = new BinarySaslResponse(cmd, "SCRAM-SHA512 SCRAM-SHA256 SCRAM-SHA1 PLAIN");
+                break;
             case SASL_AUTH:
                 if (cmd.getKey() == null || "PLAIN".equals(cmd.getKey())) {
-                    return plainAuth(cmd, server, client);
+                    response = plainAuth(cmd, server, client);
                 } else {
                     createSaslServer(cmd, server, client);
-                    return saslAuth(cmd, client);
+                    response = saslAuth(cmd, client);
                 }
+                break;
             case SASL_STEP:
-                return saslAuth(cmd, client);
+                response = saslAuth(cmd, client);
+                break;
             default:
-                return new BinarySaslResponse(cmd);
+                response = new BinarySaslResponse(cmd);
+                break;
         }
+        return response;
 
     }
 
