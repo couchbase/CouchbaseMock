@@ -246,7 +246,7 @@ public class MemcachedConnection {
         }
     }
 
-    public MemcachedServer getServer() {
+    MemcachedServer getServer() {
         return server;
     }
     
