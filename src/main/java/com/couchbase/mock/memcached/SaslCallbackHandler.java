@@ -15,8 +15,6 @@
  */
 package com.couchbase.mock.memcached;
 
-import com.couchbase.client.core.endpoint.kv.AuthenticationException;
-
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.callback.NameCallback;
@@ -24,6 +22,7 @@ import javax.security.auth.callback.PasswordCallback;
 import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.sasl.SaslServer;
 import java.io.IOException;
+import java.net.ProtocolException;
 
 /**
  * Represents a chain of {@code CallbackHandler}s. The SCRAM-SHA* server
@@ -67,7 +66,7 @@ public final class SaslCallbackHandler implements CallbackHandler {
             } else if (callback instanceof PasswordCallback) {
                 ((PasswordCallback) callback).setPassword(password.toCharArray());
             } else {
-                throw new AuthenticationException("SASLServer requested unsupported callback: " + callback);
+                throw new ProtocolException("SASLServer requested unsupported callback: " + callback);
             }
         }
     }

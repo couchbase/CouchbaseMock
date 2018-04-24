@@ -15,7 +15,7 @@
  */
 package com.couchbase.mock.security.sasl;
 
-import com.couchbase.client.core.utils.Base64;
+import com.couchbase.mock.util.Base64;
 
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
@@ -206,7 +206,7 @@ public class ShaSaslServer implements SaslServer {
             throw new IllegalArgumentException("username and client nonce is mandatory in clientFirstMessageBare");
         }
 
-        salt = Base64.decode("QSXCR+Q6sek8bf92");
+        salt = Base64.decode("QSXCR+Q6sek8bf92").getBytes();
         generateSaltedPassword();
 
         String nonce = clientNonce + serverNonce;
