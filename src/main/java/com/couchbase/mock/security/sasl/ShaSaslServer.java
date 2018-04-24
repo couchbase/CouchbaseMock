@@ -15,8 +15,6 @@
  */
 package com.couchbase.mock.security.sasl;
 
-import com.couchbase.mock.util.Base64;
-
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -33,6 +31,7 @@ import java.security.Key;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -89,7 +88,7 @@ public class ShaSaslServer implements SaslServer {
         byte[] randomNonce = new byte[21];
         SecureRandom random = new SecureRandom();
         random.nextBytes(randomNonce);
-        serverNonce = Base64.encode(randomNonce);
+        serverNonce = new String(Base64.getEncoder().encode(randomNonce));
         iterationCount = 4096;
     }
 
@@ -154,10 +153,10 @@ public class ShaSaslServer implements SaslServer {
 
         StringWriter writer = new StringWriter();
         writer.append("v=");
-        writer.append(Base64.encode(serverSignature));
+        writer.append(new String(Base64.getEncoder().encode(serverSignature)));
 
         // validate the client proof to see if we're getting the same value...
-        String myClientProof = Base64.encode(getClientProof());
+        String myClientProof = new String(Base64.getEncoder().encode(getClientProof()));
         if (!myClientProof.equals(attributes.get("p"))) {
             writer.append(",e=failed");
         }
@@ -206,7 +205,7 @@ public class ShaSaslServer implements SaslServer {
             throw new IllegalArgumentException("username and client nonce is mandatory in clientFirstMessageBare");
         }
 
-        salt = Base64.decode("QSXCR+Q6sek8bf92").getBytes();
+        salt = Base64.getDecoder().decode("QSXCR+Q6sek8bf92");
         generateSaltedPassword();
 
         String nonce = clientNonce + serverNonce;
@@ -216,7 +215,7 @@ public class ShaSaslServer implements SaslServer {
         writer.append("r=");
         writer.append(nonce);
         writer.append(",s=");
-        writer.append(Base64.encode(salt));
+        writer.append(new String(Base64.getEncoder().encode(salt)));
         writer.append(",i=");
         writer.append(Integer.toString(iterationCount));
 
