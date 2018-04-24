@@ -44,7 +44,11 @@ public class SaslCommandExecutor implements CommandExecutor {
         String mechanism = cmd.getKey();
         switch (cc) {
             case SASL_LIST_MECHS:
-                response = new BinarySaslResponse(cmd, String.join(" ", server.getSaslMechanisms()));
+                StringBuilder sb = new StringBuilder();
+                for (String m : server.getSaslMechanisms()) {
+                    sb.append(m + " ");
+                }
+                response = new BinarySaslResponse(cmd, sb.toString());
                 break;
             case SASL_AUTH:
                 if (server.supportsSaslMechanism(mechanism)) {
