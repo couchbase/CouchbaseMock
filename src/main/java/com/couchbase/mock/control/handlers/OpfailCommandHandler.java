@@ -20,6 +20,7 @@ import com.couchbase.mock.CouchbaseMock;
 import com.couchbase.mock.control.CommandStatus;
 import com.couchbase.mock.control.MockCommand;
 import com.couchbase.mock.memcached.MemcachedServer;
+import com.couchbase.mock.memcached.protocol.CommandCode;
 import com.couchbase.mock.memcached.protocol.ErrorCode;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -51,7 +52,10 @@ public class OpfailCommandHandler extends MockCommand {
 
         int count = payload.get("count").getAsInt();
         short iCode = payload.get("code").getAsShort();
-
+        CommandCode operation = CommandCode.ILLEGAL; // default to all operations
+        if (payload.has("operation")) {
+            operation = CommandCode.valueOf(payload.get("operation").getAsInt());
+        }
         for (ErrorCode rc : ErrorCode.values()) {
             if (iCode == rc.value()) {
                 eCode = rc;
@@ -72,7 +76,7 @@ public class OpfailCommandHandler extends MockCommand {
                     continue;
                 }
 
-                servers[ii].updateFailMakerContext(eCode, count);
+                servers[ii].updateFailMakerContext(eCode, count, operation);
             }
         }
 

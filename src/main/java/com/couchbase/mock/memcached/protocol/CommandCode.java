@@ -66,6 +66,10 @@ public enum CommandCode {
         return value;
     }
 
+    public static CommandCode valueOf(byte cc) {
+        return valueOf((int)cc & 0xff);
+    }
+
     public static CommandCode valueOf(int cc) {
         switch (cc) {
             case 0x00:
@@ -136,55 +140,55 @@ public enum CommandCode {
                 return SASL_AUTH;
             case 0x22:
                 return SASL_STEP;
-            case (byte)0x93:
+            case 0x93:
                 return EVICT;
-            case (byte)0x94:
+            case 0x94:
                 return GETL;
-            case (byte)0x95:
+            case 0x95:
                 return UNL;
-            case (byte)0x83:
+            case 0x83:
                 return GET_REPLICA;
-            case (byte)0x92:
+            case 0x92:
                 return OBSERVE;
-            case (byte)0xb5:
+            case 0xb5:
                 return GET_CLUSTER_CONFIG;
-            case (byte)0x1f:
+            case 0x1f:
                 return HELLO;
-            case (byte)0x91:
+            case 0x91:
                 return OBSERVE_SEQNO;
-            case (byte)0xc5:
+            case 0xc5:
                 return SUBDOC_GET;
-            case (byte)0xc6:
+            case 0xc6:
                 return SUBDOC_EXISTS;
-            case (byte)0xc7:
+            case 0xc7:
                 return SUBDOC_DICT_ADD;
-            case (byte)0xc8:
+            case 0xc8:
                 return SUBDOC_DICT_UPSERT;
-            case (byte)0xc9:
+            case 0xc9:
                 return SUBDOC_DELETE;
-            case (byte)0xca:
+            case 0xca:
                 return SUBDOC_REPLACE;
-            case (byte)0xcb:
+            case 0xcb:
                 return SUBDOC_ARRAY_PUSH_LAST;
-            case (byte)0xcc:
+            case 0xcc:
                 return SUBDOC_ARRAY_PUSH_FIRST;
-            case (byte)0xcd:
+            case 0xcd:
                 return SUBDOC_ARRAY_INSERT;
-            case (byte)0xce:
+            case 0xce:
                 return SUBDOC_ARRAY_ADD_UNIQUE;
-            case (byte)0xcf:
+            case 0xcf:
                 return SUBDOC_COUNTER;
-            case (byte)0xd0:
+            case 0xd0:
                 return SUBDOC_MULTI_LOOKUP;
-            case (byte)0xd1:
+            case 0xd1:
                 return SUBDOC_MULTI_MUTATION;
-            case (byte)0xd2:
+            case 0xd2:
                 return SUBDOC_GET_COUNT;
-            case (byte)0xb6:
+            case 0xb6:
                 return GET_RANDOM;
-            case (byte)0xfe:
+            case 0xfe:
                 return GET_ERRMAP;
-            case (byte)0x89:
+            case 0x89:
                 return SELECT_BUCKET;
             default:
                 return ILLEGAL;

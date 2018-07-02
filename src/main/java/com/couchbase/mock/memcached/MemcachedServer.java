@@ -46,8 +46,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.couchbase.mock.memcached.protocol.BinaryResponse.MAGIC;
-
 /**
  * This is a small implementation of a Memcached server. It listens
  * to exactly one port and implements the binary protocol.
@@ -125,13 +123,17 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
     public class FailMaker {
         private ErrorCode code = ErrorCode.SUCCESS;
         private int remaining = 0;
+        private CommandCode operation = CommandCode.ILLEGAL; /* fail any operation by default */
 
-        public void update(ErrorCode code, int count) {
+        public void update(ErrorCode code, int count, CommandCode operation) {
             this.code = code;
             this.remaining = count;
+            this.operation = operation;
         }
-
-        public ErrorCode getFailCode() {
+        public ErrorCode getFailCode(CommandCode operation) {
+            if (this.operation != CommandCode.ILLEGAL && this.operation != operation) {
+                return ErrorCode.SUCCESS;
+            }
             if (this.remaining == 0) {
                 return ErrorCode.SUCCESS;
             }
@@ -261,8 +263,8 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
         return storage;
     }
 
-    public void updateFailMakerContext(ErrorCode code, int count) {
-        failmaker.update(code, count);
+    public void updateFailMakerContext(ErrorCode code, int count, CommandCode operation) {
+        failmaker.update(code, count, operation);
     }
 
     @SuppressWarnings("SpellCheckingInspection")
@@ -536,7 +538,7 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
                 commandLog.add(new CommandLogEntry(cmd.getOpcode()));
             }
 
-            ErrorCode failcode = failmaker.getFailCode();
+            ErrorCode failcode = failmaker.getFailCode(cmd.getComCode());
             if (failcode != ErrorCode.SUCCESS) {
                 client.sendResponse(new BinaryResponse(cmd, failcode));
             } else if (authOk(cmd, client)) {
