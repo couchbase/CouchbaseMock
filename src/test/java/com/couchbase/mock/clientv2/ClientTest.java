@@ -18,6 +18,7 @@ package com.couchbase.mock.clientv2;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.CouchbaseCluster;
 import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import com.couchbase.mock.Bucket;
 import com.couchbase.mock.BucketConfiguration;
@@ -25,7 +26,6 @@ import com.couchbase.mock.CouchbaseMock;
 import com.couchbase.mock.JsonUtils;
 import com.couchbase.mock.client.MockClient;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import junit.framework.TestCase;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -101,5 +101,15 @@ public class ClientTest extends TestCase {
     public void testSimple() {
         bucket.upsert(JsonDocument.create("foo"));
         bucket.get(JsonDocument.create("foo"));
+    }
+
+    @Test
+    public void testCasOnDelete() {
+        JsonDocument doc = JsonDocument.create("foo", JsonObject.create().put("val", 42));
+        JsonDocument upsertResult = bucket.upsert(doc);
+        assertTrue(upsertResult.cas() > 0);
+        JsonDocument deleteResult = bucket.remove("foo");
+        assertTrue(deleteResult.cas() > 0);
+        assertTrue(upsertResult.cas() != deleteResult.cas());
     }
 }

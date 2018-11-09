@@ -214,6 +214,7 @@ public class VBucketStore {
 
         if (cas == 0 || cas == i.getCas()) {
             MutationStatus ms = incrCoords(i.getKeySpec());
+            i.setCas(++casCounter);
             kv.remove(ks);
             onItemDelete.onAction(this, i, ms.getCoords());
             return ms;

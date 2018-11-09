@@ -30,11 +30,12 @@ public class DeleteCommandExecutor implements CommandExecutor {
     @Override
     public BinaryResponse execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) throws ProtocolException {
         VBucketStore cache = server.getStorage().getCache(server, cmd.getVBucketId());
+        Item item = cache.get(cmd.getKeySpec());
         MutationStatus ms = cache.delete(cmd.getKeySpec(), cmd.getCas(), client.supportsXerror());
         ErrorCode err = ms.getStatus();
 
         if (!(cmd.getComCode() == CommandCode.DELETEQ && err == ErrorCode.SUCCESS)) {
-            return new BinaryResponse(cmd, ms, client.getMutinfoWriter(), 0);
+            return new BinaryResponse(cmd, ms, client.getMutinfoWriter(), item.getCas());
         } else {
             throw new ProtocolException("invalid opcode for Delete handler: " + cmd.getComCode());
         }
