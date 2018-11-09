@@ -545,7 +545,12 @@ public class ExecutorTest {
         assertCannotInsert(doc, "[0]", Operation.ARRAY_INSERT, "blah");
 
         doc = "{}";
-        assertMismatchError(doc, "[0]", Operation.ARRAY_INSERT, "null");
+        assertPathInvalidError(doc, "[0]", Operation.ARRAY_INSERT, "null");
+    }
+
+    private void assertPathInvalidError(String doc, String path, Operation code, String value)
+            throws SubdocException {
+        assertRaisesPriv(PathParseException.class, doc, path, code, value, false);
     }
 
     private void assertEmptyError(Operation op, String path) throws SubdocException {

@@ -90,7 +90,7 @@ public class MatchTest {
     }
 
 
-    @Test(expected = PathMismatchException.class)
+    @Test(expected = PathParseException.class)
     public void testMismatch3() throws Exception {
         String doc = "{\"foo\":{}}";
         Match.match(doc, "foo[0]");

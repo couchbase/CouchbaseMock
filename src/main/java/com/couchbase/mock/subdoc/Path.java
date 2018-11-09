@@ -119,7 +119,7 @@ public class Path {
         return components.size();
     }
 
-    public void validateComponentType(int ix, JsonElement parent) throws PathMismatchException {
+    public void validateComponentType(int ix, JsonElement parent) throws PathMismatchException, PathParseException {
         Component comp = components.get(ix);
         if (parent.isJsonPrimitive() || parent.isJsonNull()) {
             throw new PathMismatchException();
@@ -127,7 +127,7 @@ public class Path {
 
         if (comp.isIndex()) {
             if (!parent.isJsonArray()) {
-                throw new PathMismatchException();
+                throw new PathParseException("Object operation cannot have an array index as its last component");
             }
         } else {
             if (!parent.isJsonObject()) {

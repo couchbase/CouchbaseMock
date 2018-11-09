@@ -15,6 +15,14 @@
  */
 
 package com.couchbase.mock.clientv2;
+
+import com.couchbase.client.core.message.ResponseStatus;
+import com.couchbase.client.core.message.kv.subdoc.simple.SimpleSubdocResponse;
+import com.couchbase.client.core.message.kv.subdoc.simple.SubDictAddRequest;
+import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
+import com.couchbase.client.deps.io.netty.buffer.Unpooled;
+import com.couchbase.client.deps.io.netty.util.CharsetUtil;
+import com.couchbase.client.deps.io.netty.util.ReferenceCountUtil;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.CouchbaseCluster;
 import com.couchbase.client.java.document.JsonDocument;
@@ -23,17 +31,8 @@ import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import com.couchbase.mock.Bucket;
 import com.couchbase.mock.BucketConfiguration;
 import com.couchbase.mock.CouchbaseMock;
-import com.couchbase.mock.JsonUtils;
 import com.couchbase.mock.client.MockClient;
-import com.google.gson.JsonArray;
 import junit.framework.TestCase;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.util.EntityUtils;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -71,7 +70,7 @@ public class ClientTest extends TestCase {
         cluster = CouchbaseCluster.create(DefaultCouchbaseEnvironment.builder()
                 .bootstrapCarrierDirectPort(carrierPort)
                 .bootstrapHttpDirectPort(httpPort)
-                .build() ,"couchbase://127.0.0.1");
+                .build(), "couchbase://127.0.0.1");
         bucket = cluster.openBucket("default");
     }
 
@@ -111,5 +110,28 @@ public class ClientTest extends TestCase {
         JsonDocument deleteResult = bucket.remove("foo");
         assertTrue(deleteResult.cas() > 0);
         assertTrue(upsertResult.cas() != deleteResult.cas());
+    }
+
+    @Test
+    public void testReturnPathInvalidOnDictAddForArrayPath() {
+        String testSubKey = "testReturnPathInvalidOnDictAddForArrayPath";
+        bucket.upsert(JsonDocument.create(testSubKey,
+                JsonObject.create().put("sub",
+                        JsonObject.create().put("array",
+                                JsonObject.empty()))));
+
+        String subPath = "sub.array[1]";
+        ByteBuf fragment = Unpooled.copiedBuffer("\"insertedPath\"", CharsetUtil.UTF_8);
+        ReferenceCountUtil.releaseLater(fragment);
+
+        //mutate
+        SubDictAddRequest insertRequest = new SubDictAddRequest(testSubKey, subPath, fragment, bucket.name());
+        assertFalse(insertRequest.createIntermediaryPath());
+
+        SimpleSubdocResponse insertResponse = bucket.core().<SimpleSubdocResponse>send(insertRequest).toBlocking().single();
+        ReferenceCountUtil.releaseLater(insertResponse.content());
+        assertFalse(insertResponse.status().isSuccess());
+        assertEquals(0, insertResponse.content().readableBytes());
+        assertEquals(ResponseStatus.SUBDOC_PATH_INVALID, insertResponse.status());
     }
 }

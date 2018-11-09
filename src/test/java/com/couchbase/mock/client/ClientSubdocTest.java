@@ -145,7 +145,7 @@ public class ClientSubdocTest extends ClientBaseTest {
 
         cb.subdoc("[0]".getBytes(), "123".getBytes());
         resp = client.sendRequest(cb);
-        assertEquals(ErrorCode.SUBDOC_PATH_MISMATCH, resp.getStatus());
+        assertEquals(ErrorCode.SUBDOC_PATH_EINVAL, resp.getStatus());
     }
 
     public void testEmptyPath() throws Exception {
