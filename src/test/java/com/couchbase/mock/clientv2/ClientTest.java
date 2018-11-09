@@ -18,6 +18,7 @@ package com.couchbase.mock.clientv2;
 
 import com.couchbase.client.core.message.ResponseStatus;
 import com.couchbase.client.core.message.kv.subdoc.simple.SimpleSubdocResponse;
+import com.couchbase.client.core.message.kv.subdoc.simple.SubCounterRequest;
 import com.couchbase.client.core.message.kv.subdoc.simple.SubDictAddRequest;
 import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.client.deps.io.netty.buffer.Unpooled;
@@ -133,5 +134,33 @@ public class ClientTest extends TestCase {
         assertFalse(insertResponse.status().isSuccess());
         assertEquals(0, insertResponse.content().readableBytes());
         assertEquals(ResponseStatus.SUBDOC_PATH_INVALID, insertResponse.status());
+    }
+
+    @Test
+    public void testReturnDeltaRangeOnCounterDeltaUnderflow() {
+        String testSubKey = "shouldReturnDeltaRangeOnCounterDeltaUnderflow";
+        bucket.upsert(JsonDocument.create(testSubKey,
+                JsonObject.create().put("counter", 0)));
+
+        String path = "counter";
+
+        //first request will bring the value to -1
+        long prepareUnderflow = -1L;
+        SubCounterRequest request = new SubCounterRequest(testSubKey, path, prepareUnderflow, bucket.name());
+        SimpleSubdocResponse response = bucket.core().<SimpleSubdocResponse>send(request).toBlocking().single();
+        ReferenceCountUtil.releaseLater(response.content());
+        String result = response.content().toString(CharsetUtil.UTF_8);
+
+        assertEquals("-1", result);
+
+        //second request will underflow
+        long delta = Long.MIN_VALUE;
+        request = new SubCounterRequest(testSubKey, path, delta, bucket.name());
+        response = bucket.core().<SimpleSubdocResponse>send(request).toBlocking().single();
+        ReferenceCountUtil.releaseLater(response.content());
+        result = response.content().toString(CharsetUtil.UTF_8);
+
+        assertEquals(result, 0, result.length());
+        assertEquals(ResponseStatus.SUBDOC_DELTA_RANGE, response.status());
     }
 }
