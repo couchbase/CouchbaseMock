@@ -315,6 +315,7 @@ public abstract class Bucket {
     public void failover(int index, boolean rebalance) {
         configurationRwLock.writeLock().lock();
         try {
+            Info.incrementConfigRevision();
             if (index >= 0 && index < servers.length) {
                 servers[index].shutdown();
             }
@@ -322,6 +323,7 @@ public abstract class Bucket {
                 rebalance();
             }
         } finally {
+            Info.incrementConfigRevision();
             configurationRwLock.writeLock().unlock();
         }
     }
@@ -339,6 +341,7 @@ public abstract class Bucket {
             }
             rebalance();
         } finally {
+            Info.incrementConfigRevision();
             configurationRwLock.writeLock().unlock();
         }
     }
@@ -389,6 +392,7 @@ public abstract class Bucket {
         // Let's start distribute the vbuckets across the servers
         configurationRwLock.writeLock().lock();
         try {
+            Info.incrementConfigRevision();
             List<MemcachedServer> nodes = activeServers();
             for (int ii = 0; ii < numVBuckets; ++ii) {
                 Collections.shuffle(nodes);
@@ -403,6 +407,7 @@ public abstract class Bucket {
                 vbInfo[ii].setReplicas(replicas);
             }
         } finally {
+            Info.incrementConfigRevision();
             configurationRwLock.writeLock().unlock();
         }
     }

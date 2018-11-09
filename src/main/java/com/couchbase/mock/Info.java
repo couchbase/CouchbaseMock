@@ -15,6 +15,7 @@
  */
 package com.couchbase.mock;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -23,9 +24,15 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public final class Info {
     private static final String VERSION = "1.5.19";
+    private static final AtomicInteger configRevision = new AtomicInteger(1);
+    private static final AtomicLong clockOffset = new AtomicLong();
+
+    private Info() {
+    }
 
     /**
      * get major version
+     *
      * @return major version
      */
     public static String getVersion() {
@@ -34,13 +41,12 @@ public final class Info {
 
     /**
      * get full version (product vMajor revMinor)
+     *
      * @return full version
      */
     public static String getFullVersion() {
         return "CouchbaseMock v" + VERSION;
     }
-
-    private static final AtomicLong clockOffset = new AtomicLong();
 
     public static void timeTravel(long offset) {
         clockOffset.addAndGet(offset);
@@ -54,6 +60,11 @@ public final class Info {
         return 20 * 1024 * 1024;
     }
 
-    private Info() {
+    public static int getConfigRevision() {
+        return configRevision.get();
+    }
+
+    public static void incrementConfigRevision() {
+        configRevision.incrementAndGet();
     }
 }

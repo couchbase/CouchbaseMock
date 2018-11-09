@@ -55,6 +55,7 @@ public class CouchbaseBucket extends Bucket {
     public Map<String,Object> getConfigMap() {
         Map<String, Object> map = getCommonConfig();
         List<MemcachedServer> active = activeServers();
+        map.put("rev", Info.getConfigRevision());
         map.put("name", name);
         map.put("bucketType", "membase");
         map.put("authType", "sasl");
