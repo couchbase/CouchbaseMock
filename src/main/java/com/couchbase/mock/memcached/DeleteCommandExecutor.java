@@ -35,7 +35,9 @@ public class DeleteCommandExecutor implements CommandExecutor {
         ErrorCode err = ms.getStatus();
 
         if (!(cmd.getComCode() == CommandCode.DELETEQ && err == ErrorCode.SUCCESS)) {
-            return new BinaryResponse(cmd, ms, client.getMutinfoWriter(), item.getCas());
+            // return 0 for cas if item was not found
+            long cas = item != null ? item.getCas() : 0;
+            return new BinaryResponse(cmd, ms, client.getMutinfoWriter(), cas);
         } else {
             throw new ProtocolException("invalid opcode for Delete handler: " + cmd.getComCode());
         }
