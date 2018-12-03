@@ -297,6 +297,9 @@ public class Executor {
         int position = path.getLast().getIndex();
 
         if (match.hasImmediateParent()) {
+            if (!match.getImmediateParent().isJsonArray()) {
+                throw new InvalidPathException("Path should be be a JSON array");
+            }
             array = match.getImmediateParent().getAsJsonArray();
         } else {
             throw new PathNotFoundException();
