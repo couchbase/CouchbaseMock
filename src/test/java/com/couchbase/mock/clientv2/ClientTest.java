@@ -28,12 +28,15 @@ import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.CouchbaseCluster;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.StringDocument;
+import com.couchbase.client.java.document.json.JsonArray;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import com.couchbase.client.java.error.CASMismatchException;
+import com.couchbase.client.java.error.RequestTooBigException;
 import com.couchbase.mock.Bucket;
 import com.couchbase.mock.BucketConfiguration;
 import com.couchbase.mock.CouchbaseMock;
+import com.couchbase.mock.Info;
 import com.couchbase.mock.client.MockClient;
 import org.jetbrains.annotations.NotNull;
 import org.junit.After;
@@ -41,6 +44,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -179,5 +183,22 @@ public class ClientTest {
     public void testFailWithInvalidCASOnPrepend() {
         StringDocument stored = bucket.upsert(StringDocument.create("prependCasMismatch", "foo"));
         bucket.prepend(StringDocument.from(stored, stored.cas() + 1));
+    }
+
+    @Test(expected = RequestTooBigException.class)
+    public void testSubdocTooBigException() {
+        String testSubKey = "tooBigBodyForSubdoc";
+        char[] chars = new char[Info.itemSizeMax() - 15];
+        Arrays.fill(chars, 'x');
+        try {
+            bucket.upsert(JsonDocument.create(testSubKey,
+                    JsonObject.create().put("value",
+                            JsonArray.create().add(new String(chars)))));
+        } catch (RequestTooBigException ex) {
+            throw new RuntimeException("not expected TooBig here", ex);
+        }
+        bucket.mutateIn(testSubKey)
+                .arrayAppend("value", "123456789012345")
+                .execute();
     }
 }

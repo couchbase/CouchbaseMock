@@ -16,6 +16,7 @@
 
 package com.couchbase.mock.memcached;
 
+import com.couchbase.mock.Info;
 import com.couchbase.mock.memcached.protocol.BinaryCommand;
 import com.couchbase.mock.memcached.protocol.BinaryResponse;
 import com.couchbase.mock.memcached.protocol.BinarySubdocCommand;
@@ -190,6 +191,9 @@ public class SubdocCommandExecutor implements CommandExecutor {
             } else {
                 xattr = existing.getXattr();
                 body = rci.getNewDocString().getBytes();
+            }
+            if (body.length > Info.itemSizeMax()) {
+                return new BinaryResponse(cmd, ErrorCode.E2BIG);
             }
             Item newItm = new Item(
                     existing.getKeySpec(), existing.getFlags(), subdocInput.getExpiryTime(),
