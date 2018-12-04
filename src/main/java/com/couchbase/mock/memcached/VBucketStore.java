@@ -227,6 +227,11 @@ public class VBucketStore {
         if (old == null) {
             return new MutationStatus(ErrorCode.KEY_ENOENT);
         }
+        if (i.getCas() != old.getCas()) {
+            if (i.getCas() != 0) {
+                return new MutationStatus(ErrorCode.KEY_EEXISTS);
+            }
+        }
         if (!old.ensureUnlocked(i.getCas())) {
             return new MutationStatus(lockedError(xerrorEnabled));
         }

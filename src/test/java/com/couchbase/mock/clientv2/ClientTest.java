@@ -27,19 +27,26 @@ import com.couchbase.client.deps.io.netty.util.ReferenceCountUtil;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.CouchbaseCluster;
 import com.couchbase.client.java.document.JsonDocument;
+import com.couchbase.client.java.document.StringDocument;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
+import com.couchbase.client.java.error.CASMismatchException;
 import com.couchbase.mock.Bucket;
 import com.couchbase.mock.BucketConfiguration;
 import com.couchbase.mock.CouchbaseMock;
 import com.couchbase.mock.client.MockClient;
-import junit.framework.TestCase;
 import org.jetbrains.annotations.NotNull;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
 
-public class ClientTest extends TestCase {
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+public class ClientTest {
     protected final BucketConfiguration bucketConfiguration = new BucketConfiguration();
     protected MockClient mockClient;
     protected CouchbaseMock couchbaseMock;
@@ -75,16 +82,15 @@ public class ClientTest extends TestCase {
         bucket = cluster.openBucket("default");
     }
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         createMock("default", "");
         getPortInfo("default");
         createClient();
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() {
         if (cluster != null) {
             cluster.disconnect();
         }
@@ -94,7 +100,6 @@ public class ClientTest extends TestCase {
         if (mockClient != null) {
             mockClient.shutdown();
         }
-        super.tearDown();
     }
 
     @Test
@@ -162,5 +167,17 @@ public class ClientTest extends TestCase {
 
         assertEquals(result, 0, result.length());
         assertEquals(ResponseStatus.SUBDOC_DELTA_RANGE, response.status());
+    }
+
+    @Test(expected = CASMismatchException.class)
+    public void testFailWithInvalidCASOnAppend() {
+        StringDocument stored = bucket.upsert(StringDocument.create("appendCasMismatch", "foo"));
+        bucket.append(StringDocument.from(stored, stored.cas() + 1));
+    }
+
+    @Test(expected = CASMismatchException.class)
+    public void testFailWithInvalidCASOnPrepend() {
+        StringDocument stored = bucket.upsert(StringDocument.create("prependCasMismatch", "foo"));
+        bucket.prepend(StringDocument.from(stored, stored.cas() + 1));
     }
 }
