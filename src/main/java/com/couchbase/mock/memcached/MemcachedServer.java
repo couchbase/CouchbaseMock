@@ -329,6 +329,10 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
             Map<String, String> tapStats = new HashMap<String, String>();
             tapStats.put("ep_tap_count", "0");
             return tapStats;
+        } else if (about.equals("config")) {
+            Map<String, String> configStats = new HashMap<String, String>();
+            configStats.put("ep_dcp_conn_buffer_size", "10485760");
+            return configStats;
         } else if (about.equals("__MOCK__")) {
             Map<String,String> mockInfo = new HashMap<String, String>();
             mockInfo.put("implementation", "java");
