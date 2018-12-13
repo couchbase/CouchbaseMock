@@ -9,7 +9,7 @@ and for allowing extra instrumentation.
 CouchbaseMock is implemented in Java and is intended to be used by a single
 client instance. Testing with any real kind of workload has not been done,
 and it is not intended to be high performance or reliable (it does not even
-persist data to the disk). As opposed to [cbgb|http://cbgb.io], this is
+persist data to the disk). As opposed to [cbgb](https://github.com/couchbaselabs/cbgb), this is
 not intended to be a full implementation and/or replacement for the server.
 
 The repository for CouchbaseMock may be found at
