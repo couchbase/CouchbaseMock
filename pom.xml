@@ -98,15 +98,32 @@
         <configuration>
           <relocations>
             <relocation>
-            <pattern>org</pattern>
-            <shadedPattern>com.couchbase.mock.deps.org</shadedPattern>
-          </relocation>
+              <pattern>org.apache</pattern>
+              <shadedPattern>com.couchbase.mock.deps.org.apache</shadedPattern>
+            </relocation>
             <relocation>
-              <pattern>com</pattern>
-              <shadedPattern>com.couchbase.mock.deps.com</shadedPattern>
-              <excludes>
-                <exclude>com.couchbase.mock.*</exclude>
-              </excludes>
+              <pattern>org.intellij</pattern>
+              <shadedPattern>com.couchbase.mock.deps.org.intellij</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>org.iq80</pattern>
+              <shadedPattern>com.couchbase.mock.deps.org.iq80</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>org.json</pattern>
+              <shadedPattern>com.couchbase.mock.deps.org.json</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>org.tukaani</pattern>
+              <shadedPattern>com.couchbase.mock.deps.org.tukaani</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>org.apache</pattern>
+              <shadedPattern>com.couchbase.mock.deps.org.apache</shadedPattern>
+            </relocation>
+            <relocation>
+              <pattern>com.google</pattern>
+              <shadedPattern>com.couchbase.mock.deps.com.google</shadedPattern>
             </relocation>
           </relocations>
         </configuration>
