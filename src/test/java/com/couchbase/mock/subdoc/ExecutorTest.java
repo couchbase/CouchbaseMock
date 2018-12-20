@@ -401,13 +401,13 @@ public class ExecutorTest {
         assertEquals(Long.MAX_VALUE, res.getMatch().getAsLong());
         doc = res.getNewDocString();
 
-        assertRaisesPriv(DeltaTooBigException.class, doc, "counter", Operation.COUNTER, "2", false);
+        assertRaisesPriv(CannotInsertException.class, doc, "counter", Operation.COUNTER, "2", false);
 
         doc = "{\"counter\":" + Long.toString(Long.MIN_VALUE+1) + "}";
         res = Executor.execute(doc, "counter", Operation.COUNTER, "-1");
         assertEquals(Long.MIN_VALUE, res.getMatch().getAsLong());
         doc = res.getNewDocString();
-        assertRaisesPriv(DeltaTooBigException.class, doc, "counter", Operation.COUNTER, "-2", false);
+        assertRaisesPriv(CannotInsertException.class, doc, "counter", Operation.COUNTER, "-2", false);
     }
 
     private static void assertBadDictValue(String value) throws SubdocException{

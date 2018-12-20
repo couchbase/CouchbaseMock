@@ -402,11 +402,11 @@ public class Executor {
 
             if (delta >= 0 && numres >= 0) {
                 if (Long.MAX_VALUE - delta < numres) {
-                    throw new DeltaTooBigException();
+                    throw new CannotInsertException("operation results in counter overflow");
                 }
             } else if (delta < 0  && numres < 0) {
                 if (delta < Long.MIN_VALUE - numres) {
-                    throw new DeltaTooBigException();
+                    throw new CannotInsertException("operation results in counter underflow");
                 }
             }
 

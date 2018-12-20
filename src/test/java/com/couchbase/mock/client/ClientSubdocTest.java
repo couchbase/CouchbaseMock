@@ -191,7 +191,7 @@ public class ClientSubdocTest extends ClientBaseTest {
         resp = client.sendRequest(storeCb);
         assertTrue(resp.success());
         resp = client.sendRequest(cb);
-        assertEquals(ErrorCode.SUBDOC_DELTA_ERANGE, resp.getStatus());
+        assertEquals(ErrorCode.SUBDOC_VALUE_CANTINSERT, resp.getStatus());
 
     }
 

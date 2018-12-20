@@ -170,7 +170,7 @@ public class ClientTest {
         result = response.content().toString(CharsetUtil.UTF_8);
 
         assertEquals(result, 0, result.length());
-        assertEquals(ResponseStatus.SUBDOC_DELTA_RANGE, response.status());
+        assertEquals(ResponseStatus.SUBDOC_VALUE_CANTINSERT, response.status());
     }
 
     @Test(expected = CASMismatchException.class)
