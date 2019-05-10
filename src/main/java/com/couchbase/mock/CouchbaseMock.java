@@ -37,6 +37,7 @@ import com.couchbase.mock.util.Getopt.Entry;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.nio.channels.ServerSocketChannel;
 import java.util.ArrayList;
@@ -98,7 +99,19 @@ public class CouchbaseMock {
             });
         }
 
-        harakiriMonitor.connect(address.getHostName(), address.getPort());
+        boolean connected = false;
+        do {
+            try {
+                harakiriMonitor.connect(address.getHostName(), address.getPort());
+                connected = true;
+            } catch (ConnectException ex) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    // ignore
+                }
+            }
+        } while (!connected);
         harakiriMonitor.start();
     }
 
