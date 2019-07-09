@@ -279,7 +279,7 @@ public class CouchbaseMock {
         userManagementHandler = new UserManagementHandler(this);
         userManagementHandler.register(httpServer);
         httpServer.register("/mock/*", new ControlHandler(controlDispatcher));
-        httpServer.register("/query/*", new QueryServer());
+        httpServer.register("/query*", new QueryServer());
     }
 
     /**
