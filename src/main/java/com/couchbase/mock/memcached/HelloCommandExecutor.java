@@ -29,10 +29,6 @@ import com.couchbase.mock.memcached.protocol.ErrorCode;
 public class HelloCommandExecutor implements CommandExecutor {
     @Override
     public BinaryResponse execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) {
-        if (server.getBucket().getType() != Bucket.BucketType.COUCHBASE) {
-            return new BinaryResponse(cmd, ErrorCode.NOT_SUPPORTED);
-        }
-
         BinaryHelloCommand hcmd = (BinaryHelloCommand) cmd;
         // Get the features
         client.setSupportedFeatures(hcmd.getFeatures());
