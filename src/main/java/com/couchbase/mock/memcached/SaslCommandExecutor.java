@@ -26,6 +26,8 @@ import com.couchbase.mock.security.sasl.Sasl;
 import javax.security.sasl.SaslException;
 import javax.security.sasl.SaslServer;
 import java.net.ProtocolException;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Sergey Avseyev
@@ -34,7 +36,11 @@ public class SaslCommandExecutor implements CommandExecutor {
     // http://www.ietf.org/rfc/rfc4616.txt
     // http://www.ietf.org/rfc/rfc5802.txt
 
-    private SaslServer saslServer;
+    /**
+     * Since there can be multiple clients attached to the same executor at the same time and the
+     * sasl server is stateful, we need one per client/socket.
+     */
+    private Map<MemcachedConnection, SaslServer> saslServer = new ConcurrentHashMap<MemcachedConnection, SaslServer>();
 
     @Override
     public BinaryResponse execute(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client) throws ProtocolException {
@@ -55,7 +61,7 @@ public class SaslCommandExecutor implements CommandExecutor {
                     if ("PLAIN".equals(mechanism)) {
                         response = plainAuth(cmd, server, client);
                     } else {
-                        createSaslServer(cmd, server);
+                        createSaslServer(cmd, server, client);
                         response = saslAuth(cmd, client);
                     }
                 } else {
@@ -105,33 +111,39 @@ public class SaslCommandExecutor implements CommandExecutor {
         return response;
     }
 
-    private void createSaslServer(BinaryCommand cmd, MemcachedServer server)
+    private void createSaslServer(BinaryCommand cmd, MemcachedServer server, MemcachedConnection client)
             throws ProtocolException {
         try {
             Bucket bucket = server.getBucket();
-            saslServer = Sasl.createSaslServer(cmd.getKey(), server.getHostname(), null,
-                    new SaslCallbackHandler(bucket.getName(), bucket.getPassword()));
+            saslServer.put(
+              client,
+              Sasl.createSaslServer(
+                cmd.getKey(),
+                server.getHostname(),
+                null,
+                new SaslCallbackHandler(bucket.getName(), bucket.getPassword())
+              )
+            );
         } catch (SaslException e) {
             throw new ProtocolException(e.getMessage());
         }
     }
 
     private BinaryResponse saslAuth(BinaryCommand cmd, MemcachedConnection client) throws ProtocolException {
-        if (saslServer == null) {
-            return new BinarySaslResponse(cmd);
-        }
         byte[] raw = cmd.getValue();
         try {
             BinaryResponse response;
-            final byte[] challenge = saslServer.evaluateResponse(raw);
-            if (saslServer.isComplete()) {
+            final byte[] challenge = saslServer.get(client).evaluateResponse(raw);
+            if (saslServer.get(client).isComplete()) {
                 client.setAuthenticated();
                 response = new BinarySaslResponse(cmd, new String(challenge));
+                saslServer.remove(client);
             } else {
                 response = new BinarySaslResponse(cmd, new String(challenge), ErrorCode.AUTH_CONTINUE);
             }
             return response;
         } catch (SaslException e) {
+            saslServer.remove(client.hashCode());
             throw new ProtocolException(e.getMessage());
         }
     }
