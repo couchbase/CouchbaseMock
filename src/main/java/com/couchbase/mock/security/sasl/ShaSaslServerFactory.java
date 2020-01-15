@@ -33,7 +33,7 @@ public class ShaSaslServerFactory implements SaslServerFactory {
     private static final String SCRAM_SHA512 = "SCRAM-SHA512";
     private static final String SCRAM_SHA256 = "SCRAM-SHA256";
     private static final String SCRAM_SHA1 = "SCRAM-SHA1";
-    public static final String[] SUPPORTED_MECHS = {SCRAM_SHA1, SCRAM_SHA256, SCRAM_SHA512};
+    public static final String[] SUPPORTED_MECHS = {SCRAM_SHA512, SCRAM_SHA256, SCRAM_SHA1};
 
     @Override
     public SaslServer createSaslServer(String mechanism, String protocol, String serverName, Map<String, ?> props,

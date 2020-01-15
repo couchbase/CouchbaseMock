@@ -24,6 +24,7 @@ import com.couchbase.mock.memcached.protocol.BinaryConfigResponse;
 import com.couchbase.mock.memcached.protocol.BinaryResponse;
 import com.couchbase.mock.memcached.protocol.CommandCode;
 import com.couchbase.mock.memcached.protocol.ErrorCode;
+import com.couchbase.mock.security.sasl.ShaSaslServerFactory;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -38,6 +39,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.security.AccessControlException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -161,7 +163,8 @@ public class MemcachedServer extends Thread implements BinaryProtocolHandler {
         this.storage = new Storage(vbi, this);
         this.cccpEnabled = cccpEnabled;
         this.saslMechanisms = new ArrayList<String>();
-        saslMechanisms.add("PLAIN"); /* only PLAIN should be supported by default */
+        Collections.addAll(this.saslMechanisms, ShaSaslServerFactory.SUPPORTED_MECHS);
+        saslMechanisms.add("PLAIN");
 
         for (int ii = 0; ii < executors.length; ++ii) {
             executors[ii] = unknownHandler;
