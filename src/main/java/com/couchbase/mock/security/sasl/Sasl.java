@@ -69,7 +69,7 @@ public class Sasl {
      * @throws SaslException If cannot create a SaslServer because of an error.
      */
     public static SaslServer createSaslServer(String mechanism, String serverName, Map<String, ?> props, CallbackHandler cbh) throws SaslException {
-        if (Arrays.binarySearch(ShaSaslServerFactory.SUPPORTED_MECHS, mechanism) < 0) {
+        if (Arrays.asList(ShaSaslServerFactory.SUPPORTED_MECHS).indexOf( mechanism) < 0) {
             return javax.security.sasl.Sasl.createSaslServer(mechanism, PROTOCOL_COUCHBASE, serverName, props, cbh);
         } else {
             return saslServerFactory.createSaslServer(mechanism, PROTOCOL_COUCHBASE, serverName, props, cbh);
