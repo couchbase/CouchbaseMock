@@ -1,18 +1,25 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
   <groupId>com.couchbase.mock</groupId>
   <artifactId>CouchbaseMock</artifactId>
-  <packaging>jar</packaging>
   <!-- Please update src/main/java/com/couchbase/mock/Info.java when you change the version number -->
-  <version>1.5.25</version>
+  <version>1.5.26-SNAPSHOT</version>
+
   <name>CouchbaseMock</name>
-  <url>http://maven.apache.org</url>
+  <description>A simple Java mock of Couchbase used for client testing.</description>
+  <url>https://github.com/couchbase/CouchbaseMock</url>
+
+  <organization>
+    <name>Couchbase, Inc.</name>
+    <url>https://couchbase.com</url>
+  </organization>
 
   <licenses>
     <license>
       <name>The Apache Software License, Version 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
       <distribution>repo</distribution>
     </license>
   </licenses>
@@ -21,13 +28,6 @@
     <url>https://github.com/couchbase/CouchbaseMock</url>
     <connection>scm:git://github.com/couchbase/CouchbaseMock</connection>
   </scm>
-
-  <repositories>
-    <repository>
-      <id>couchbase</id>
-      <url>http://files.couchbase.com/maven2</url>
-    </repository>
-  </repositories>
 
   <developers>
     <developer>
@@ -48,49 +48,48 @@
   </developers>
 
   <distributionManagement>
-    <repository>
-      <id>ssh-repository</id>
-      <url>scpexe://cb-web01.couchbase.com/var/www/domains/membase.org/files/htdocs/maven2</url>
-    </repository>
+    <snapshotRepository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+    </snapshotRepository>
   </distributionManagement>
+
   <build>
-    <finalName>${project.artifactId}-${project.version}</finalName>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>${maven-compiler-plugin.version}</version>
         <configuration>
-          <source>1.6</source>
-          <target>1.6</target>
-          <encoding>${project.build.sourceEncoding}</encoding>
+          <source>1.8</source>
+          <target>1.8</target>
         </configuration>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
         <version>${maven-resources-plugin.version}</version>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>${maven-jar-plugin.version}</version>
         <configuration>
-          <encoding>${project.build.sourceEncoding}</encoding>
+          <archive>
+            <manifest>
+              <mainClass>com.couchbase.mock.CouchbaseMock</mainClass>
+              <packageName>com.couchbase.mock</packageName>
+            </manifest>
+            <manifestEntries>
+              <mode>development</mode>
+              <url>${project.url}</url>
+            </manifestEntries>
+          </archive>
         </configuration>
       </plugin>
-      <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-jar-plugin</artifactId>
-          <version>${maven-jar-plugin.version}</version>
-          <configuration>
-        <archive>
-          <manifest>
-            <mainClass>com.couchbase.mock.CouchbaseMock</mainClass>
-            <packageName>com.couchbase.mock</packageName>
-          </manifest>
-          <manifestEntries>
-            <mode>development</mode>
-            <url>${project.url}</url>
-          </manifestEntries>
-        </archive>
-          </configuration>
-      </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
@@ -147,6 +146,7 @@
           </execution>
         </executions>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
@@ -160,6 +160,7 @@
           </execution>
         </executions>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
@@ -173,21 +174,49 @@
           </execution>
         </executions>
       </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-gpg-plugin</artifactId>
+        <version>1.6</version>
+        <executions>
+          <execution>
+            <id>sign-artifacts</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>sign</goal>
+            </goals>
+            <configuration>
+              <gpgArguments>
+                <!-- Bypass gpg agent -->
+                <arg>--pinentry-mode</arg>
+                <arg>loopback</arg>
+              </gpgArguments>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.sonatype.plugins</groupId>
+        <artifactId>nexus-staging-maven-plugin</artifactId>
+        <version>1.6.7</version>
+        <extensions>true</extensions>
+        <configuration>
+          <serverId>ossrh</serverId>
+          <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+          <autoReleaseAfterClose>${autoReleaseAfterClose}</autoReleaseAfterClose>
+        </configuration>
+      </plugin>
     </plugins>
-    <extensions>
-      <extension>
-        <groupId>org.apache.maven.wagon</groupId>
-         <artifactId>wagon-ssh-external</artifactId>
-         <version>1.0</version>
-      </extension>
-    </extensions>
   </build>
+
   <dependencies>
-      <dependency>
-          <groupId>com.intellij</groupId>
-          <artifactId>annotations</artifactId>
-          <version>12.0</version>
-      </dependency>
+    <dependency>
+      <groupId>com.intellij</groupId>
+      <artifactId>annotations</artifactId>
+      <version>12.0</version>
+    </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpcore</artifactId>
@@ -198,7 +227,7 @@
       <artifactId>httpclient</artifactId>
       <version>4.5.3</version>
     </dependency>
-      <dependency>
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>4.12</version>
@@ -242,6 +271,7 @@
       <version>0.4</version>
     </dependency>
   </dependencies>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
@@ -250,18 +280,98 @@
     <maven-resources-plugin.version>3.1.0</maven-resources-plugin.version>
     <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
     <maven-javadoc-plugin.version>2.10.4</maven-javadoc-plugin.version>
+
+    <!-- Don't sign artifacts unless the 'stage' or 'release' profile is active -->
+    <gpg.skip>true</gpg.skip>
+
+    <!-- When deploying, automatically promote artifacts from staging repository -->
+    <autoReleaseAfterClose>true</autoReleaseAfterClose>
   </properties>
-    <description>A simple Java mock of Couchbase used for client testing.</description>
-    <reporting>
+
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>2.8</version>
+        <configuration>
+          <configLocation>config/sun_checks.xml</configLocation>
+        </configuration>
+      </plugin>
+    </plugins>
+  </reporting>
+
+  <profiles>
+    <profile>
+      <id>release</id>
+      <activation>
+        <property>
+          <name>release</name>
+        </property>
+      </activation>
+      <properties>
+        <gpg.skip>false</gpg.skip>
+      </properties>
+      <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>2.8</version>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-enforcer-plugin</artifactId>
+            <version>3.0.0-M2</version>
+            <executions>
+              <execution>
+                <id>enforce-release</id>
+                <goals>
+                  <goal>enforce</goal>
+                </goals>
                 <configuration>
-                    <configLocation>config/sun_checks.xml</configLocation>
+                  <rules>
+                    <requireReleaseVersion>
+                      <message>Not a release version (remove -SNAPSHOT suffix!)</message>
+                    </requireReleaseVersion>
+                    <requireReleaseDeps>
+                      <message>Can't release with snapshot dependencies!</message>
+                    </requireReleaseDeps>
+                  </rules>
+                  <fail>true</fail>
                 </configuration>
-            </plugin>
+              </execution>
+            </executions>
+          </plugin>
         </plugins>
-    </reporting>
+      </build>
+    </profile>
+
+    <profile>
+      <id>snapshot</id>
+      <properties>
+        <gpg.skip>false</gpg.skip>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-enforcer-plugin</artifactId>
+            <version>3.0.0-M2</version>
+            <executions>
+              <execution>
+                <id>enforce-no-releases</id>
+                <goals>
+                  <goal>enforce</goal>
+                </goals>
+                <configuration>
+                  <rules>
+                    <requireSnapshotVersion>
+                      <message>Not a snapshot version</message>
+                    </requireSnapshotVersion>
+                  </rules>
+                  <fail>true</fail>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
