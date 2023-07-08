@@ -27,6 +27,7 @@ import com.couchbase.mock.http.PoolsHandler;
 import com.couchbase.mock.http.User;
 import com.couchbase.mock.http.UserManagementHandler;
 import com.couchbase.mock.http.capi.CAPIServer;
+import com.couchbase.mock.http.PingServer;
 import com.couchbase.mock.http.query.QueryServer;
 import com.couchbase.mock.httpio.HttpServer;
 import com.couchbase.mock.memcached.MemcachedServer;
@@ -280,6 +281,8 @@ public class CouchbaseMock {
         userManagementHandler.register(httpServer);
         httpServer.register("/mock/*", new ControlHandler(controlDispatcher));
         httpServer.register("/query*", new QueryServer());
+        httpServer.register("/admin/ping", new PingServer("{\"status\":\"OK\"}"));
+        httpServer.register("/", new PingServer("{\"couchdb\":\"Welcome\"}"));
     }
 
     /**

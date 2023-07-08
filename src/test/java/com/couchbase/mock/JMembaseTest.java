@@ -203,8 +203,18 @@ public class JMembaseTest extends TestCase {
     }
 
     public void testHandleHttpRequestUnkownFile() throws IOException {
-        URL url = new URL("http://localhost:" + instance.getHttpPort() + "/");
+        URL url = new URL("http://localhost:" + instance.getHttpPort() + "/doesnotexist");
         assertResponseNotFound(url, "Administrator", "password");
+    }
+
+    public void testHandleHttpRequestViewsPing() throws IOException {
+        URL url = new URL("http://localhost:" + instance.getHttpPort() + "/");
+        assertResponseOK(url);
+    }
+
+    public void testHandleHttpRequestQueryPing() throws IOException {
+        URL url = new URL("http://localhost:" + instance.getHttpPort() + "/admin/ping");
+        assertResponseOK(url);
     }
 
 //    @SuppressWarnings("UnusedAssignment")
