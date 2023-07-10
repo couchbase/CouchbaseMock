@@ -7,6 +7,7 @@ Central Repository.
 
 You will need:
 
+* JDK 9 or later.
 * The `gpg` command-line program and a PGP key. Mac users, grab `gpg` from
   https://gpgtools.org and enjoy
   [this setup guide](http://notes.jerzygangi.com/the-best-pgp-tutorial-for-mac-os-x-ever/). Generate a PGP key with

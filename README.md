@@ -14,7 +14,10 @@ not intended to be a full implementation and/or replacement for the server.
 
 The repository for CouchbaseMock may be found at
 [https://github.com/couchbase/couchbasemock](https://github.com/couchbase/couchbasemock).
-This is a maven project and most of us use NetBeans with it.
+This is a Maven project.
+
+CouchbaseMock requires Java 8 or later at runtime. Java 9 or later is required
+when building the project from source.
 
 ## Basic Usage
 
