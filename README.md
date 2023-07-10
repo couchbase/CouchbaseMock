@@ -3,7 +3,7 @@
 CouchbaseMock is a test server implementing some of the memcached protocol
 which is used by some SDKs (including the C SDK) for basic testing. While it
 is recommended that testing be done against the real server, CouchbaseMock is
-useful as being self contained (there is no need to install it to the system)
+useful as being self-contained (there is no need to install it to the system)
 and for allowing extra instrumentation.
 
 CouchbaseMock is implemented in Java and is intended to be used by a single
@@ -18,7 +18,7 @@ This is a maven project and most of us use NetBeans with it.
 
 ## Basic Usage
 
-Typically the mock is spawned by passing a `--port` argument as the REST port to
+Typically, the mock is spawned by passing a `--port` argument as the REST port to
 listen on, and a list of _bucket specifications_ separated by commas. Passing
 `--help` to the CouchbaseMock should show example usage. If no port is passed,
 it will listen on the REST port of 8091 (and will fail if you already have a
@@ -30,7 +30,7 @@ Once the mock has been started, it may be used like a normal Couchbase server,
 with clients bootstrapping over HTTP using the port specified as `--port`.
 
 ```sh
-java -jar CouchbaseMock-1.4.7.jar --port 9000
+java -jar CouchbaseMock-1.5.26.jar --port 9000
 ```
 
 and then in another console:
@@ -99,7 +99,7 @@ mean that your bucket must have a password. For example:
 
 Will create a bucket without a password.
 
-Additionally note that the `ramQuotaMB` must be specified, though other than
+Additionally, note that the `ramQuotaMB` must be specified, though other than
 being necessary for conforming to server behavior, has no effect.
 
 ### Views (Map-Reduce)
@@ -188,7 +188,7 @@ be a JSON object consisting of the following fields
 ## HTTP API
 
 This is a lightweight API following the semantics of the JSON API; only that
-it uses HTTP as a transport.
+it uses HTTP as the transport.
 
 The format of each command is `http://localhost:18091/mock/<command>?payload\_param1=payload\_value1&...`
 
@@ -224,7 +224,7 @@ Parameters:
     <tr>
         <td><b>idx</b></td>
         <td>The server index</td>
-        <td>JSON Number</td></tr>
+        <td>JSON Number</td>
     </tr>
         <tr><td>bucket</td>
         <td>The bucket to affect (`"default"`) if unspecified</td>
@@ -304,7 +304,7 @@ Paramters:
         <th>Type</th>
     </tr>
     <tr>
-        <td><b>code<b></td>
+        <td><b>code</b></td>
         <td>The Memcached protocol code to force</td>
         <td>JSON Number; Must also be recognized by the Mock</td>
     </tr>
@@ -554,7 +554,7 @@ steps:
 
 ### Common Parameters
 
-These  out-of-band commands allow to modify or retrieve
+These out-of-band commands allow to modify or retrieve
 information on a specific _key_.
 
 They all accept a set of common parameters
@@ -587,7 +587,7 @@ They all accept a set of common parameters
         <td>The new CAS to use</td>
         <td>Optional. Number. If not specified, the existing CAS (if the key
             already exists) of each key entry in its respective storage partition
-            will be used. Otherwise a new CAS is generated</td>
+            will be used. Otherwise, a new CAS is generated</td>
     </tr>
     <tr>
         <td>Value</td>
