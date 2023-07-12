@@ -33,7 +33,7 @@ Once the mock has been started, it may be used like a normal Couchbase server,
 with clients bootstrapping over HTTP using the port specified as `--port`.
 
 ```sh
-java -jar CouchbaseMock-1.5.26.jar --port 9000
+java -jar CouchbaseMock-1.5.27.jar --port 9000
 ```
 
 and then in another console:
